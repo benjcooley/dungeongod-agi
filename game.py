@@ -1476,7 +1476,7 @@ class Game():
             case "encounter":
                 return self.get_encounter_response_end()
             case _:
-                ""
+                return ""
 
     def next_turn(self, action: any, 
                   subject: any = None, 
