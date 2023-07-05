@@ -78,6 +78,8 @@ async def on_message(message):
 
     content = message.content
     if content.startswith("!"):
+        if content == "!restart":
+            game.restart()
         return
 
     try:
