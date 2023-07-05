@@ -39,7 +39,7 @@ FACTS = "Facts"
 k_n = 3
 
 # initialize pinecone
-pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_API_ENV)
+#pinecone.init(api_key=PINECONE_API_KEY, environment=PINECONE_API_ENV)
 
 # initialize openAI
 openai.api_key = OPENAI_API_KEY
@@ -51,11 +51,11 @@ def get_ada_embedding(text):
         ][0]["embedding"]
 
 class Agent():
-    def __init__(self, table_name, user_name) -> None:
+    def __init__(self, agent_name, user_name) -> None:
         self.messages = []
         self.previous_memories = ""
         self.previous_response = ""
-        self.table_name = table_name
+        self.agent_name = agent_name
         self.user_name = user_name
         self.memory = None
         self.thought_id_count = int(counter['count'])
@@ -66,7 +66,8 @@ class Agent():
         with open('prompts/prompts.yaml', 'r') as f:
             self.prompts = yaml.load(f, Loader=yaml.FullLoader)        
         # Creates Pinecone Index
-        self.createIndex(table_name)
+        #self.table_name = table_name
+        #self.createIndex(table_name)
 
     # Keep Remebering!
     # def __del__(self) -> None:

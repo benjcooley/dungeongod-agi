@@ -18,7 +18,7 @@ DISCORD_BOT_CHANNEL = os.getenv('DISCORD_BOT_CHANNEL') or "general"
 AGENT_NAME = os.getenv("AGENT_NAME") or "my-agent"
 USER_NAME = os.getenv("USER_NAME") or "Anonymous"
 
-agent = Agent(AGENT_NAME)
+agent = Agent(AGENT_NAME, USER_NAME)
 game = Game(agent, "Encounter Test", "Band of Heroes")
 
 intents = discord.Intents.default()

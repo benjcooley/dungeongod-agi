@@ -5,4 +5,4 @@ services:
     build: ./
     volumes:
       - "./:/app"
-    profiles: ["exclude-from-up"] # Use `docker-compose run teenage-agi` to get an attached container
+    profiles: ["exclude-from-up"] # Use `docker-compose run dungeongod-agi` to get an attached container

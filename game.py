@@ -37,8 +37,7 @@ def time_difference_mins(time1_str, time2_str) -> int:
     return int(delta.total_seconds() / 60)
 
 class Game():
-
-    def __init__(self, agent: Agent, module: dict[str, any], party: dict[str, any]) -> None:
+    def __init__(self, agent: Agent, module_name: str, party_name: str) -> None:
         self.module_name = module_name
         self.agent: Agent = agent
         self.game_started = False
@@ -1532,8 +1531,3 @@ class Game():
         self.save_game()
 
         return resp
-
-
-def create_game(agent: Agent, module_name: str, party_name: str) -> Game:
-    
-
