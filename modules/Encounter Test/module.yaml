@@ -1,0 +1,46 @@
+info:
+  title: "Encounter Test"
+  game: "Heroes of Adventure"
+  game_version: "1.0"
+
+starting_location_name: "Arena"
+starting_game_state: "exploration"
+starting_time: 'Sep 10 3050 19:00'
+
+quests: {}
+tasks: {}
+npcs: {}
+overview: {}
+areas: {}
+
+monsters:
+  "Ant, Giant":
+    info:
+      description: |-
+        A great ant of enormous size with dangerous claws.
+    stats: 
+      basic: 
+        level: 3
+        health: 10
+        defense: 10
+        damage_res: 2
+        skill: "d6"
+    melee_attack:
+      description: "Giant pincers"
+      damage: "d4"
+    ranged_attack: null
+
+locations:
+  "Arena":
+    description: |-
+      You party is on a dusty plain, a battle arena to test your mettle against evil monsters.
+    size: "outside"
+    state:
+      encounter:
+        description: "You are attacked by three giant ants!"
+        image: "images/GiantAnts.jpg"
+        monsters:
+          "Giant Ant 1": { monster_type: "Ant, Giant" }
+          "Giant Ant 2": { monster_type: "Ant, Giant" }
+          "Giant Ant 3": { monster_type: "Ant, Giant" }
+      items: {}

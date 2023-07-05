@@ -1,0 +1,22 @@
+characters: {}
+
+npcs: {}
+
+npcs_with_party: []
+
+location_states: {}
+
+tasks_completed: {}
+
+exits_blocked: {}
+
+quests_completed: {}
+
+encounter: None
+
+state:
+  cur_location_name: ""
+  cur_game_state: ""
+  cur_time: "JAN 1 3050 12:00"
+  location_since: "JAN 1 3050 12:00"
+  script_state_since: "JAN 1 3050 12:00"

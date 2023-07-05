@@ -1,0 +1,126 @@
+# Prompts to generate internal and external thoughts based on top relevant memories
+internal_thought: |-
+  You have been given the following user query {query}. You must decide what information you will need 
+  to best respond to the query. You will be asked to then write your results in a json response with these 
+  sections: MEMORIES SUMMARY, THINGS I WANT TO REMEMBER, QUESTIONS I HAVE, and GOOGLE SEARCH.
+
+  The following contains information that may be relevant to this query:
+
+  MEMORIES sorted by relevance:
+  
+  {previous_memories}
+  {top_matches}
+
+  YOUR PREVIOUS RESPONSE:
+  
+  {previous_response}
+
+  THE NEXT USER QUERY:
+
+  {query}
+
+  You will respond by returning data you generate given the following JSON schema. Include each property even
+  if the contents are empty. The descriptions of each element follow:
+
+  { "memories": "<MEMORIES SUMMARY>", "to_remember": [ <THINGS I WANT TO REMEMBER> ], "questions": <QUESTIONS I HAVE>, "google_search": "<GOOGLE SEARCH>" }
+
+  <MEMORIES SUMMARY> - A new brief summary paragraph of your current memories, include the current subject of the conversation
+  information about the user relevant to this conversation, and anything else you feel might be relevant to answering the user's current query.
+
+  Example:
+
+      "memories" : "Fred Jones works for AI Corp and is an engineer in the knowledge division. He is currently asking about rewards systems."
+
+  <THINGS I WANT TO REMEMBER> - An optional string array of facts you already know that you'd like to remember based on the context above that aren't in the list of memories, 
+  Important - only place facts here to which you know the answers. Write each of these facts in the form of a question then the answer to the qeustion like 
+  this "{Question} --> {Answer}".
+
+  Example:
+
+      "to_remember" : [
+        "Who is Fred Jones? --> Fred Jones is an engineer at AI Corp.",
+        "What is Fred Jone's job? --> Fred Jones is an AI scientist and engineer.",
+        "What is the subject of this conversation? --> Fred Jones is asking about vector databases."
+     ]
+
+  <QUESTIONS I HAVE> - Optional list no more than three basic facts about the user or subject of the chat you'd like to know that aren't in the context above that 
+  would best help you anwswer the query. Write each of these as a simple question.
+
+  Example:
+
+      "questions" : [
+        "What is Fred Jone's favorite computer language?",
+        "What does Fred Jones like to talk about?"
+      ]
+
+  <GOOGLE SEARCH> A google search query relevant to this user query. This might be useful for information past 
+  your training cutoff date, or something you don't know or want to be certain about. ALWAYS provide a google search
+  term if the user query asks you to search for something, but otherwise only if it is really necessary. 
+
+  Example:
+
+      "google_search" : "AI Corp"
+
+  or if empty..
+
+      "google_search" : ""
+
+context_prompt: |-
+  INNER THOUGHTS:
+
+  The current date and time is {now}
+
+  Here are my MEMORIES and THOUGHTS related to prior conversation useful for answering the users query:
+
+  {memories}
+
+  Here are some ANSWERS to QUESTIONS I retrieved for answering the users query:
+
+  {answers}
+
+# Prompts to create memories
+request_memory: |-
+  On {now} the user said to you:
+  '{query}'
+  You said:
+  '{response}'
+
+internal_thought_memory: |-
+  Based on the query "{query}", on {now} you thought:
+   '{internal_thought}'
+
+external_thought_memory: |-
+  Based on the query "{query}", on {now} you responded with:
+   '{external_thought}'
+
+search_results_prompt: |-
+  Google Search Results:
+
+  {results}
+
+  Based on the google search results above, return a JSON array of AT LEAST ONE url but NO MORE 
+  THAN THREE that has information that would best answer the user's query '{query}'. 
+  
+  NOTE: STRONGLY PREFER to return only a single best url. Only return two, or three if there
+  is significant information to add. As a rule only 1 out of every 10 queries should return 
+  more than 1 url.
+
+  Example:
+  
+  User query was: "Who was president George Washington?"
+
+  Returns this JSON array of the best url's to answer the user's query:  
+
+  [ "https://www.wikipedia.org/George+Washington" ]
+
+wepbage_summary_request: |-
+  Webpage text to summarize:
+  {text}
+
+  Return a single paragraph summary of the website content above which was retrieved from the web for 
+  the query '{query}'. Be sure to include any specific details requested in the query.
+
+wepbage_summary: |-
+  From the url {url} retrieved {now} for the search query '{query}' you summarized this content:
+
+  '{summary}'
