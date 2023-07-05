@@ -173,9 +173,9 @@ class Game():
 
     def save_game(self) -> None:
         module_save_path = f'save_games/{self.module_name}'
-        game_save_path = f'save_games/{self.module_name}/{self.party_name}.yaml'
+        game_save_path = f'save_games/{self.module_name}/{self.party_name}.yaml'       
         if not path.exists(module_save_path):
-            os.mkdir(module_save_path)
+            os.makedirs(module_save_path)
         with open(game_save_path, 'w') as f:
             yaml.dump(self.game_state, f)
 
