@@ -1,0 +1,5 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: [ 'build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/dungeongod1/dungeongod1:latest', '.' ]
+images:
+- 'us-central1-docker.pkg.dev/$PROJECT_ID/dungeongod1/dungeongod1:latest'

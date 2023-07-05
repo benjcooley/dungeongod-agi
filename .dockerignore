@@ -1,0 +1,8 @@
+.env
+.git
+.vscode
+.DS_Store
+__pycache__
+memory_count.yaml
+/attic
+/save_games
