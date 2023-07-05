@@ -25,8 +25,10 @@ PINECONE_API_ENV = os.getenv("PINECONE_API_ENV")
 token_enc = tiktoken.encoding_for_model(OPENAI_MODEL)
 
 # Counter Initialization
-with open('memory_count.yaml', 'r') as f:
-    counter = yaml.load(f, Loader=yaml.FullLoader)
+counter={ "count": 1 }
+if os.path.exists('memory_count.yaml'):
+    with open('memory_count.yaml', 'r') as f:
+        counter = yaml.load(f, Loader=yaml.FullLoader)
 
 # Thought types, used in Pinecone Namespace
 THOUGHTS = "Thoughts"

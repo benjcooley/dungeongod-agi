@@ -15,8 +15,8 @@ DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 DISCORD_GUILD = os.getenv('DISCORD_GUILD')
 DISCORD_BOT_CHANNEL = os.getenv('DISCORD_BOT_CHANNEL') or "general"
 
-AGENT_NAME = os.getenv("AGENT_NAME") or "my-agent"
-USER_NAME = os.getenv("USER_NAME") or "Anonymous"
+AGENT_NAME = os.getenv("AGENT_NAME") or "dungeon-god-agi"
+USER_NAME = os.getenv("USER_NAME") or "dungeon-god-agi"
 
 agent = Agent(AGENT_NAME, USER_NAME)
 game = Game(agent, "Encounter Test", "Band of Heroes")
