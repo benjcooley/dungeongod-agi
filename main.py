@@ -99,7 +99,7 @@ async def on_message(message):
 #async def slash_command(interaction: discord.Interaction): 
 #    if interaction.channel.name != DISCORD_BOT_CHANNEL:
 #        return
-#
+# 
 #    resp = game.restart_command()
 #    await interaction.response.send_message(resp)
 
