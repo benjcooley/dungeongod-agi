@@ -20,6 +20,8 @@ starting_location_name: "Cave Entrance"
 starting_game_state: "exploration"
 starting_time: "12:30"
 
+npcs: {}
+monsters: {}
 quests: {}
 tasks: {}
 
@@ -28,6 +30,7 @@ locations:
   "Cave Entrance":
     description: |-
       Entrance to a small cave. Small stream coming out. Nasty smells.
+    image: "images/cave_entrance.jpg"
     topics:
       "Bard":
         "the map": "Bard says it's a map of entire cave, all monster locations, treasure, traps."
@@ -61,9 +64,10 @@ locations:
     exits:
       "door": { to: "Great Chamber" }
       "exit": { to: "Cave Entrance" }
+    image: "images/cave_interior.jpg"    
     state:
       hidden:
-        "+1 Sword" : {}
+        "+1 Sword" : { damage: "d6" }
 
   "Great Chamber":
     description: |-
@@ -73,4 +77,4 @@ locations:
       "door": { to: "First Chamber" }
     state:
       hidden:
-        "Gold" : { "qty": 50 }
+        "gp" : { "qty": 50 }

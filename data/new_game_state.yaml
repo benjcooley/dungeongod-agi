@@ -12,7 +12,7 @@ exits_blocked: {}
 
 quests_completed: {}
 
-encounter: None
+encounter: null
 
 state:
   cur_location_name: ""

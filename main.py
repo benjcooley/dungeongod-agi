@@ -2,7 +2,7 @@ import agent
 import os
 import traceback
 from dotenv import load_dotenv
-import shlex
+import yaml
 
 from agent import Agent
 from game import Game
@@ -12,15 +12,26 @@ import discord
 # Load default environment variables (.env)
 load_dotenv()
 
+DEVELOPER_MODE = (os.getenv('DEVELOPER_MODE') == "true")
+
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
 DISCORD_GUILD = os.getenv('DISCORD_GUILD')
-DISCORD_BOT_CHANNEL = os.getenv('DISCORD_BOT_CHANNEL') or "general"
 
 AGENT_NAME = os.getenv("AGENT_NAME") or "dungeon-god-agi"
 USER_NAME = os.getenv("USER_NAME") or "dungeon-god-agi"
 
-agent = Agent(AGENT_NAME, USER_NAME)
-game = Game(agent, "Encounter Test", "Band of Heroes")
+config: dict[str, any] = {}
+channel_games: dict[str, any] = {}
+
+with open('config.yaml', 'r') as f:
+    config = yaml.load(f, Loader=yaml.FullLoader)
+
+# Create a module per channel
+for channel_name, channel_config in config["channels"].items():
+    agent = Agent(AGENT_NAME, USER_NAME)
+    game = Game(agent, channel_config["module"], channel_config["party"], channel_name)
+    actual_channel_name = (f"dev-{channel_name}" if DEVELOPER_MODE else channel_name)
+    channel_games[actual_channel_name] = { "agent": agent, "game": game }
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -51,33 +62,43 @@ async def on_ready():
     if guild is None:
         return
 
-    channel = discord.utils.get(guild.channels, name=DISCORD_BOT_CHANNEL)
-    if channel is None:
+    channels_to_start = []
+    for channel in guild.channels:
+        channel_name = channel.name
+        if not channel_name in channel_games:
+            continue
+        channels_to_start.append({ "channel": channel, "game": channel_games[channel_name]["game"] })
+
+    if len(channels_to_start) == 0:
         return
 
     print(
         f'{discord_client.user} is connected to the following guild:\n'
-        f'{guild.name} (id: {guild.id})'
-        f'{channel.name} (id: {channel.id})'
+        f'{guild.name} (id: {guild.id})\n'
     )
 
-    if game.is_started:
-        return
-
-    try:
-        result = game.start_game()
-    except:
-        result = traceback.format_exc()
-    await send_to_channel(channel, result)
+    for start_channel in channels_to_start:
+        channel: discord.ChannelType = start_channel["channel"]
+        game: Game = start_channel["game"]
+        if game.is_started:
+            continue
+        print(f"{channel.name} (id: {channel.id}) (module: {game.module_name}) (party: {game.party_name})")
+        try:
+            result = game.start_game()
+        except:
+            result = traceback.format_exc()
+        await send_to_channel(channel, result)
 
 @discord_client.event
 async def on_message(message):
     if message.author == discord_client.user:
         return
 
-    if message.channel.name != DISCORD_BOT_CHANNEL:
+    channel_name = message.channel.name
+    if not channel_name in channel_games:
         return
 
+    game: Game = channel_games[channel_name]["game"]
     content = message.content
 
     # Ignore users messages among themselves

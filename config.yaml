@@ -1,0 +1,7 @@
+channels:
+  "dg-lair-of-the-mutant":
+    module: "Lair of the Mutant"
+    party: "Band of Heroes"
+  "dg-encounter-test":
+    module: "Encounter Test" 
+    party: "Band of Heroes"

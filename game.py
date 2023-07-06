@@ -38,7 +38,7 @@ def time_difference_mins(time1_str, time2_str) -> int:
     return int(delta.total_seconds() / 60)
 
 class Game():
-    def __init__(self, agent: Agent, module_name: str, party_name: str) -> None:
+    def __init__(self, agent: Agent, module_name: str, party_name: str, save_game_name: str) -> None:
         self.module_name = module_name
         self.agent: Agent = agent
         self.game_started = False
@@ -53,7 +53,7 @@ class Game():
             self.module = yaml.load(f, Loader=yaml.FullLoader)
         with open(f"{self.rules_path}/rules.yaml", "r") as f:
             self.rules = yaml.load(f, Loader=yaml.FullLoader)
-        self.save_game_name = ""
+        self.save_game_name = save_game_name
         self.game_state: dict[str, any] = {}
         self.action_image_path: str | None = None
         self.response_id = 1
@@ -169,7 +169,7 @@ class Game():
         self.save_game()
 
     def load_game(self) -> None:
-        game_path = f'save_games/{self.module_name}/{self.party_name}.yaml'
+        game_path = f'save_games/{self.module_name}/{self.save_game_name}.yaml'
         if path.exists(game_path):
             with open(game_path, 'r') as f:
                 self.game_state = yaml.load(f, Loader=yaml.FullLoader)
@@ -179,7 +179,7 @@ class Game():
 
     def save_game(self) -> None:
         module_save_path = f'save_games/{self.module_name}'
-        game_save_path = f'save_games/{self.module_name}/{self.party_name}.yaml'       
+        game_save_path = f'save_games/{self.module_name}/{self.save_game_name}.yaml'       
         if not path.exists(module_save_path):
             os.makedirs(module_save_path)
         with open(game_save_path, 'w') as f:
@@ -807,7 +807,7 @@ class Game():
         if subject in self.cur_location.get("poi", {}):
             desc = self.cur_location["poi"]["description"]
             self.action_image_path = self.other_image(subject, "poi")
-        elif self.cur_location_script is not None and subject in self.cur_location_script["poi"]:
+        elif self.cur_location_script is not None and subject in self.cur_location_script.get("poi", {}):
             desc = self.cur_location_script["poi"]["description"]
             self.action_image_path = self.other_image(subject, "poi")
         elif subject in self.game_state["characters"]:
@@ -1031,10 +1031,7 @@ class Game():
     # ENCOUNTER ACTIONS ----------------------------------------------------------
 
     def check_random_encounter(self) -> tuple[bool, dict[str, any] | None]:
-        if "encounter" in self.cur_location_state:
-            return (True, None)
-        # Implement random encounters here!
-        return ()
+        return None
     
     def get_cur_location_encounter(self) -> dict[str, any]:
         if self.cur_location_script is not None and "encounter" in self.cur_location_script:
