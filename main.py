@@ -2,6 +2,7 @@ import agent
 import os
 import traceback
 from dotenv import load_dotenv
+import shlex
 
 from agent import Agent
 from game import Game
@@ -24,6 +25,7 @@ game = Game(agent, "Encounter Test", "Band of Heroes")
 intents = discord.Intents.default()
 intents.message_content = True
 discord_client = discord.Client(intents=intents)
+discord_tree = discord.app_commands.CommandTree(discord_client)
 
 async def send_to_channel(channel: any, msg: str) -> None:
     lines = msg.splitlines()
@@ -77,16 +79,29 @@ async def on_message(message):
         return
 
     content = message.content
+
+    # Ignore users messages among themselves
     if content.startswith("!"):
-        if content == "!restart":
-            game.restart()
         return
 
     try:
-        result = game.action(content)
+        result = game.user_action(content)
     except:
         result = traceback.format_exc()
-    await send_to_channel(message.channel, result)   
+        if agent.logging:
+            print(result)
+
+    if result != "":
+        await send_to_channel(message.channel, result)   
+
+# make the slash command
+#@discord_tree.command(name="restart", description="Restarts game")
+#async def slash_command(interaction: discord.Interaction): 
+#    if interaction.channel.name != DISCORD_BOT_CHANNEL:
+#        return
+#
+#    resp = game.restart_command()
+#    await interaction.response.send_message(resp)
 
 if DISCORD_TOKEN:
     # Run as a bot on discord
@@ -99,6 +114,6 @@ else:
     while True:
         print("\n\033[33mUser:\033[0m")
         userInput = input()
-        result = game.action(userInput)
+        result = game.user_action(userInput)
         if result != "":
             print(f"\n\033[34mAgent:\033[0m\n{result}")

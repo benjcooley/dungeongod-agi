@@ -6,6 +6,7 @@ import os
 import os.path as path
 import random
 import yaml
+import shlex
 
 def find_case_insensitive(dic: dict, key: str) -> tuple[str, any]:
     value = dic.get(key)
@@ -69,7 +70,7 @@ class Game():
         self.game_started = True        
         resp = self.agent.generate(self.rules["starting_prompt"], primary=True, keep=True)
         resume_prompt = self.agent.make_prompt(self.rules["resume_game_prompt"], self.module["info"])
-        return self.action(resume_prompt, \
+        return self.system_action(resume_prompt, \
                            'call next_turn("resume")', \
                            'AI Referee, you must use [call next_turn("resume")] to start the game. Please try again.\n')
 
@@ -80,9 +81,14 @@ class Game():
             self.rules["instructions_prompt"] + "\n\n" + \
             self.cur_location_script["hint"] + "\n\n"
 
-    def action(self, query: str, expected_action: str = None, retry_msg: str = None) -> str:
+    def system_action(self, query: str, expected_action: str = None, retry_msg: str = None) -> str:
+        return self.process_action(True, query, expected_action, retry_msg)
+
+    def user_action(self, query: str) -> str:
+        return self.process_action(False, query)
+            
+    def process_action(self, is_system: bool, query: str, expected_action: str = None, retry_msg: str = None) -> str:
         self.action_image_path = None
-        is_system = query.startswith("SYSTEM:")
         if not is_system and self.cur_location_script and "hint" in self.cur_location_script:
             query = self.add_query_hint(query)
         resp = self.agent.generate(query, primary=True)
@@ -798,7 +804,7 @@ class Game():
         if subject is None or subject == self.cur_location_name:
             return self.describe_location()
         desc = None
-        if subject in self.cur_location["poi"]:
+        if subject in self.cur_location.get("poi", {}):
             desc = self.cur_location["poi"]["description"]
             self.action_image_path = self.other_image(subject, "poi")
         elif self.cur_location_script is not None and subject in self.cur_location_script["poi"]:
@@ -929,8 +935,8 @@ class Game():
         return (resp, False)
 
     def restart(self) -> tuple[str, bool]:
-        if not self.game_over:
-            return ("current game is not over", True)
+#        if not self.game_over:
+#            return ("current game is not over", True)
         self.new_game()
         return self.resume()
 
@@ -1531,3 +1537,12 @@ class Game():
         self.save_game()
 
         return resp
+    
+    # USER COMMANDS ----------------------------------------------------------
+
+    def restart_command(self) -> str:
+        resp, err = self.restart()
+        if err:
+            return resp
+        return self.process_response(resp, 1)
+
