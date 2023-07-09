@@ -458,9 +458,7 @@ class Game():
         return True # For now just assume an exit not explicitly blocked is unblocked
 
     def describe_exits(self) -> str:
-        exits = self.cur_location.get("exits", {})
-        if self.cur_location_script is not None:
-            exits.update(self.cur_location_script.get("exits", {}))
+        exits = self.get_merged_exits()
         exit_names = []
         for exit_name, _ in exits.items():
             if not self.exit_blocked(self.cur_location_name, exit_name):
@@ -549,6 +547,9 @@ class Game():
             case "d20":
                 return random.randint(1, 20)
         return 0
+
+    def is_character_name(self, maybe_char_name: str) -> bool:
+        return maybe_char_name in self.game_state["characters"]
 
     @staticmethod
     def is_character(maybe_char: dict[str, any]) -> bool:
@@ -706,6 +707,17 @@ class Game():
         rules_weapon = self.rules["equipment"][rules_weapon_name]
         weapon.update(rules_weapon)
         return weapon
+    
+    def get_merged_exits(self) -> dict[str, any]:
+        # add base exits
+        exits = self.cur_location.get("exits", {})
+        # add any additional exits revealed in the current script state
+        if self.cur_location_script and "exits" in self.cur_location_script:
+            exits.update(self.cur_location_script["exits"])
+        # add any additional exits added to the current location state (say by a search)
+        if "exits" in self.cur_location_state:
+            exits.update(self.cur_location_state["exits"])
+        return exits
 
     # GENERAL ACTIONS ----------------------------------------------------------
 
@@ -775,7 +787,7 @@ class Game():
         if topic_resp is None:
             topics = json.dumps(list(npc_topics.keys()))
             return (f"no topic '{topic}' for npc '{npc}' - npc topics are {topics}\n" +\
-                    "you can try again using one of these, or choose to make up your own response\n", True)
+                    "you can try again using one of these, or creatively improvise a response consistent with the story and rules\n", False)
         return (topic_resp, False)
 
     def give(self, char_name: str, to_name: str, item_name: any, extra: any) -> tuple[str, bool]:
@@ -801,8 +813,10 @@ class Game():
         return self.add_item(to_name, item_name, qty)
 
     def look(self, subject) -> tuple[str, bool]:
-        if subject is None or subject == self.cur_location_name:
+        if subject is None or subject == self.cur_location_name or subject == "location":
             return self.describe_location()
+        elif subject == "party":
+            return self.describe_party()
         desc = None
         if subject in self.cur_location.get("poi", {}):
             desc = self.cur_location["poi"]["description"]
@@ -836,9 +850,7 @@ class Game():
         return (resp, False)
 
     def go(self, subject: str, object: str) -> tuple[str, bool]:
-        exits = self.cur_location.get("exits", {})
-        if self.cur_location_script and "exits" in self.cur_location_script:
-            exits.update(self.cur_location_script["exits"])
+        exits = self.get_merged_exits()
         to = None
         if subject in exits:
             to = subject
@@ -856,7 +868,7 @@ class Game():
         return ("ok", False)
     
     def invent(self, char_name) -> tuple[str, bool]:
-        if not self.is_character(char_name):
+        if not self.is_character_name(char_name):
             return (f"not a character '{char_name}'", True)
         return (json.dumps(self.characters[char_name]["inventory"]) + "\n", False)
 
@@ -972,22 +984,59 @@ class Game():
         else:
             return ("failed", False)
 
-    def search(self, character: str) -> tuple[str, bool]:
+    def search(self, character_name: str, term: str) -> tuple[str, bool]:
+        # Note, we don't use character skill rolls for searching (at least not yet)
+        # so for now we skip the character.
+        if character_name not in self.game_state["characters"]:
+            term = character_name
         if "hidden" not in self.cur_location_state:
             return ("nothing found", False)
-        if "items" not in self.cur_location_state:
-            self.cur_location_state["items"] = {}
-        hidden_items = json.dumps(self.cur_location_state["hidden"])
-        self.cur_location_state["items"].update(self.cur_location_state["hidden"])
-        del self.cur_location_state["hidden"]
-        return (f"found items {hidden_items}", False)
+        hidden = self.cur_location_state["hidden"]
+        found_state = None
+        found_idx = None
+        for idx, state in enumerate(hidden):
+            terms = state.get("terms")
+            if terms is None:
+                found_state = state
+                found_idx = idx
+                break
+            if term in terms:
+                found_state = state
+                found_idx = idx
+                break
+        if found_state is None:
+            return ("nothing found", False)
+        desc = found_state.get("description", "")
+        if len(desc) > 0:
+            desc += "\n"
+        found_items = found_state.get("items")
+        found_items_list = ""
+        if found_items is not None:
+            if "items" not in self.cur_location_state:
+                self.cur_location_state["items"] = {}
+            found_items_list = "found items " + json.dumps(found_items.keys()).strip("[]") + "\n"
+            self.cur_location_state["items"].update(found_items)
+        found_exits = found_state.get("exits")
+        found_exits_list = ""
+        if found_exits is not None:
+            if "exits" not in self.cur_location_state:
+                self.cur_location_state["exits"] = copy.deepcopy(self.cur_location.get("exits", {}))
+            found_exits_list = "found exits " + json.dumps(found_exits.keys()).strip("[]") + "\n"
+            self.cur_location_state["exits"].update(found_exits)
+        del self.cur_location_state["hidden"][found_idx]
+        return (f"{desc}{found_items_list}{found_exits_list}", False)
     
+    def use(self, subject: str, object: str, extra: any, use_synonym: str) -> tuple[str, bool]:
+        # just assume it worked (for now)
+        return ("ok", False)
+
     def do_expore_action(self, action: any, subject: any, object: any, extra: any) -> tuple[str, bool]:
         resp = ""
         error = False
 
         use_synonym = ""
-        if action in ("eat", "drink", "open", "close", "push", "pull", "activate", "press", "lock"):
+        if action in ("light", "extinguish", "eat", "drink", "open", "close", "push", "pull", 
+                      "activate", "press", "lock", "unlock"):
             use_synonym = action
             action = "use"
 
@@ -1013,13 +1062,13 @@ class Game():
                 resp, error = self.go(subject, object)
             case "invent":
                 resp, error = self.invent(subject)
-            case "move":
-                resp, error = self.go(subject, object)
             case "party":
                 resp, error = self.describe_party()
             case "pickup":
                 resp, error = self.pickup(subject, object, extra)
             case "search":
+                resp, error = self.search(subject)
+            case "use":
                 resp, error = self.search(subject)
             case "next":
                 resp, error = self.next_script_state(subject)
@@ -1340,7 +1389,7 @@ class Game():
         if self.cur_game_state_name != "encounter" or self.cur_encounter is None:
             return ("'{move}' FAILED - not in 'encounter' game state", True)
         
-        if move not in [ "attack", "press", "shoot", "advance", "retreat", "charge", "flee" ]:
+        if move not in [ "attack", "press", "shoot", "advance", "retreat", "charge", "flee", "pass" ]:
             return (f"'{move}' FAILED - not a valid encounter action", True)
 
         attacker = self.get_attacker(attacker_name)
@@ -1419,6 +1468,11 @@ class Game():
                 print("  " + resp)
             attacker["encounter"]["moved_round"] = self.cur_encounter["round"]
 
+        elif move == "pass":
+            err = False
+            resp = f"'{attacker_name}' passes this turn"
+            attacker["encounter"]["moved_round"] = self.cur_encounter["round"]
+
         _, left = self.get_attackers_left_to_go()
         if left == 0:
             turn_resp, err = self.next_encounter_turn()
@@ -1438,7 +1492,10 @@ class Game():
         resp = ""
         error = False
 
-        if action in [ "charge", "flee", "advance", "retreat", "attack", "press", "block", "shoot" ]:
+        if action in [ "wait", "hold", "stop", "defend", "no_action" ]:
+            action = "pass"
+
+        if action in [ "charge", "flee", "advance", "retreat", "attack", "press", "block", "shoot", "pass" ]:
             resp, error = self.attack_move(action, subject, object)
         else:   
             match action:
@@ -1498,7 +1555,7 @@ class Game():
 
         match action:
             case "describe":
-                resp, error = self.describe_location()
+                resp, error = self.look(subject)
             case "party":
                 resp, error = self.describe_party()
             case "topic":

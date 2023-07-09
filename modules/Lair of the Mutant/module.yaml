@@ -20,8 +20,20 @@ starting_location_name: "Dusty Road"
 starting_game_state: "exploration"
 starting_time: 'Sep 10 3050 19:00'
 
+overview:
+  description: |-
+    In the introductory adventure "Lair of the Mutant" for the Heroes of Adventure RPG system, players, 
+    as 1st-level heroes, embark on a mission in the Farlands, near the border outpost Skenrith 
+    Keep. In this adventure they must solve a mystery and use their wits and their abilities to
+    rescue innocent friends taken by a hideously monsterous mutant force.
+  image: "images/Introduction.jpg"
+
 quests: {}
 tasks: {}
+
+# ------------------------------------------------------------------------------
+#                                    N P C S
+# ------------------------------------------------------------------------------
 
 npcs:
 
@@ -167,15 +179,18 @@ npcs:
       Queen's next meal. Frightened and wants
       to escape.
 
-overview:
-  description: |-
-    In the introductory adventure "Lair of the Mutant" for the Heroes of Adventure RPG system, players, 
-    as 1st-level heroes, embark on a mission in the Farlands, near the border outpost Skenrith 
-    Keep. In this adventure they must solve a mystery and use their wits and their abilities to
-    rescue innocent friends taken by a hideously monsterous mutant force.
-  image: "images/Introduction.jpg"
+# ------------------------------------------------------------------------------
+#                                 M O N S T E R S
+# ------------------------------------------------------------------------------
+
+monsters: {}
+
+# ------------------------------------------------------------------------------
+#                                    A R E A S
+# ------------------------------------------------------------------------------
 
 areas:
+
   "Farmhouse":
     description: |-
       - Small wooden Farm House, strong and sturdy construction. Home of Grun the wagon driver's
@@ -184,9 +199,157 @@ areas:
       - Main door is swinging in the wind. No sign of the occupants. Some sheep
         have escaped the pen situated behind the house.
       -
-      - From here players can move to: farmhouse, barn, storage shed, sheeps pen, well.      
+      - From here players can move to: farmhouse, barn, storage shed, sheep pen, well. 
+
+  "Moathouse":
+    description: |-
+      Proceed to the Moat House location (pg. 8).
+      THE FARM HOUSE
+
+      MOAT HOUSE HIGHLIGHTS
+      The me
+
+      - **Moat House** is a former residence of a Sentran noble,
+          **abandoned for centuries** and is a **ruined, decaying**
+          **structure.** Buildings have partially collapsed.
+      - **Surrounded** by the growing creep of the **wilderness**.
+          Players circling the vegetation outside may encounter a
+          **Vine Choker** monster.
+      - The  **river bed has dried up**, small crawl spaces have been
+          dug from the moat bed underneath the Moat House.
+      - Area is quiet, abandoned, nothing of value.
+      - Loose debris, rocks and stones cover the floor.
+
+
+      Instructions
+
+      - **Atmosphere:** Build suspense as the players explore and
+          provide hints or evidence of potential threats.
+      - **Clue:Barus** reveals **Jacob** was dragged through tunnels
+          (B1).
+      - **Clue:** Rock Powder (B1), ant poison ingredient.
+      - **Clue:** Salt (B6) second ant poison ingredient.
+      - **Clue:** Multiple claw-like tracks (B2). Clue of potential
+          threat.
+      - **Clue:** Well, leads down to the lower dungeon (B2 to D4).
+      - **Clue:** Armoury, locked (B8). Key found (B2).
+      - **Clue:** Tunnels, may reveal threat if **Ants** are encountered
+          (B17).
+      - **Artefact:** The  **Blessing of Suunos** statue will be
+          discovered.
+      - **Help:** Random encounter table includes **Meryn the**
+          **Pathfinder** , potential ally.
+
+
+      RANDOM ENCOUNTER TABLE
+      d6 Description
+      01 Giant Fire Ants d4, hunting a breach into their lair
+      02 Giant Fire Ants d4, patrolling the area
+      03 Giant Ants d4, foraging for the Ant Queen
+      04 Giant Spiders d4, spinning webs, setting traps
+      05 Ralik, looking for treasure or an opportunity
+      06 Meryn the Hunter, investigating ant tracks
+      If a person has been encountered previously then roll again taking a
+      different result.
+
+  "Upper Dungeon":
+    description: |-
+      UPPER DUNGEON HIGHLIGHTS
+
+      - This level is dark, dry and **light sources are required.**
+      - Constructed dungeon rooms have been expanded by areas
+          **dug out and tunnelled by the ant infestation.**
+      - Ground covered in **loose rock, earth, mud and sand.**
+      - This level offers opportunities for player exploration.
+
+
+      Instructions
+
+      - **Encounter:** Party will now start to encounter **Giant Ants.
+      - Encounter:** May meet and align with **The lana-Ki** (C11).
+      - **Clue:** May discover some items to help them overcome the
+          "nal threat in the level below.
+      - **Clue:** Ant eggs, evidence of volume and nature of the
+          threat if they hatch (C2, C5, C6, C7).
+      - **Secret:** Door leads from room (C12) to secret room (C15).
+      - **Solution:** Dwarven munitions can be found here for
+          additional firepower (C9).
+      - **Solution** : Water combined with salt (B6) and rock powder
+          (B1) can create an ant poison (pour down well or pollute
+          food sources).
+
+      **RANDOM ENCOUNTER TABLE**
+      d6 Description
+      01 Ralik, looking for treasure or an opportunity
+      02 Giant Fire Ants d4, patrolling the area
+      03 Giant Ants d4, foraging for the Ant Queen
+      04 Giant Spiders d4, spinning webs, setting traps
+      05 Thelana-Ki, searching for the Tattooed Man
+      06 Meryn the Hunter, investigating ant tracks
+      If a person has been encountered previously then roll again taking a
+      different result.
+
+
+      TATTOOED MAN
+      The  Story of the Tattooed Man
+
+      - Formerly the legendary elven wanderer (Shotan-Ra) who
+          appeared in and out of elven history and lore.
+      - Shotan-Ra discovered the ri%s between dimensions and the
+          ability to open the portals using a Chaos Stone (his ‘key').
+      - He explored the Shadowlands where time moved differently
+          and decades elapsed each time he travelled.
+      - Captured and imprisoned by the Sentran Empire centuries
+          ago and le% to rot in this prison.
+      - Chaos Stone mutated his form into that of a mindless
+          zombie. The  stone itself was taken by a Giant Ant which
+          mutated its form over decades into the bloated Ant Queen.
+
+  "Lower Dungeon":
+    description: |-
+      LOWER DUNGEON HIGHLIGHTS
+
+      - Level is **dark, dry hot and humid.**
+      - Cave areas have been carved out by an army of Giant Ants
+      - **Fungal plants** grow on the walls.
+      - Ground is littered by **larvae eggs** some close to hatching.
+
+
+      Instructions
+
+      - **Encounter:** Discovery of the unconscious **Jacob** , players
+          may elect to grab Jacob and escape before facing the Ant
+          Queen.
+      - **Encounter:** The  **Ant Queen** will be found here (D5). She
+          will be di#cult to defeat in a straight "ght, **defended by**
+          **her ant army** and with the ability to call upon more aid
+          each turn (see Ant Queen encounter).
+      - **Encounter** : **Larvae Eggs** (D3, D5) some are close to
+          hatching (d6, 1-5 Giant Ant, 6 Fire Ant).
+      - **Clue:** Pool (D4) Could be poisoned to impair the Ant
+          Queen.
+      - **Artefact:** A Chaos Stone (‘The  Key') will be found on the
+          Ant Queen's corpse once she has been destroyed.
+
+      RANDOM ENCOUNTER TABLE
+      d6 Description
+      01 Giant Fire Ants d8, hunting a breach into their lair
+      02 Giant Fire Ants d4, patrolling the area
+      03 Giant Ants d4, foraging for the Ant Queen
+      04 Giant Spiders d4, spinning webs, setting traps
+      05 Thelana-Ki, searching for the Tattooed Man
+      06 Meryn the Hunter, investigating ant tracks
+      If a person has been encountered previously then roll again taking a
+      different result.          
+
+# ------------------------------------------------------------------------------
+#                                L O C A T I O N S
+# ------------------------------------------------------------------------------
 
 locations:
+
+  # ---------- DUSTY ROAD ------------------------------------------------------
+
   "Dusty Road":
     description:
       You party has hitched a lift with the caravaneer Grun and his son
@@ -243,15 +406,17 @@ locations:
       cur_script_state: "introductions"
       items: {}
 
+  # ---------- FARMHOUSE ------------------------------------------------------
+
   "Abandoned Farmhouse":
-    area: "Barus's Farm"
+    area: "Farmhouse"
     description: |-
       - Small wooden Farm House, strong and sturdy construction. Home of Grun the wagon driver's
         friend Barus and his son Jacob. Grun and adventurers decided to overnight at this cottage 
         while on their way to Skenrith Keep.
       - Main door is swinging in the wind. No sign of the occupants. Some sheep
         have escaped the pen situated behind the house.
-      - From here players can move to: farmhouse, barn, storage shed, sheeps pen, well.
+      - From here players can move to: farmhouse, barn, storage shed, sheep pen, well.
       - Something is wrong. Getting dark and the house seems empty.
     image: "images/OldFarmhouse.jpg"
     instructions: |-
@@ -268,7 +433,7 @@ locations:
       "farmhouse": { to: "Farmhouse Lounge" }
       "barn": { to: "Farmhouse Barn" }
       "storage shed": { to: "Farmhouse Storage Shed" }
-      "sheeps pen": { to: "Farmhouse Sheeps Pen" }      
+      "sheep pen": { to: "Farmhouse Sheep Pen" }      
       "well": { to: "Farmhouse Well" }
     topics:
       "Grun":
@@ -308,7 +473,9 @@ locations:
       "lounge" : { to: "Farmhouse Lounge" }
     state:
       hidden:
-        "sp": { "qty": 100 }
+        any:
+          items:
+            "sp": { "qty": 100 }
 
   "Farmhouse Storage Room":
     area: "Farmhouse"
@@ -317,33 +484,35 @@ locations:
           barrels, boxes, containing (foodstuffs and water).
       - From here players can move back to: kitchen"
     instructions: |-
-      - If players search the boxes use "search" action to reveal items there.
+      - If players search the "boxes" to reveal items there.
       - Keep the items SECRET until the players search for them.
     exits:
       "kitchen": { to: "Farmhouse Kitchen" }
     state:
       hidden:
-        "Lantern" : { "qty": 2 }
-        "Oil" : { "qty" : 4 }
-        "Torches" : { "qty" : 4 }
-        "Tinderbox" : {}
+      - description: There are several useful items Barus has stashed away in the boxes.
+        items:
+          "Lantern" : { "qty": 2 }
+          "Oil" : { "qty" : 4 }
+          "Torches" : { "qty" : 4 }
+          "Tinderbox" : {}
 
   "Farmhouse Jacob's Bedroom":
     area: "Farmhouse"
     description: |-
       - Appears to be a child's bedroom with a bed; drawers;
           cupboards.
-      - Wooden carved toy soldiers scattered on the floor.
+      - Wooden "Carved Toy Soldier" qty: 34 scattered on the floor.
       - From here players can move to: lounge.
-    instructions: |-
-      - Under the amongst the toys lies a small knife (d4).
-      - DON'T reveal the knife until players do a search among the toys.
     exits:
       "lounge": { to: "Farmhouse Lounge" }
     state:
-      hidden:
+      items:
         "Carved Toy Soldier": { "qty": 34 }
-        "Small Knife": { damage: "d4" }
+      hidden:
+      - description: Hidden among the toy soliders is a Jacob's small knife.
+        items:
+          "Small Knife": { damage: "d4" }
 
   "Farmhouse Barus's Bedroom":
     area: "Farmhouse"
@@ -359,52 +528,57 @@ locations:
       - DON'T reveal the armor until players do a search of the cupboard.
     state:
       hidden:
-        "Chainmail Armor" : { }
-        "Helmet" : { }
-        "Battle Axe" : { damage: "d8" }
+      - terms: [ "cupboard" ]
+        items:
+          "Chainmail Armor" : { }
+          "Helmet" : { }
+          "Battle Axe" : { damage: "d8" }
     exits:
       "lounge": { to: "Farmhouse Lounge" }
 
   "Farmhouse Barn":
-    area: "Barus's Farm"  
+    area: "Farmhouse"  
     description: |-
       - Large wooden barn with a strong smell of horse and hay.
       - Inside there are a number of animal pens (dra# horse in the
           largest) and a working area (small woodworking tools);
           barrels (horse feed) and a wooden crate (contains a pick,
           hammer knife, nails, horseshoes, first aid kit).
-      - From here players can move to: farmhouse, storage shed, sheeps pen, well.
+      - From here players can move to: farmhouse, storage shed, sheep pen, well.
+    image: "images/Barn.jpg"
     exits:
       "farmhouse": { to: "Abandoned Farmhouse" }
       "storage shed": { to: "Farmhouse Storage Shed" }
-      "sheeps pen": { to: "Farmhouse Sheeps Pen" }      
+      "sheep pen": { to: "Farmhouse Sheep Pen" }      
       "well": { to: "Farmhouse Well" }      
 
   "Farmhouse Storage Shed":
-    area: "Barus's Farm"  
+    area: "Farmhouse" 
     description: |-
       - Small wooden privy, contains a bucket. The storage area
           contains cut pieces of wood, long handled axe (d6).
-      - From here players can move to: farmhouse, barn, sheeps pen, well.
+      - From here players can move to: farmhouse, barn, sheep pen, well.
     exits:
       "farmhouse": { to: "Abandoned Farmhouse" }
       "barn": { to: "Farmhouse Barn" }
-      "sheeps pen": { to: "Farmhouse Sheeps Pen" }      
+      "sheep pen": { to: "Farmhouse Sheep Pen" }      
       "well": { to: "Farmhouse Well" }      
 
   "Farmhouse Well":
-    area: "Barus's Farm"  
+    area: "Farmhouse"
     description: |-
       - Narrow stone well.
-      - From here players can move to: farmhouse, barn, storage shed, sheeps pen.
+      - Old outhouse.
+      - From here players can move to: farmhouse, barn, storage shed, sheep pen.
+    image: "images/WellAndOuthouse.jpg"      
     exits:
       "farmhouse": { to: "Abandoned Farmhouse" }
       "barn": { to: "Farmhouse Barn" }
       "storage shed": { to: "Farmhouse Storage Shed" }
-      "sheeps pen": { to: "Farmhouse Sheeps Pen" }      
+      "sheep pen": { to: "Farmhouse Sheep Pen" }      
 
   "Farmhouse Sheep Pen":
-    area: "Barus's Farm"  
+    area: "Farmhouse"
     description: |-
       - Flock of sheep are agitated and roaming outside the pen.
       - An long abandoned Moat House can be seen in the
@@ -416,766 +590,625 @@ locations:
       - Clue: If players walking perimeter (walk around) reveals a dead sheep lodged in a
           damaged fence the fence (lemon, cheesy smell ant
           pheromone).
+    image: "images/SheepPen.jpg"
     exits:
       "farmhouse": { to: "Abandoned Farmhouse" }
       "barn": { to: "Farmhouse Barn" }
       "storage shed": { to: "Farmhouse Storage Shed" }
-      "well": { to: "Farmhouse Well" }      
-
-everything_else: |-
-    **FARM HOUSE AREA**
-
-    **Farm House**
-
-    - Small wooden Farm House, strong and sturdy construction.
-    - The  place is quiet, no sign of the occupants. Some sheep
-        have escaped the pen situated behind the house.
-
-  
-    #### FARM HOUSE
-
-
-    FARM HOUSE HIGHLIGHTS
-    Read the following description to the players and ask them
-    what they would like to do next.
-
-
- 
-
-
-    The  following information is provided to help the referee set
-    the scene and highlights clues that can be revealed to the
-    players as they search the property.
-
-    **- The me:** Farm House is quiet and empty.
-    **- Hook:** Family is missing.
-    **- Investigate:** Search the area.
-    **- Clue:** Occupants ( **Barus and Jacob** ) are missing.
-    **- Clue:** Food cold, occupants le% quickly.
-    **- Clue:** Battle-Axe missing from the lounge, danger?
-    **- Clue:** Sheep agitated, some escaped, tracks leading north.
-    **- Next Step:** Follow the tracks north to the Moat House.
-
-
-    Proceed to the Moat House location (pg. 8).
-    THE FARM HOUSE
-
-
-    statue about 10% away and a small gem built into the stone
-    with a faint magic aura (See Blessing of Suunos artefact pg.
-    14).
-
-
-    B3: Stables
-
-    - The  stable doors are broken and swing with the breeze.
-        Inside are some old "lthy horse stalls and a working area
-        with some rotten barrels and a large chest.
-    - Searching the area reveals the rotten remain of old horse
-        feed and various old tools (brushes, rake, shovel, wheel-
-        barrow, pick-axe, buckets, hand-axe, all in poor condition)
-        scattered about.
-    - A large wooden box is closed but not locked (contains; pick,
-        hammer, knife, nails, horseshoes, "rst aid kit all average
-        quality).
-
-
-    B4: Kitchen
-
-    - The  outer walls have collapsed and the area is covered in
-        rock and rubble making the footing unsteady. A partially
-        collapsed "replace is located on the north wall.
-    - Searching the place reveals broken cooking utensils and
-        items (broken copper cooking plates, smashed plates, an iron
-        poker, old wood and kindling).
-    - Investigating the outer wall reveals a gap big enough to
-        squeeze outside.
-
-    **MOAT HOUSE**
-
-    **B1: Gate & Drawbridge**
-
-    - A lowered wooden drawbridge crosses a dried moat, the
-        main double doors are rotten and slowly swing in and out.
-    **- Encounter:** An injured man **Barus** (current health 2,
-        impaired) lies wounded and unconscious (he can reveal they
-        followed the tracks and were attacked and he recalls seeing
-        Jacob dragged down the moat before he was knocked out).
-    - The  moat is a dried riverbed covered in dust and rubble.
-        The  ground is covered in large deposits of a white powdery
-        substance (Rock Powder, no odour but irritates the skin).
-        Looking in the moat reveals two small tunnels leading
-        underneath the moat (Tunnels B17 lead to (C4/5).
-
-    **B2: Courtyard**
-
-    - A large courtyard area covered in rubble, rock, dust and
-        debris. A dead carcass lies next to the well in the centre of
-        the courtyard beyond which stands a stone statue of a man.
-        Steps situated to the NE, SW & SW lead to the Towers
-        (B16).
-    - The  well contains a broken bucket and frayed rope, is 50%
-        deep and leads to (D4). The re is a small pool of water below.
-    **- Artefact:** The  weathered stone statue depicts a human man
-        holding a staff but the staff head is missing. A bronze key
-        hangs around his neck (opens armoury B8). Clearing the
-        debris near the statue reveals a line pattern circling the
-
-
-    MOAT HOUSE HIGHLIGHTS
-    The me
-
-    **- Moat House** is a former residence of a Sentran noble,
-        **abandoned for centuries** and is a **ruined, decaying**
-        **structure.** Buildings have partially collapsed.
-    **- Surrounded** by the growing creep of the **wilderness**.
-        Players circling the vegetation outside may encounter a
-        **Vine Choker** monster.
-    - The  **river bed has dried up**, small crawl spaces have been
-        dug from the moat bed underneath the Moat House.
-    - Area is quiet, abandoned, nothing of value.
-    - Loose debris, rocks and stones cover the floor.
-
-
-    Instructions
-
-    **- Atmosphere:** Build suspense as the players explore and
-        provide hints or evidence of potential threats.
-    **- Clue:Barus** reveals **Jacob** was dragged through tunnels
-        (B1).
-    **- Clue:** Rock Powder (B1), ant poison ingredient.
-    **- Clue:** Salt (B6) second ant poison ingredient.
-    **- Clue:** Multiple claw-like tracks (B2). Clue of potential
-        threat.
-    **- Clue:** Well, leads down to the lower dungeon (B2 to D4).
-    **- Clue:** Armoury, locked (B8). Key found (B2).
-    **- Clue:** Tunnels, may reveal threat if **Ants** are encountered
-        (B17).
-    **- Artefact:** The  **Blessing of Suunos** statue will be
-        discovered.
-    **- Help:** Random encounter table includes **Meryn the**
-        **Pathfinder** , potential ally.
-
-
-    BARUS (NPC)
-
-
-    GIANT ANTS 25%
-
-
-    GIANT ANTS 25%
-
-
-    RANDOM ENCOUNTER TABLE
-    d6 Description
-    01 Giant Fire Ants d4, hunting a breach into their lair
-    02 Giant Fire Ants d4, patrolling the area
-    03 Giant Ants d4, foraging for the Ant Queen
-    04 Giant Spiders d4, spinning webs, setting traps
-    05 Ralik, looking for treasure or an opportunity
-    06 Meryn the Hunter, investigating ant tracks
-    If a person has been encountered previously then roll again taking a
-    different result.
-
-
-
-    LAIR OF THE MUTANT | MOAT HOUSE
-
-    **B5: Grand Hall**
-
-    - A large hall that has partially collapsed and contains a
-        variety of broken furniture (several tables, two overturned
-        surrounded by broken chairs) rubble, debris and the remains
-        of old torn tapestries (depict a journey and battle).
-    - An overturned table hides a small passageway (an
-        unarmoured person could squeeze through) which leads to
-        (C2).
-    **- Encounter** : The  dark corners of the room contain thick
-        cobwebs, a single **Giant Spider** lurks in the ra%ers waiting
-        to pounce.
-
-    **B6: Storage** (Door locked target 10 or iron key)
-
-    - A dirty, dusty room with faint footprints leading downstairs
-        into darkness (leads to C1). The  room contains several
-        sealed and open barrels and crates stacked along the east
-        wall.
-    - Examining the open barrels reveals tainted foul-smelling
-        water. The  sealed barrels (strength 10 check to open) contain;
-        rancid spoiled grain and salt (ant-poison component).
-    - The  wooden crates contain old rotten equipment but the
-        following can be salvaged; torches x6, tinderbox x2, candles
-        x10, rope 50 feet.
-
-    **B7: Guest Rooms**
-
-    - A set of ransacked guest quarters each containing bare
-        furniture (bed, cupboard, drawers, cabinets).
-    - A brief searching each room reveals old clothes and rags
-        and some small personal items (mirror, comb).
-    - A more detailed search (search 15 check) may reveal one
-        random item of loot (one check per room - pg. 15).
-
-    **B8: Armoury** (sturdy door target 15 or bronze key)
-
-    - This dark dusty room appears to have not been disturbed
-        for some time. The  room contains an assortment of
-        weapons stored on racks on the wall and two large sealed
-        wooden crates. Everything is covered in dust.
-    - The  weapon rack contains; (5x spears; 5x shields; 1x
-        chainmail armour; 2x leather armour, all dulled but usable).
-    - The  "rst wooden create contains (5x longswords, 5x hand-
-        axes, 5x shortswords, 5x daggers and the second contains; 5x
-        crossbows, 200x bolts in batches of 20).
-
-    **B9: Lounge** (door broken and hanging off hinges)
-
-    - Room contains various furniture (chairs, small table)and a
-        large cupboard. The  inside is dirty and dusty but there is
-        evidence of footprints and glove prints.
-    - The  large cupboard contains some old tattered cloaks.
-    - A more detailed search (search 15 check) may reveal one
-        random item of loot (one check per room - pg. 15).
-
-    **B10: Bedrooms**
-
-    - Each room contains a bed (smelly bedding); furniture
-        (cupboards, drawers, desk & chair). All the rooms are dirty,
-        dusty and covered in cobwebs.
-    - Searching the furniture reveals; cupboards (tattered clothes);
-        drawers (tattered clothes); desk & chair (drawers, quills,
-        dried ink pots, old papers).
-    **- Encounter:** A group of **d4 Giant Spiders** lurk in the rafters
-        above waiting to pounce on any unsuspecting victims.
-
-
-    B11: Storage Area
-
-    - The  room is a storage area with wall-to-wall wooden
-        cupboards which are damaged and splintered.
-    - Searching the cupboards reveals (tattered clothes).
-    - Searching the tattered clothes (search 10 check) may reveal
-        an old (treasure map) scrolltucked in a cloak's inner pocket.
-    - Some wood is neatly stacked against the wall. Examination
-        reveals 2x units of **Feywood** and 2x units of **Iron Wood**.
-
-
-    B12: Library
-
-    - A ransacked room containing desk and chair (knocked
-        over); bookshelves (tattered books, loose pages); collapsed
-        outer wall (gap, vegetation has grown inside) and the &oor is
-        covered in rocks, stones and debris.
-    - Examining the books reveals stories, poetry and songs (
-        books can be recovered undamaged and valued at 100 sp
-        each). The y are written in the Sentran language.
-
-
-    B13: Servants Quarters
-
-    - Each individual room contains a bed (covered in smelly
-        bedding) and furniture (cupboards, drawers, desk & chair).
-        The  rooms are dirty, dusty and cobwebbed.
-    - Searching the furniture reveals (tattered clothes).
-
-
-    B14: Guards Quarters (door closed, not locked)
-
-    - The  rooms are dirty and dusty and contain bare furnishing
-        in poor condition. Cobwebs hang from the ceilings.
-    - Searching the room reveals doesn't reveal much. One room
-        has a large chest with (Leather Armour, Shortsword (Gladius
-        style); Metal Helmet; Faded Red Cloak and Hand-Axe).
-
-
-    B15: Baths
-
-    - Bathroom area containing free-standing baths (dregs of
-        green water, algae); cupboards and a "replace in the main
-        area.
-    - Searching the area reveals; cupboards (old blankets and
-        metallic jugs) and "replace (old kindling, metallic pans for
-        heating water; iron poker).
-
-
-    B16: Towers
-
-    - Each tower is rubble strewn, damaged, collapsed.
-    - A walkway leads around old the Moat House and is
-        accessible by stairs in (B2) (NE, SE, SW). Torch-holder
-        brackets are "xed to the wall.
-    - Each tower contains a sealed wooden crate (old lanterns, oils
-        x10, tinderbox, hunting horn, crossbows and 100 bolts).
-
-
-    B17: Small Tunnels
-
-    - The  dried moat contains various holes and piles of earth.
-    - An unarmoured person with a small weapon could crawl
-        through the tunnels which lead to the upper dungeon level.
-    **- Encounter:** A small group of **d4 Giant Ants** may be
-        encountered coming in or out of the tunnel 25% of the time.
-
-
-
-    LAIR OF THE MUTANT | UPPER DUNGEON
-
-
-    TATTOOED MAN
-
-
-    THELANA-KI (NPC)
-
-
-    GIANT FIRE ANTS
-
-
-    GIANT ANTS
-
-
-    GIANT ANTS
-
-
-    C
-
-
-    C9 C
-
-
-    C
-
-
-    C
-
-
-    C
-
-
-    C4 C
-
-
-    C
-
-
-    C
-
-
-    C
-    C
-
-
-    C12 C
-
-
-    C
-
-    #### UPPER DUNGEON
-
-
-    UPPER DUNGEON HIGHLIGHTS
-    The me
-
-    - This level is dark, dry and **light sources are required.**
-    - Constructed dungeon rooms have been expanded by areas
-        **dug out and tunnelled by the ant infestation.**
-    - Ground covered in **loose rock, earth, mud and sand.**
-    - This level offers opportunities for player exploration.
-
-
-    Instructions
-
-    **- Encounter:** Party will now start to encounter **Giant Ants.
-    - Encounter:** May meet and align with **The lana-Ki** (C11).
-    **- Clue:** May discover some items to help them overcome the
-        "nal threat in the level below.
-    **- Clue:** Ant eggs, evidence of volume and nature of the
-        threat if they hatch (C2, C5, C6, C7).
-    **- Secret:** Door leads from room (C12) to secret room (C15).
-    **- Solution:** Dwarven munitions can be found here for
-        additional firepower (C9).
-    **- Solution** : Water combined with salt (B6) and rock powder
-        (B1) can create an ant poison (pour down well or pollute
-        food sources).
-
-    **RANDOM ENCOUNTER TABLE**
-    d6 Description
-    01 Ralik, looking for treasure or an opportunity
-    02 Giant Fire Ants d4, patrolling the area
-    03 Giant Ants d4, foraging for the Ant Queen
-    04 Giant Spiders d4, spinning webs, setting traps
-    05 Thelana-Ki, searching for the Tattooed Man
-    06 Meryn the Hunter, investigating ant tracks
-    If a person has been encountered previously then roll again taking a
-    different result.
-
-
-    TATTOOED MAN
-    The  Story of the Tattooed Man
-
-    - Formerly the legendary elven wanderer (Shotan-Ra) who
-        appeared in and out of elven history and lore.
-    - Shotan-Ra discovered the ri%s between dimensions and the
-        ability to open the portals using a Chaos Stone (his ‘key').
-    - He explored the Shadowlands where time moved differently
-        and decades elapsed each time he travelled.
-    - Captured and imprisoned by the Sentran Empire centuries
-        ago and le% to rot in this prison.
-    - Chaos Stone mutated his form into that of a mindless
-        zombie. The  stone itself was taken by a Giant Ant which
-        mutated its form over decades into the bloated Ant Queen.
-
-
-    UPPER DUNGEON
-    C1: Dungeon Stairs
-
-    - Narrow stairs (single "le, lead into darkness) leads to (D8).
-    **C2: Ant Chamber**
-    - Rubble strewn &oor with fungal plants growing on the
-        south wall. The re is a small crawl space (unarmoured person
-        with a small weapon would "t) in the west and north walls
-        leading to (B17).
-    - Examining the room reveals evidence of digging; some
-        debris which contains a mixture of earth, rock and bones.
-    **- Hazard:** A narrow passage leads to (C3), &oor is unstable
-        (agility 10 to avoid fall or suffer d4 damage) and fall to (D6).
-    **- d6 Greenfoot Fungus** plant grows, this can be used as a
-        source of nourishment for Ants.
-
-
-
-    LAIR OF THE MUTANT | UPPER DUNGEON
-
-    **C3: Ant Chamber**
-
-    - The  &oor is covered in earth and debris (contains earth, rock
-        and bones) a clicking and scratching noise can be heard.
-    - The re is a small crawl space (unarmoured person with a
-        small weapon would "t) in the west and north walls leading
-        to (B17).
-    **- Hazard:** A narrow passage leads to (C3), &oor is unstable
-        (agility 10 to avoid fall or suffer d4 damage) and falls to (D6).
-    **- d6 Greenfoot Fungus** plant grows, this can be used as a
-        source of nourishment for Giant Ants.
-    **- Encounter: d4 Giant Ants** are digging a tunnel in the north
-        wall. Morale check to see if they engage or &ee.
-
-    **C4: Small Chamber**
-
-    - The  air is dry and dusty and the &oor is covered in earth,
-        stones and debris.
-
-    **C5: Egg Chamber**
-
-    - The  air is dry and dusty and the &oor is covered in many
-        large oval-shaped larvae eggs. The re is a small crawl space
-        (unarmoured person with a small weapon would "t) in west
-        and north walls leading to (B17).
-    **- d10+10 Larvae Eggs** 2-3 feet in size, le% here for gestation.
-    **- Encounter: d4 Giant Ants** carrying ant eggs from (B6 &
-        B7). Make a morale check to see if they engage or &ee.
-
-    **C6: Guarded Egg Chamber**
-
-    - The  air is dry and dusty, the &oor is covered in loose earth
-        with many large oval-shaped eggs. A clicking and scratching
-        noise can be heard.
-    **- d10+10 Larvae Eggs** 2-3 feet in size, le% here for gestation.
-    **- Encounter: d4 Giant Fire Ants** are blocking the exit to
-        (C7). If disturbed they will move towards the threat.
-
-    **C7: Chamber with Holes**
-
-    - The  &oor here is dirty; several small holes have been dug
-        into the ground and surrounded by small piles of earth; a
-        passageway leads down into darkness (D1).
-    - The  holes are too narrow for people to "t. Searching these
-        (search 15 check) once each to discover d4 fragments of
-        silver ore (value 2d20 each).
-
-    **C8: Small Room**
-
-    - The  &oor is covered with stone mosaic tiles, doors lead west,
-        south and east. The re is a burning smell within the room.
-    - Examination of the tiles shows the ground is covered with
-        the charred remains of some boney creature (exploded "re
-        ant remains).
-
-    **C9: Vault** (Door locked target 15, iron key)
-
-    - Room contains two large wooden crates and weapons racks
-        (holds 10x spears, 5x wooden shields, all average condition).
-    - Wooden crate 1 is sealed but can be broken open and
-        contains (10x longswords, 5x hand-axes, 10x shortswords, 5x
-        daggers (1x silver). Weapons are thick-bladed in old empire
-        style. Wooden crate 2 is also sealed but can be broken open
-        and contains (10x crossbows, 200 crossbow bolts).
-    **- Secret:** The  SW wall contains a **secret panel** (search 10
-        check to find). It is evidenced by a gap in the wall which can
-        be pushed inwards to open. This contains two small chests.
-    - The  "rst chest is not locked and contains a dwarven
-        inscription (Languages 10 check, words are caution and "re).
-        The  contents are carefully stored and padded with cloth (2x
-        5 dwarven incendiary bolts; 2x 5 dwarven shrapnel bolts).
-        The  second chest is locked (target 15, key lost) and contains
-        (2x pouches of 100 silver coins and 1 pouch of 50 gold coins.
-        All coins are aged and in the style of the old empire).
-
-
-    C10: Prayer Room (Door closed, inner door locked target 10)
-
-    - The  room is dusty and covered in cobwebs, four statues
-        stand silently in alcoves leading towards a stone altar near
-        the west wall.
-    - The  four statues represent the four Gods as follows (tall
-        human, fatherly = Suunos; tall human, motherly = Reeva;
-        human male skeleton face = Kadmos; human, female veiled =
-        Morraine).
-    - The  stone altar is adorned with candles and a goblet. Old
-        worn prayer mats lay in front. The re is a hidden
-        compartment underneath the heavy lid that slides off
-        (contains 3x incense powders and the golden-sun staff head
-        required to complete the statue puzzle) (B2).
-    **C11: Sparring Room**
-    - The  &oor is comprised of mosaic tiles of different shades;
-        some weapons hang from the wall and there is a strange
-        burning smell. A cloaked "gure is huddled over another
-        body lying on the ground at the far end of the room.
-    - Weapon Racks (contains 1x Spear, 1x short-sword, 1x
-        Longsword, 1x Shortbow, 1x 20 arrows and 1x Mace. All
-        weapons are poor quality, reduce damage level by one die).
-    **- Encounter: The lanna-Ki** is huddled over the body of her
-        fallen colleague (Kiatan-Ro). She is wounded from the "ght
-        with some Giant Fire Ants.
-    **C12: Pool Room**
-    - The re is a dry pool area in the centre of the room, the &oor
-        is covered in dust and loose rock.
-    - Examining the room reveals some splattered dried blood.
-        Magic-sensitive heroes may feel a faint tingle.
-    **- Secret:** The re is a **secret door** in the east wall (search 15
-        check to discover its an illusion). A dispel magic spell (or
-        physical interaction) will reveal a small passageway to (C15).
-    **C13: Cells** (Rusty key, target 15)
-    - The  room contains a number of cells with rusted iron bars.
-    - The  North wall has collapsed leading to a cavernous
-        chamber beyond. A small table and two stools lie outside
-        the cells in front of some hooks on the wall from which
-        hang some chains and manacles (rusty key hangs here).
-    - The  "rst four cells contain a bed, bucket and some rags.
-    **- Encounter:** Can hear a faint murmuring from the furthest
-        cell which contains the zombi"ed mindless form of the
-        **Tattooed Man** covered in centuries of dirt and grime.
-    **C14: War Room** (locked target 10 to open)
-    **- Trap:** A tripwire activates a bell behind the door as
-        someone enters (next random encounter check at
-        disadvantage). Inside is a large table and chairs. Small
-        tunnels lie to the west (B17) and south walls (to C4 & C5)
-    - The  table contains a dirty, torn, map (ancient map of the
-        area). Some notes (Languages 10 to decipher) describe
-        logistics for an expedition to a wilderness site.
-    **C15: Hidden Study**
-    - This hidden room contains a study, desk and chair;
-        bookshelves (decaying books, parchments and scrolls)
-    - Searching the bookshelves reveals books on various topics
-        ("ction, history, lore, poems, geography) in poor condition
-        (d20 books salvageable, worth 100 sp to collectors). Language
-        is old Sentra (Languages 10 to recognise) 2x Scrolls sit
-        amongst the documents (Arcane Magic - Illusion and Chaos
-        Magic - Discord)
-    - Desk contains old parchment, papers, candles, tinderbox,
-        quill and ink. Desk drawers contains (alchemists kit,
-        components sealed and well-preserved and 1 large vial of Acid
-        d10 damage, 1 use).
-
-
-
-    LAIR OF THE MUTANT | LOWER DUNGEON
-
-
-    GIANT FIRE ANTS
-
-
-    JACOB (NPC)
-
-
-    D
-
-
-    D
-
-
-    D
-
-
-    D
-
-
-    D
-
-
-    D
-
-    **LOWER DUNGEON**
-
-    **D1: Steps**
-
-    - Wide steps leading into darkness to (C7).
-
-    **D2: Ant Chamber**
-
-    - The re are several small holes in the ground, surrounded by
-        earth, stone. The re is a rising feeling of heat and humidity.
-    - An ascending passageway leads from (D2) to (C7).
-    - Search the **piles of earth** (search 15 check) reveals d
-        fragments of silver ore (value 2d20 each).
-
-    **D3: Ant Egg Chamber**
-
-    - This wide cavernous room is covered in fungal plants. The 
-        room feels hot, humid and oppressive. Many **large larvae**
-        **eggs** sit pulsing and gestating (2d20+20 ant-eggs, 3-4 feet in
-        size and close to hatching).
-    **- Encounter: Jacob** lies unconscious.
-    **- Encounter: d8 Giant Fire Ants** guard Jacob and patrol this
-        area in groups of 2-3.
-    **- d6 Greenfoot Fungus** plants grow on the south wall.
-
-    **D4: Well Chamber**
-
-    - There is some light in this cavernous area from the well
-        above (B2). A stale pool of water now receding sits on a
-        shallow rock bed.
-    - Examining the pool area reveals murky stale water and an
-        old bucket. A handful of copper coins (d20) can be found
-        scattered around.
-    - This is the last remaining water source for the Ant Queen.
-
-    #### LOWER DUNGEON
-
-
-    LOWER DUNGEON HIGHLIGHTS
-    The me
-
-    - Level is **dark, dry hot and humid.**
-    - Cave areas have been carved out by an army of Giant Ants
-    **- Fungal plants** grow on the walls.
-    - Ground is littered by **larvae eggs** some close to hatching.
-
-
-    Instructions
-
-    **- Encounter:** Discovery of the unconscious **Jacob** , players
-        may elect to grab Jacob and escape before facing the Ant
-        Queen.
-    **- Encounter:** The  **Ant Queen** will be found here (D5). She
-        will be di#cult to defeat in a straight "ght, **defended by**
-        **her ant army** and with the ability to call upon more aid
-        each turn (see Ant Queen encounter).
-    **- Encounter** : **Larvae Eggs** (D3, D5) some are close to
-        hatching (d6, 1-5 Giant Ant, 6 Fire Ant).
-    **- Clue:** Pool (D4) Could be poisoned to impair the Ant
-        Queen.
-    **- Artefact:** A Chaos Stone (‘The  Key') will be found on the
-        Ant Queen's corpse once she has been destroyed.
-
-
-    D5: Ant Queen Lair
-
-    - A large cavernous area, the floor is swamped with debris
-        collated into small mounds. More **larvae eggs** (2d20+
-        ant-eggs, 3-4 feet in size and close to hatching) circle the
-        mounds and are pulsing. A deep clicking sound can be
-        heard from the SE corner.
-    **- Encounter: Ant Queen** , **d6 Giant Ants & d6 Fire Ants**. The 
-        Ant Queen sits upon a large mound of brush, debris and
-        bones whilst being attended to by the Giant Ants and
-        guarded by the Giant Fire Ants. If killed, the Ant Queens
-        form dissolves to reveal a swallowed Chaos Stone **artefact.**
-    - Searching the Ant Queens lair (search 15 check reveals d
-        items of jewellery valued at 2d20 sp each).
-
-
-    D6: Small Chamber
-
-    - A small excavated area with loose earth falling from the
-        ceiling.
-    **- Hazard:** The  ceiling is unsafe and people may fall down
-        from the rooms above (C2 to C3).
-
-
-    ANT QUEEN
-    GIANT ANTS
-    GIANT FIRE ANTS
-
-
-    RANDOM ENCOUNTER TABLE
-    d6 Description
-    01 Giant Fire Ants d8, hunting a breach into their lair
-    02 Giant Fire Ants d4, patrolling the area
-    03 Giant Ants d4, foraging for the Ant Queen
-    04 Giant Spiders d4, spinning webs, setting traps
-    05 Thelana-Ki, searching for the Tattooed Man
-    06 Meryn the Hunter, investigating ant tracks
-    If a person has been encountered previously then roll again taking a
-    different result.
-
-
-
-    LAIR OF THE MUTANT | LOWER DUNGEON
-
-
-    ANT QUEEN TREASURE TABLE
-    d20 Item
-    01 Polished bone (no value)
-    02 Animal skins (bloodied, torn)
-    03 Metal filings (10 cp)
-    04 A broken stone statue (10 cp)
-    05 A small broken mirror (no value)
-    06 Vegetable roots (d4 rations)
-    07 A dull broken bronze medal (10 sp)
-    08 A handful of copper coins (d20 cp)
-    09 Broken short-sword (gladius style) (10 sp)
-    10 Earring (False Gold, 10 sp)
-    11 Circlet (Impure Gold, 10 sp)
-    12 Small silver ring (20 sp)
-    13 Gold signet ring (10 gp)
-    14 A handful of gold coins (d10 gp)
-    15 A damaged pearl necklace (50 sp)
-    16 Small toy soldiers made of metal (50 sp)
-    17 Torn Sentran book “The Musings of Aurlax” (50 sp)
-    18 Copper bar ingots (100 sp)
-    19 Metal Cross with tiny gem fragment (100 sp)
-    20 12” Silver carving of a soldier (150 sp)
-
-    **ANT QUEEN ENCOUNTER**
-
-    - The  Ant Queen has been mutated by the chaos stone and
-        is bloated and enlarged.
-    - She is too large to move beyond these chambers and relies
-        on the attendance of her workforce.
-    - The  Ant Queen should be di#cult to defeat in a straight
-        "ght, defended by her army of Giant Ants and with the
-        ability to call upon more of them each turn (see below).
-    - Each time the Ant Queen is injured it releases a black bile
-        (close range, agility 10 check or suffer d4 damage).
-    - If killed, the Ant Queen form will dissolve into a sticky
-        slimy pool of a thick oily substance (acidic Fortitude 10
-        check or suffer d6 damage). If methods are used to search
-        this then a **Chaos Stone** artefactwill be found, the cause
-        of her mutation.
-
-    **ANT QUEEN SUPPORT**
-
-    - The  Ant Queen can call upon aid from her army of Ants
-        each turn. The  level of support will depend upon the
-        players actions to this point and how many Giant Ants
-        have been eliminated in the process.
-    **- Each turn roll a d6,** on a result of a 1-2 a new Giant Ant
-        or Fire Ant answers the Ant Queen's summons. If the
-        players have eliminated many Ant's/destroyed ant eggs
-        then reduce this to change 1 on a d6.
-    - Limit the number of additional Ants that appear to 10.
-
-
+      "well": { to: "Farmhouse Well" }
+      "moathouse": { to: "Moathouse Gate" }
+
+  # ---------- MOATHOUSE ------------------------------------------------------
+
+  "Moathouse Gate":
+    area: "Moathouse"
+    description: |-
+      - A lowered wooden drawbridge crosses a dried moat, the
+          main double doors are rotten and slowly swing in and out.
+    instructions: |-          
+      - **Encounter:** An injured man **Barus** (current health 2,
+          impaired) lies wounded and unconscious (he can reveal they
+          followed the tracks and were attacked and he recalls seeing
+          Jacob dragged down the moat before he was knocked out).
+      - The  moat is a dried riverbed covered in dust and rubble.
+          The  ground is covered in large deposits of a white powdery
+          substance (Rock Powder, no odour but irritates the skin).
+          Looking in the moat reveals two small tunnels leading
+          underneath the moat (Tunnels B17 lead to (C4/5).
+    exits:
+      "gate": { to: "Moathouse Courtyard" }
+      "farmhouse": { to: "Farmhouse Sheep Pen" }
+
+  "Moathouse Courtyard": 
+    area: "Moathouse"
+    decription: |-
+      - A large courtyard area covered in rubble, rock, dust and
+          debris. A dead carcass lies next to the well in the centre of
+          the courtyard beyond which stands a stone statue of a man.
+          Steps situated to the NE, SW & SW lead to the Towers
+          (B16).
+    instructions: |-          
+      - The  well contains a broken bucket and frayed rope, is 50%
+          deep and leads to (D4). The re is a small pool of water below.
+      - **Artefact:** The  weathered stone statue depicts a human man
+          holding a staff but the staff head is missing. A bronze key
+          hangs around his neck (opens armoury B8). Clearing the
+          debris near the statue reveals a line pattern circling the
+          statue about 10% away and a small gem built into the stone
+          with a faint magic aura (See Blessing of Suunos artefact pg.
+          14).
+    exits:
+      "W_door_1": { to: "Moathouse Stables" }
+      "W_door_2": { to: "Moathouse Kitchen" }
+      "W_door_3": { to: "Moathouse Grand Hall" }
+      "N_door_1": { to: "Moathouse Storage" }
+      "N_door_2": { to: "Moathouse Guest Rooms" }
+      "N_door_3": { to: "Moathouse Armory" }
+      "N_door_4": { to: "Moathouse Lounge" }
+      "E_door_1": { to: "Moathouse Bedrooms" }
+      "E_door_2": { to: "Moathouse Storage" }
+      "E_door_3": { to: "Moathouse Library" }
+      "NW_tower": { to: "Moathouse Northwest Tower" }
+      "NE_tower": { to: "Moathouse Northeast Tower" }
+      "SW_tower": { to: "Moathouse Southwest Tower" }
+      "SE_tower": { to: "Moathouse Southeast Tower" }
+      "gate": { to: "Moathouse Gate" }
+
+  "Moathouse Stables":
+    area: "Moathouse"
+    description: |-
+      - The  stable doors are broken and swing with the breeze.
+          Inside are some old "lthy horse stalls and a working area
+          with some rotten barrels and a large chest.
+    instructions: |-          
+      - Searching the area reveals the rotten remain of old horse
+          feed and various old tools (brushes, rake, shovel, wheel-
+          barrow, pick-axe, buckets, hand-axe, all in poor condition)
+          scattered about.
+      - A large wooden box is closed but not locked (contains; pick,
+          hammer, knife, nails, horseshoes, first aid kit all average
+          quality).
+    exits:
+      "courtyard": { to: "Moathouse Courtyard" }
+
+  "Moathouse Kitchen":
+    area: "Moathouse"
+    description: |-
+      - The  outer walls have collapsed and the area is covered in
+          rock and rubble making the footing unsteady. A partially
+          collapsed "replace is located on the north wall.
+    instructions: |-
+      - Searching the place reveals broken cooking utensils and
+          items (broken copper cooking plates, smashed plates, an iron
+          poker, old wood and kindling).
+      - Investigating the outer wall reveals a gap big enough to
+          squeeze outside.
+    exits:
+      "courtyard": { to: "Moathouse Courtyard" }
+
+  "Moathouse Grand Hall":
+    area: "Moathouse"
+    description: |-
+      - A large hall that has partially collapsed and contains a
+          variety of broken furniture (several tables, two overturned
+          surrounded by broken chairs) rubble, debris and the remains
+          of old torn tapestries (depict a journey and battle).
+    instructions: |-          
+      - An overturned table hides a small passageway (an
+          unarmoured person could squeeze through) which leads to
+          (C2).
+      - **Encounter** : The  dark corners of the room contain thick
+          cobwebs, a single **Giant Spider** lurks in the ra%ers waiting
+          to pounce.
+    exits:
+      "courtyard": { to: "Moathouse Courtyard" }
+
+  "Moathouse Storage":
+    area: "Moathouse"
+    size: "small"
+    description: |-
+      - A dirty, dusty room with faint footprints leading downstairs
+          into darkness (leads to C1). The  room contains several
+          sealed and open barrels and crates stacked along the east
+          wall.
+    instructions: |-
+      ** (Door locked target 10 or iron key)
+      - Examining the open barrels reveals tainted foul-smelling
+          water. The  sealed barrels (strength 10 check to open) contain;
+          rancid spoiled grain and salt (ant-poison component).
+      - The  wooden crates contain old rotten equipment but if the 
+        players search they can find some equipment to salvage.
+    exits:
+      "courtyard": { to: "Moathouse Courtyard" }
+    state:
+      hidden:
+        items:
+          "Torch": { qty: 6 }
+          "Tinderbox": { qty: 2 }
+          "Candles": { qty: 10 }
+
+
+  "Moathouse Guest Rooms":
+    area: "Moathouse"
+    description: |-
+      - A set of ransacked guest quarters each containing bare
+          furniture (bed, cupboard, drawers, cabinets).
+    instructions: |-
+      - A brief searching each room reveals old clothes and rags
+          and some small personal items (mirror, comb).
+      - A more detailed search (search 15 check) may reveal one
+          random item of loot (one check per room - pg. 15).
+    exits:
+      "courtyard": { to: "Moathouse Courtyard" }
+
+  "Moathouse Armory":
+    area: "Moathouse"
+    description: |-
+      - **Armoury** (sturdy door target 15 or bronze key)
+      - This dark dusty room appears to have not been disturbed
+          for some time. The  room contains an assortment of
+          weapons stored on racks on the wall and two large sealed
+          wooden crates. Everything is covered in dust.
+    instructions: |-
+      - The  weapon rack contains; (5x spears; 5x shields; 1x
+          chainmail armour; 2x leather armour, all dulled but usable).
+      - The  "rst wooden create contains (5x longswords, 5x hand-
+          axes, 5x shortswords, 5x daggers and the second contains; 5x
+          crossbows, 200x bolts in batches of 20).
+    exits:
+      "courtyard": { to: "Moathouse Courtyard" }
+
+  "Moathouse Lounge":
+    area: "Moathouse"
+    description: |-
+      - **Lounge** (door broken and hanging off hinges)
+      - Room contains various furniture (chairs, small table)and a
+          large cupboard. The inside is dirty and dusty but there is
+          evidence of footprints and glove prints.
+    instructions: |-
+      - The  large cupboard contains some old tattered cloaks.
+      - A more detailed search (search 15 check) may reveal one
+          random item of loot (one check per room - pg. 15).
+    exits:
+      "courtyard": { to: "Moathouse Courtyard" }
+
+  "Moathouse Bedrooms":
+    area: "Moathouse"
+    description: |-
+      - Each room contains a bed (smelly bedding); furniture
+          (cupboards, drawers, desk & chair). All the rooms are dirty,
+          dusty and covered in cobwebs.
+    instructions: |-
+      - Searching the furniture reveals; cupboards (tattered clothes);
+          drawers (tattered clothes); desk & chair (drawers, quills,
+          dried ink pots, old papers).
+      - **Encounter** A group of **d4 Giant Spiders** lurk in the rafters
+          above waiting to pounce on any unsuspecting victims.
+    exits:
+      "courtyard": { to: "Moathouse Courtyard" }
+
+  "Moathouse Storage Area":
+    area: "Moathouse"
+    description: |-
+      - The  room is a storage area with wall-to-wall wooden
+          cupboards which are damaged and splintered.
+    instructions: |-
+      - Searching the cupboards reveals (tattered clothes).
+      - Searching the tattered clothes (search 10 check) may reveal
+          an old (treasure map) scrolltucked in a cloak's inner pocket.
+      - Some wood is neatly stacked against the wall. Examination
+          reveals 2x units of **Feywood** and 2x units of **Iron Wood**.
+    exits:
+      "courtyard": { to: "Moathouse Courtyard" }
+
+  "Moathouse Library":
+    area: "Moathouse"
+    description: |-
+      - A ransacked room containing desk and chair (knocked
+          over); bookshelves (tattered books, loose pages); collapsed
+          outer wall (gap, vegetation has grown inside) and the &oor is
+          covered in rocks, stones and debris.
+    instructions: |-
+      - Examining the books reveals stories, poetry and songs (
+          books can be recovered undamaged and valued at 100 sp
+          each). The y are written in the Sentran language.
+    exits:
+      "courtyard": { to: "Moathouse Courtyard" }
+
+  "Moathouse Servants Quarters":
+    area: "Moathouse"
+    description: |-
+      - Each individual room contains a bed (covered in smelly
+          bedding) and furniture (cupboards, drawers, desk & chair).
+          The  rooms are dirty, dusty and cobwebbed.
+    instructions: |-
+      - Searching the furniture reveals (tattered clothes).
+    exits:
+      "courtyard": { to: "Moathouse Courtyard" }
+
+  "Moathouse Guards Quarters":
+    area: "Moathouse"
+    description: |-
+      - (door is closed, not locked)
+      - The  rooms are dirty and dusty and contain bare furnishing
+          in poor condition. Cobwebs hang from the ceilings.
+    instructions: |-
+      - Searching the room reveals doesn't reveal much. One room
+          has a large chest with (Leather Armour, Shortsword (Gladius
+          style); Metal Helmet; Faded Red Cloak and Hand-Axe).
+
+  "Moathouse Baths":
+    area: "Moathouse"
+    description: |-
+      - Bathroom area containing free-standing baths (dregs of
+          green water, algae); cupboards and a "replace in the main
+          area.
+    instructions: |-
+      - Searching the area reveals; cupboards (old blankets and
+          metallic jugs) and "replace (old kindling, metallic pans for
+          heating water; iron poker).
+
+  "Moathouse Northeast Tower":
+    area: "Moathouse"
+    description: |-
+      - Each tower is rubble strewn, damaged, collapsed.
+      - A walkway leads around old the Moat House and is
+          accessible by stairs in (B2) (NE, SE, SW). Torch-holder
+          brackets are "xed to the wall.
+    instructions: |-
+      - Each tower contains a sealed wooden crate (old lanterns, oils
+          x10, tinderbox, hunting horn, crossbows and 100 bolts).
+
+  "Moathouse Northwest Tower":
+    area: "Moathouse"
+    description: |-
+      - Each tower is rubble strewn, damaged, collapsed.
+      - A walkway leads around old the Moat House and is
+          accessible by stairs in (B2) (NE, SE, SW). Torch-holder
+          brackets are "xed to the wall.
+    instructions: |-
+      - Each tower contains a sealed wooden crate (old lanterns, oils
+          x10, tinderbox, hunting horn, crossbows and 100 bolts).
+
+  "Moathouse Southeast Tower":
+    area: "Moathouse"
+    description: |-
+      - Each tower is rubble strewn, damaged, collapsed.
+      - A walkway leads around old the Moat House and is
+          accessible by stairs in (B2) (NE, SE, SW). Torch-holder
+          brackets are "xed to the wall.
+    instructions: |-
+      - Each tower contains a sealed wooden crate (old lanterns, oils
+          x10, tinderbox, hunting horn, crossbows and 100 bolts).
+
+  "Moathouse Southwest Tower":
+    area: "Moathouse"
+    description: |-
+      - Each tower is rubble strewn, damaged, collapsed.
+      - A walkway leads around old the Moat House and is
+          accessible by stairs in (B2) (NE, SE, SW). Torch-holder
+          brackets are fixed to the wall.
+    instructions: |-
+      - Each tower contains a sealed wooden crate (old lanterns, oils
+          x10, tinderbox, hunting horn, crossbows and 100 bolts).
+
+    "Moathouse Small Tunnels":
+      area: "Moathouse"
+      description: |-
+        - The  dried moat contains various holes and piles of earth.
+      instructions: |-
+        - An unarmoured person with a small weapon could crawl
+            through the tunnels which lead to the upper dungeon level.
+        - **Encounter:** A small group of **d4 Giant Ants** may be
+            encountered coming in or out of the tunnel 25% of the time.
+
+  # ---------- UPPER DUNGEON ------------------------------------------------------
+    
+  "Upper Dungeon Stairs":
+    area: "Upper Dungeon"
+    description: |-
+      - Narrow stairs (single "le, lead into darkness) leads to (D8).
+      
+  "Upper Dungeon Ant Chamber 1":
+    area: "Upper Dungeon"
+    description: |-
+      - Rubble strewn &oor with fungal plants growing on the
+          south wall. The re is a small crawl space (unarmoured person
+          with a small weapon would "t) in the west and north walls
+          leading to (B17).
+      - Examining the room reveals evidence of digging; some
+          debris which contains a mixture of earth, rock and bones.
+      - **Hazard:** A narrow passage leads to (C3), &oor is unstable
+          (agility 10 to avoid fall or suffer d4 damage) and fall to (D6).
+      - **d6 Greenfoot Fungus** plant grows, this can be used as a
+          source of nourishment for Ants.
+
+  "Upper Dungeon Ant Chamber 2":
+    area: "Upper Dungeon"
+    description: |-
+      - The  &oor is covered in earth and debris (contains earth, rock
+          and bones) a clicking and scratching noise can be heard.
+      - The re is a small crawl space (unarmoured person with a
+          small weapon would "t) in the west and north walls leading
+          to (B17).
+      - **Hazard:** A narrow passage leads to (C3), &oor is unstable
+          (agility 10 to avoid fall or suffer d4 damage) and falls to (D6).
+      - **d6 Greenfoot Fungus** plant grows, this can be used as a
+          source of nourishment for Giant Ants.
+      - **Encounter: d4 Giant Ants** are digging a tunnel in the north
+          wall. Morale check to see if they engage or &ee.
+
+  "Upper Dungeon Small Chamber":
+    area: "Upper Dungeon"
+    description: |-
+      - The  air is dry and dusty and the &oor is covered in earth,
+          stones and debris.
+
+  "Upper Dungeon Egg Chamber":
+    area: "Upper Dungeon"
+    description: |-
+      - The  air is dry and dusty and the &oor is covered in many
+          large oval-shaped larvae eggs. The re is a small crawl space
+          (unarmoured person with a small weapon would "t) in west
+          and north walls leading to (B17).
+      - **d10+10 Larvae Eggs** 2-3 feet in size, le% here for gestation.
+      - **Encounter: d4 Giant Ants** carrying ant eggs from (B6 &
+          B7). Make a morale check to see if they engage or &ee.
+
+  "Upper Dungeon Guarded Egg Chamber":
+    area: "Upper Dungeon"
+    description: |-
+      - The  air is dry and dusty, the &oor is covered in loose earth
+          with many large oval-shaped eggs. A clicking and scratching
+          noise can be heard.
+      - **d10+10 Larvae Eggs** 2-3 feet in size, le% here for gestation.
+      - **Encounter: d4 Giant Fire Ants** are blocking the exit to
+          (C7). If disturbed they will move towards the threat.
+
+  "Upper Dungeon Chamber with Holes":
+    area: "Upper Dungeon"
+    description: |-
+      - The  Door here is dirty; several small holes have been dug
+          into the ground and surrounded by small piles of earth; a
+          passageway leads down into darkness (D1).
+      - The  holes are too narrow for people to "t. Searching these
+          (search 15 check) once each to discover d4 fragments of
+          silver ore (value 2d20 each).
+
+  "Upper Dungeon Small Room":
+    area: "Upper Dungeon"
+    description: |-
+      - The  &oor is covered with stone mosaic tiles, doors lead west,
+          south and east. The re is a burning smell within the room.
+      - Examination of the tiles shows the ground is covered with
+          the charred remains of some boney creature (exploded "re
+          ant remains).
+
+  "Upper Dungeon Vault":
+    area: "Upper Dungeon"
+    description: |-
+      - Room contains two large wooden crates and weapons racks
+          (holds 10x spears, 5x wooden shields, all average condition).
+    instructions: |-
+      - (Door locked target 15, iron key)      
+      - Wooden crate 1 is sealed but can be broken open and
+          contains (10x longswords, 5x hand-axes, 10x shortswords, 5x
+          daggers (1x silver). Weapons are thick-bladed in old empire
+          style. Wooden crate 2 is also sealed but can be broken open
+          and contains (10x crossbows, 200 crossbow bolts).
+      - **Secret:** The  SW wall contains a **secret panel** (search 10
+          check to find). It is evidenced by a gap in the wall which can
+          be pushed inwards to open. This contains two small chests.
+      - The first chest is not locked and contains a dwarven
+          inscription (Languages 10 check, words are caution and "re).
+          The  contents are carefully stored and padded with cloth (2x
+          5 dwarven incendiary bolts; 2x 5 dwarven shrapnel bolts).
+          The  second chest is locked (target 15, key lost) and contains
+          (2x pouches of 100 silver coins and 1 pouch of 50 gold coins.
+          All coins are aged and in the style of the old empire).
+
+  "Upper Dungeon Prayer Room":
+    area: "Upper Dungeon"
+    description: |-
+      - The  room is dusty and covered in cobwebs, four statues
+          stand silently in alcoves leading towards a stone altar near
+          the west wall.
+      - The  four statues represent the four Gods as follows (tall
+          human, fatherly = Suunos; tall human, motherly = Reeva;
+          human male skeleton face = Kadmos; human, female veiled =
+          Morraine).
+      - The  stone altar is adorned with candles and a goblet. Old
+          worn prayer mats lay in front. The re is a hidden
+          compartment underneath the heavy lid that slides off
+          (contains 3x incense powders and the golden-sun staff head
+          required to complete the statue puzzle) (B2).
+      (Door closed, inner door locked target 10)
+
+
+  "Upper Dungeon Sparring Room":
+    area: "Upper Dungeon"
+    description: |-
+      - The floor is comprised of mosaic tiles of different shades;
+          some weapons hang from the wall and there is a strange
+          burning smell. A cloaked "gure is huddled over another
+          body lying on the ground at the far end of the room.
+      - Weapon Racks (contains 1x Spear, 1x short-sword, 1x
+          Longsword, 1x Shortbow, 1x 20 arrows and 1x Mace. All
+          weapons are poor quality, reduce damage level by one die).
+      - **Encounter: The lanna-Ki** is huddled over the body of her
+          fallen colleague (Kiatan-Ro). She is wounded from the "ght
+          with some Giant Fire Ants.
+
+  "Upper Dungeon Pool Room":
+    area: "Upper Dungeon"
+    description: |-
+      - The re is a dry pool area in the centre of the room, the &oor
+          is covered in dust and loose rock.
+      - Examining the room reveals some splattered dried blood.
+          Magic-sensitive heroes may feel a faint tingle.
+      - **Secret:** The re is a **secret door** in the east wall (search 15
+          check to discover its an illusion). A dispel magic spell (or
+          physical interaction) will reveal a small passageway to (C15).
+
+  "Upper Dungeon Cells":
+    area: "Upper Dungeon"
+    description: |-
+      - The  room contains a number of cells with rusted iron bars.
+      - The  North wall has collapsed leading to a cavernous
+          chamber beyond. A small table and two stools lie outside
+          the cells in front of some hooks on the wall from which
+          hang some chains and manacles (rusty key hangs here).
+      - (Rusty key, target 15)
+      - The first four cells contain a bed, bucket and some rags.
+      - **Encounter:** Can hear a faint murmuring from the furthest
+          cell which contains the zombi"ed mindless form of the
+          **Tattooed Man** covered in centuries of dirt and grime.
+
+  "Upper Dungeon War Room":
+    area: "Upper Dungeon"
+    description: |-
+      - **Trap:** A tripwire activates a bell behind the door as
+          someone enters (next random encounter check at
+          disadvantage). Inside is a large table and chairs. Small
+          tunnels lie to the west (B17) and south walls (to C4 & C5)
+      - (locked target 10 to open)
+      - The  table contains a dirty, torn, map (ancient map of the
+          area). Some notes (Languages 10 to decipher) describe
+          logistics for an expedition to a wilderness site.
+
+  "Upper Dungeon Hidden Study":
+    area: "Upper Dungeon"
+    description: |-
+      - This hidden room contains a study, desk and chair;
+          bookshelves (decaying books, parchments and scrolls)
+      - Searching the bookshelves reveals books on various topics
+          ("ction, history, lore, poems, geography) in poor condition
+          (d20 books salvageable, worth 100 sp to collectors). Language
+          is old Sentra (Languages 10 to recognise) 2x Scrolls sit
+          amongst the documents (Arcane Magic - Illusion and Chaos
+          Magic - Discord)
+      - Desk contains old parchment, papers, candles, tinderbox,
+          quill and ink. Desk drawers contains (alchemists kit,
+          components sealed and well-preserved and 1 large vial of Acid
+          d10 damage, 1 use).
+
+  # ---------- LOWER DUNGEON ------------------------------------------------------
+
+  "Lower Dungeon Steps":
+    area: "Lower Dungeon"
+    description: |-
+      - Wide steps leading into darkness to (C7).
+
+  "Lower Dungeon Ant Chamber":
+    area: "Lower Dungeon"
+    description: |-
+      - The are are several small holes in the ground, surrounded by
+          earth, stone. The re is a rising feeling of heat and humidity.
+      - An ascending passageway leads from (D2) to (C7).
+      - Search the **piles of earth** (search 15 check) reveals d
+          fragments of silver ore (value 2d20 each).
+
+  "Lower Dungeon Ant Egg Chamber":
+    area: "Lower Dungeon"
+    description: |-
+      - This wide cavernous room is covered in fungal plants. The 
+          room feels hot, humid and oppressive. Many **large larvae**
+          **eggs** sit pulsing and gestating (2d20+20 ant-eggs, 3-4 feet in
+          size and close to hatching).
+      - **Encounter: Jacob** lies unconscious.
+      - **Encounter: d8 Giant Fire Ants** guard Jacob and patrol this
+          area in groups of 2-3.
+      - **d6 Greenfoot Fungus** plants grow on the south wall.
+
+  "Lower Dungeon Well Chamber":
+    area: "Lower Dungeon"
+    description: |-
+      - There is some light in this cavernous area from the well
+          above (B2). A stale pool of water now receding sits on a
+          shallow rock bed.
+      - Examining the pool area reveals murky stale water and an
+          old bucket. A handful of copper coins (d20) can be found
+          scattered around.
+      - This is the last remaining water source for the Ant Queen.
+
+  "Lower Dungeon Ant Queen Lair":
+    area: "Lower Dungeon"
+    description: |-
+      - A large cavernous area, the floor is swamped with debris
+          collated into small mounds. More **larvae eggs** (2d20+
+          ant-eggs, 3-4 feet in size and close to hatching) circle the
+          mounds and are pulsing. A deep clicking sound can be
+          heard from the SE corner.
+      - **Encounter: Ant Queen** , **d6 Giant Ants & d6 Fire Ants**. The 
+          Ant Queen sits upon a large mound of brush, debris and
+          bones whilst being attended to by the Giant Ants and
+          guarded by the Giant Fire Ants. If killed, the Ant Queens
+          form dissolves to reveal a swallowed Chaos Stone **artefact.**
+      - Searching the Ant Queens lair (search 15 check reveals d
+          items of jewellery valued at 2d20 sp each).
+
+
+  "Lower Dungeon Small Chamber":
+    area: "Lower Dungeon"
+    description: |-
+      - A small excavated area with loose earth falling from the
+          ceiling.
+      - **Hazard:** The  ceiling is unsafe and people may fall down
+          from the rooms above (C2 to C3).
+
+      ANT QUEEN TREASURE TABLE
+      d20 Item
+      01 Polished bone (no value)
+      02 Animal skins (bloodied, torn)
+      03 Metal filings (10 cp)
+      04 A broken stone statue (10 cp)
+      05 A small broken mirror (no value)
+      06 Vegetable roots (d4 rations)
+      07 A dull broken bronze medal (10 sp)
+      08 A handful of copper coins (d20 cp)
+      09 Broken short-sword (gladius style) (10 sp)
+      10 Earring (False Gold, 10 sp)
+      11 Circlet (Impure Gold, 10 sp)
+      12 Small silver ring (20 sp)
+      13 Gold signet ring (10 gp)
+      14 A handful of gold coins (d10 gp)
+      15 A damaged pearl necklace (50 sp)
+      16 Small toy soldiers made of metal (50 sp)
+      17 Torn Sentran book “The Musings of Aurlax” (50 sp)
+      18 Copper bar ingots (100 sp)
+      19 Metal Cross with tiny gem fragment (100 sp)
+      20 12” Silver carving of a soldier (150 sp)
+
+      **ANT QUEEN ENCOUNTER**
+
+      - The  Ant Queen has been mutated by the chaos stone and
+          is bloated and enlarged.
+      - She is too large to move beyond these chambers and relies
+          on the attendance of her workforce.
+      - The  Ant Queen should be di#cult to defeat in a straight
+          "ght, defended by her army of Giant Ants and with the
+          ability to call upon more of them each turn (see below).
+      - Each time the Ant Queen is injured it releases a black bile
+          (close range, agility 10 check or suffer d4 damage).
+      - If killed, the Ant Queen form will dissolve into a sticky
+          slimy pool of a thick oily substance (acidic Fortitude 10
+          check or suffer d6 damage). If methods are used to search
+          this then a **Chaos Stone** artefactwill be found, the cause
+          of her mutation.
+
+      **ANT QUEEN SUPPORT**
+
+      - The  Ant Queen can call upon aid from her army of Ants
+          each turn. The  level of support will depend upon the
+          players actions to this point and how many Giant Ants
+          have been eliminated in the process.
+      - **Each turn roll a d6,** on a result of a 1-2 a new Giant Ant
+          or Fire Ant answers the Ant Queen's summons. If the
+          players have eliminated many Ant's/destroyed ant eggs
+          then reduce this to change 1 on a d6.
+      - Limit the number of additional Ants that appear to 10.
+
+other_stuff: |-
     #### ARTEFACTS
 
 
@@ -1211,15 +1244,15 @@ everything_else: |-
     jagged surface seemingly pulsating with the pure force of chaos
     magic, its touch cold and clammy like death itself.
 
-    **- Chaos Magic** , holding the stone in one hand allows the
+    - **Chaos Magic** , holding the stone in one hand allows the
         wielder to cast any chaos magic spell at advantage.
-    **- Power** , can be used as a source of power for spell
+    - **Power** , can be used as a source of power for spell
         casters.
-    **- Wild Magic** , occurs on a roll of a 1 or 2 when a spell is
+    - **Wild Magic** , occurs on a roll of a 1 or 2 when a spell is
         cast and the wild magic roll is made at disadvantage.
-    **- Portal,** can be used to open the portal to the
+    - **Portal,** can be used to open the portal to the
         Shadowlands.
-    **- Usage** , reduce the power of the stone by 1 health each
+    - **Usage** , reduce the power of the stone by 1 health each
         time it is used.
 
 
@@ -1342,8 +1375,6 @@ everything_else: |-
 
     #### BESTIARY
 
-
-
     LAIR OF THE MUTANT | BESTIARY
 
     **RAT, GIANT**
@@ -1375,38 +1406,15 @@ everything_else: |-
     paralysing bite to ensure an easy meal later on.
 
 
-
-    LAIR OF THE MUTANT | NON-PLAYER CHARACTERS
-
-    #### NAMED NON-PLAYER CHARACTERS
-
-
-
-
- 
-
-
-    
-
-
-
-
-
-    LAIR OF THE MUTANT | NPC & MONSTER STATISTICS & ENDING THE ADVENTURE
-
-    #### MONSTER STATISTICS
-
-
     ENDING THE ADVENTURE
     The  adventure will end once the following primary objectives
     are completed:
 
-    **- Barus** and **Jacob** are rescued.
+    - **Barus** and **Jacob** are rescued.
     - The  **Ant Queen** and her ant army are defeated.
-    **- Jacob is not rescued** and the party &ees.
+    - **Jacob is not rescued** and the party &ees.
 
     **REWARDS**
-
 
     Total experience points are awarded as follows. Heroes earn a
     full share each and any accompanying NPC's/deceased members
@@ -1425,7 +1433,6 @@ everything_else: |-
     - Destroy the **Ant Eggs** (5XP).
     - Destroy all the **Giant Ants** (5XP).
     - Help **The lana-Ki** find the artefact (Chaos Stone) (5XP).
-
 
     Favours
 
@@ -1449,12 +1456,12 @@ everything_else: |-
         returned to their tribe deep within the wilderness, this may
         earn some favour with the Wildfolk (i.e. unlock Wildfolk
         hero option).
-    **- The lana-Ki** wants to retrace the footsteps of the **Tattooed**
+    - **The lana-Ki** wants to retrace the footsteps of the **Tattooed**
         **Man** and learn the secrets of his wanderings.
-    **- Meryn the Pathfinder** may introduce the hero to the lives
+    - **Meryn the Pathfinder** may introduce the hero to the lives
         of the Eastwatch Rangers and their role to protect the
         borderlands.
-    **- Ralik the Outlaw** may look to betray the heroes and steal
+    - **Ralik the Outlaw** may look to betray the heroes and steal
         their treasures, leading to a manhunt.
     - The  players may continue their journey to **Skenrith Keep** ,
         the last bastion of civilisation on the borderlands for further
@@ -1463,7 +1470,6 @@ everything_else: |-
         from the events of this adventure.
 
     #### ENDING THE ADVENTURE
-
 
     MONSTERS STATISTICS
     Name LVL HLT DEF SKL TSRCombat

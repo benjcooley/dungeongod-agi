@@ -97,12 +97,14 @@ starting_prompt: |-
             "move", "<target>" - Move party to a direction, exit listed in turn response
             "use", "<character>", "<target or item>" - Use a device/prop at the current location such as a rope, ladder,
                    etc. or an item in player's inventory. The AI Referee can use synonyms for "use" such
-                   as "eat", "drink", "push", "pull", "open", "close", "unlock", "lock", "climb", or other simple words that make sense.
+                   as "light", "extinguish", "eat", "drink", "push", "pull", "open", "close", "unlock", "lock", "climb", 
+                   or other simple words that make sense.
             "change", "<change>" - Log a change to this location made by a character or an event.
             "pickup", "<character>", "<item>" - Pickup an item listed for this location           
             "give", "<character or npc>", "<to character or npc>", "item", <qty>" - Give an item or items to another 
               character, NPC (qty is optional)
-            "search", "<character>" - Search for hidden items
+            "search", "<optional character>", "<optional location>" - Search for hidden items or exits. Character is optional. 
+                Search location only needed if the target is a specific location.
             "drop", "<character>", "<item>" - Drops an item from inventory at this location
             "attack" - Attacks monsters (if monsters haven't already noticed the party)
             "equip", "<character>", "<item>" - Equip an item in inventory
@@ -247,6 +249,7 @@ encounter_prompt: |-
     "flee" - "<attacker>" - Fast retreat away from opponents (escape) (2 range bands). -1 disadvantage.
     "cast" - "<attacker>", "<opponent>" - Cast a spell.
     "use" - "<attacker>", "<opponent>" - Use an item that may have an effect in combat such as a scroll or healing potion.
+    "pass" - Player or monster passes peforming an action this turn, holds position or waits.
   
   ENCOUNTER GAMEPLAY:
 
