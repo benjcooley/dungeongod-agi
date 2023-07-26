@@ -39,10 +39,12 @@ characters:
         Ranged Combat: d4
         Religion: d4
       abilities:
-        - Arcane Magic
-        - Linguist
-        - Lore Master
-    inventory:
+      - Arcane Magic
+      - Linguist
+      - Lore Master
+      proficiencies:
+      - Missile
+    items:
       Leather Armor:
         defense: 2
       Short Sword:
@@ -101,12 +103,16 @@ characters:
       abilities:
         - Dark Vision
         - Earth Magic
+        - Water Magic
         - Ghost Walker
         - Iron Skin
         - Long-Lived
         - Shape Change
         - Suggestion
-    inventory:
+      proficiencies:
+        - Earth Spike
+        - Healing Waters
+    items:
       Robes:
         defense: 1
       Short Sword:

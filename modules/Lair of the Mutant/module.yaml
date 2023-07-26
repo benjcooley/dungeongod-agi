@@ -95,7 +95,7 @@ npcs:
     role: "Eeastwatch Ranger"
     stats:
       basic: { level: 3, health: 9, defense: 12, skill: "d6" }
-    description:
+    description: |-
       Grey-haired bearded man in his 50's.
       Friendly, approachable with a vibrant
       attitude. Member of the Eastwatch
@@ -182,6 +182,8 @@ npcs:
 # ------------------------------------------------------------------------------
 #                                 M O N S T E R S
 # ------------------------------------------------------------------------------
+
+monsters_types: {}
 
 monsters: {}
 
@@ -351,7 +353,7 @@ locations:
   # ---------- DUSTY ROAD ------------------------------------------------------
 
   "Dusty Road":
-    description:
+    description: |-
       You party has hitched a lift with the caravaneer Grun and his son
       Reece, following an old track path to Skenrith Keep, the last
       bastion of civilisation in the borderlands. Grun has regaled you
@@ -494,7 +496,7 @@ locations:
         items:
           "Lantern" : { "qty": 2 }
           "Oil" : { "qty" : 4 }
-          "Torches" : { "qty" : 4 }
+          "Torch" : { "qty" : 4 }
           "Tinderbox" : {}
 
   "Farmhouse Jacob's Bedroom":
@@ -1082,7 +1084,7 @@ locations:
       - This hidden room contains a study, desk and chair;
           bookshelves (decaying books, parchments and scrolls)
       - Searching the bookshelves reveals books on various topics
-          ("ction, history, lore, poems, geography) in poor condition
+          (Fiction, history, lore, poems, geography) in poor condition
           (d20 books salvageable, worth 100 sp to collectors). Language
           is old Sentra (Languages 10 to recognise) 2x Scrolls sit
           amongst the documents (Arcane Magic - Illusion and Chaos

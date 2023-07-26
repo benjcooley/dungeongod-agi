@@ -21,6 +21,7 @@ starting_game_state: "exploration"
 starting_time: "12:30"
 
 npcs: {}
+monster_types: {}
 monsters: {}
 quests: {}
 tasks: {}

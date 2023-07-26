@@ -2,7 +2,11 @@ characters: {}
 
 npcs: {}
 
-npcs_with_party: []
+monsters: {}
+
+effects: []
+
+mods: {}
 
 location_states: {}
 
@@ -20,3 +24,4 @@ state:
   cur_time: "JAN 1 3050 12:00"
   location_since: "JAN 1 3050 12:00"
   script_state_since: "JAN 1 3050 12:00"
+  party: []

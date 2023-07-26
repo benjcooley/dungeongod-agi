@@ -13,8 +13,8 @@ npcs: {}
 overview: {}
 areas: {}
 
-monsters:
-  "Ant, Giant":
+monster_types:
+  "Giant Ant":
     info:
       description: |-
         A great ant of enormous size with dangerous claws.
@@ -30,17 +30,19 @@ monsters:
       damage: "d4"
     ranged_attack: null
 
+monsters: {}
+
 locations:
   "Arena":
     description: |-
       You party is on a dusty plain, a battle arena to test your mettle against evil monsters.
     size: "outside"
     state:
+      items: {}
       encounter:
         description: "You are attacked by three giant ants!"
         image: "images/GiantAnts.jpg"
         monsters:
-          "Giant Ant 1": { monster_type: "Ant, Giant" }
-          "Giant Ant 2": { monster_type: "Ant, Giant" }
-          "Giant Ant 3": { monster_type: "Ant, Giant" }
-      items: {}
+          "Giant Ant 1": { monster_type: "Giant Ant" }
+          "Giant Ant 2": { monster_type: "Giant Ant" }
+          "Giant Ant 3": { monster_type: "Giant Ant" }

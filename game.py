@@ -6,15 +6,24 @@ import os
 import os.path as path
 import random
 import yaml
-import shlex
+import pydash
 
 def find_case_insensitive(dic: dict, key: str) -> tuple[str, any]:
+    # Unique name will always be the right case (i.e "Dagger#1001")
     value = dic.get(key)
     if value is not None:
         return (key, value)
-    lower_key = key.lower()
+    # Search the dictionary linearly for non unique name. Sometimes this 
+    # may not match case as the AI sometimes doesn't get casing right.
+    lower_key = key.casefold()
     for k, v in dic.items():
-        if k.lower() == lower_key:
+        # We use the "name" prop if it has one, otherwise use k
+        if isinstance(v, dict):
+            name = v.get("name") or k
+        else:
+            name = k
+        if name.casefold() == lower_key:
+            # Always return the key as the name
             return (k, v)
     return (key, None)
 
@@ -37,6 +46,14 @@ def time_difference_mins(time1_str, time2_str) -> int:
     delta = parse_date_time(time1_str) - parse_date_time(time2_str)
     return int(delta.total_seconds() / 60)
 
+def escape_path_key(key: str) -> str:
+    key = key.replace("\\", r"\\")
+    key = key.replace(".", r"\.")
+    return key
+
+def cur_value(obj: dict[str, any], path: str, value: str) -> any:
+    return pydash.get(obj, path + ".cur_" + value) or pydash.get(obj, path + "." + value)
+
 class Game():
     def __init__(self, agent: Agent, module_name: str, party_name: str, save_game_name: str) -> None:
         self.module_name = module_name
@@ -53,6 +70,8 @@ class Game():
             self.module = yaml.load(f, Loader=yaml.FullLoader)
         with open(f"{self.rules_path}/rules.yaml", "r") as f:
             self.rules = yaml.load(f, Loader=yaml.FullLoader)
+        self.help_index = {}
+        self.init_help_index()
         self.save_game_name = save_game_name
         self.game_state: dict[str, any] = {}
         self.action_image_path: str | None = None
@@ -60,7 +79,6 @@ class Game():
         self.player_results_id = 0
         self.monster_results_id = 0
         self.load_game()
-        self.init_session_state()
 
     @property
     def is_started(self) -> bool:
@@ -141,7 +159,24 @@ class Game():
         resp = resp.strip(" \t\n")
         return resp
 
+    def init_help_index(self) -> None:
+        all_spells = { "name": "all", "type": "spells" }
+        self.help_index["spells"] = all_spells
+        self.help_index["all spells"] = all_spells       
+        for spell_name in self.rules["spells"].keys():
+            self.help_index[spell_name.lower()] = { "name": spell_name, "type": "spell" }
+        magic_categories = { "name": "magic categories", "type": "magic_categories" }
+        self.help_index["magic categories"] = magic_categories
+        self.help_index["magic types"] = magic_categories
+        self.help_index["magic"] = magic_categories
+        for magic_category_name in self.rules["magic_categories"].keys():
+            self.help_index[(magic_category_name + " Magic").lower()] = { "name": magic_category_name, "type": "magic_categories" }
+        for equipment_name in self.rules["equipment"].keys():
+            self.help_index[equipment_name.lower()] = { "name": equipment_name, "type": "equipment" }
+
     def init_game(self) -> None:
+        self.init_session_state()
+        self.init_object_map()
         if self.cur_location_name is not None:
             self.cur_location = self.module["locations"][self.cur_location_name]
             if self.cur_script_state:
@@ -162,9 +197,14 @@ class Game():
             self.game_state = yaml.load(f, Loader=yaml.FullLoader)
             self.game_state["characters"] = copy.deepcopy(self.party["characters"])
             self.game_state["npcs"] = copy.deepcopy(self.module["npcs"])
+            self.game_state["monsters"] = copy.deepcopy(self.module["monsters"])
+            self.game_state["state"]["last_effect_uid"] = 1000
+            self.game_state["state"]["last_object_uid"] = 1000
             self.cur_game_state_name = self.module["starting_game_state"]
             self.cur_location_name = None
             self.cur_time = self.module["starting_time"]
+        for loc_name, loc in self.module["locations"].items():
+            self.location_states[loc_name] = copy.deepcopy(loc.get("state", {}))
         self.init_game()
         self.save_game()
 
@@ -201,6 +241,22 @@ class Game():
     @property
     def characters(self) -> dict[str, any]:
         return self.game_state["characters"]
+
+    @property
+    def npcs(self) -> dict[str, any]:
+        return self.game_state["npcs"]
+
+    @property
+    def monsters(self) -> dict[str, any]:
+        return self.game_state["monsters"]
+
+    @property
+    def monster_types(self) -> dict[str, any]:
+        return self.rules["monster_types"]
+
+    @property
+    def module_monster_types(self) -> dict[str, any]:
+        return self.module["monster_types"]
 
     def describe_party_basic(self) -> str:
         desc = ""
@@ -337,43 +393,115 @@ class Game():
     def script_state_elapsed_mins(self) -> str:
         return time_difference_mins(self.cur_time, self.script_state_since)
 
+    def get_state_value(self, target: dict[str, any], path: str) -> any:
+        match path:
+            case "stats.basic.cur_health":
+                return self.get_cur_health(target)
+            case _:
+                return pydash.get(target, path)
+
+    def set_state_value(self, target: dict[str, any], path: str, value: any) -> None:
+        match path:
+            case "stats.basic.cur_health":
+                self.set_cur_health(target, value)
+            case _:
+                pydash.set_(target, path, value)
+
     def is_character(self, char_name: str) -> bool:
         return char_name in self.characters
     
-    def add_item(self, char_name: str, item_name: str, qty: int) -> tuple[str, bool]:
-        if not self.is_character(char_name):
-            return (f"is not a character '{char_name}'", True)
-        char = self.characters[char_name]
-        cur_item = char["inventory"].get(item_name)
-        if cur_item is None:
-            if qty > 1:
-                char["inventory"][item_name] = { "qty": qty }
-            else:
-                char["inventory"][item_name] = {}
+    def describe_equipment(self, equipment_name: str) -> tuple[str, any]:
+        equipment_type = self.rules["equipment"].get(equipment_name)
+        if equipment_type is None:
+            return (f"no equipment type {equipment_name}", True)
+        image_path = self.check_for_image(self.rules_path + "/images", equipment_name, "equipment")
+        if image_path:
+            self.action_image_path = image_path
+        return ("EQUIPMENT TYPE:\n" + json.dumps(equipment_type) + "\n", False)
+
+    def find_item(self, char_name_or_any: str, maybe_item_name: str) -> tuple[dict, dict]:
+        if char_name_or_any == "any":
+            for char_name in self.game_state["characters"].keys():
+                found_char, found_item = self.find_item(char_name, maybe_item_name)
+                if found_item:
+                    return (found_char, found_item)
         else:
-            cur_item["qty"] = qty + cur_item.get("qty", 1)
+            char_name = char_name_or_any
+            char = self.game_state["characters"].get(char_name)
+            if char is None:
+                return (None, None)
+            item = char["items"].get(maybe_item_name)
+            if item is not None:
+                return (char, item)
+        return (None, None)
+    
+    def has_item(self, char_name_or_any: str, maybe_item_name: str) -> bool:
+        char, _ = self.find_item(char_name_or_any, maybe_item_name)
+        return char is not None
+    
+    def add_item(self, parent: dict[str, any], item: dict[str, any]) -> tuple[str, bool]:
+        parent_type = parent["type"]
+        parent_unique_name = parent["unique_name"]
+        assert parent_type in [ "monster", "character", "npc", "location_state", "item" ]
+        prev_parent_unique_name = item.get("parent")
+        if prev_parent_unique_name == parent_unique_name:
+            # already here
+            return ("ok", False)
+        if prev_parent_unique_name is not None:
+            prev_parent = self.get_object(prev_parent_unique_name)
+            assert prev_parent is not None
+            # Note, if this is a qty item like arrows, a "new" item might be returned with the given qty.
+            (item, _, _) = self.remove_item(prev_parent, item)
+        # Check moving qty for items which use qty (gold, arrows, etc.)
+        if "qty" in item:
+            # Look for item with same name (not it's unique name)
+            target_item = find_case_insensitive(parent["items"], item["name"])
+            if target_item is not None:
+                # Just add qty to existing item
+                target_item["qty"] = target_item.get("qty", 1) + item["qty"]
+                return ("ok", False)
+        item_unique_name = self.get_or_add_unique_name(item["name"], item)
+        parent["items"][item_unique_name] = item
+        item["parent"] = parent_unique_name
+        self.add_to_object_map(item)
         return ("ok", False)
 
-    def remove_item(self, char_name: str, item_name: str, qty: int) -> tuple[str, bool]:
-        if not self.is_character(char_name):
-            return (f"is not a character '{char_name}'", True)
-        char = self.characters[char_name]
-        cur_item = char["inventory"].get(item_name)
-        if cur_item is None:
-            return (f"item '{item_name}' not in inventory", True)
-        cur_qty = cur_item.get("qty", 1)
-        if qty > cur_qty:
-            return (f"only {cur_qty} of '{item_name}' in inventory", True)
-        if qty == cur_qty:
-            del char["inventory"][item_name]
+    def remove_item(self, parent: dict[str, any], item: dict[str, any] | str, qty: int | None = None) -> tuple[dict, str, bool]:
+        # TODO: Fix general add/remove
+        assert parent["type"] in [ "monster", "character", "npc", "location_state", "item" ]
+        if isinstance(item, str):
+            item_name: str = item
+            item = find_case_insensitive(parent["items"], item)
+            if item is None:
+                return (None, f"'{item_name}' not found", True)
         else:
-            cur_item["qty"] = cur_qty - qty
-        return ("ok", False)
-    
-    def place_item(self, location: dict[str, any], item_name: str, item: dict[str, any]) -> None:
-        if "items" not in location:
-            location["items"] = {}
-        location["items"][item_name] = item
+            item_name = item["name"]
+        item_qty = item.get("qty", 1)
+        if qty is None:
+            qty = item_qty
+        if qty > item_qty:
+            parent_name = parent["name"]
+            return (None, f"'{parent_name}' has only {item_qty} of '{item_name}'", True)
+        if qty == item_qty:
+            # Delete the existing item and return the whole item
+            self.remove_from_object_map(item)
+            item_unique_name = item["unique_name"]
+            del parent["items"][item_unique_name]
+            del item["parent"]
+            return (item, "ok", False)
+        else:
+            # Remove 'qty' of items for existing item, return a new item
+            item["qty"] = item_qty - qty
+            ret_item = copy.deepcopy(item)
+            del ret_item["parent"]
+            del ret_item["unique_name"]
+            ret_item["qty"] = qty
+            return (ret_item, "ok", False)
+
+    def move_all_items(self, from_obj: dict[str, any], to_obj: dict[str, any]) -> None:
+        for _, item in from_obj["items"].items():
+            self.remove_item(from_obj, item)
+            self.add_item(to_obj)
 
     def set_location(self, new_loc_name: str) -> None:
         if self.cur_location_name == new_loc_name:
@@ -465,14 +593,18 @@ class Game():
                 exit_names.append(f'"{exit_name}"')
         return ", ".join(exit_names)
 
-    def get_random_character(self) -> tuple[str, dict]:
+    def get_random_character(self) -> dict:
         num_chars = len(self.characters)
         char_idx = random.randint(0, num_chars - 1)
-        for char_name, char in self.characters.items():
+        for char in self.characters.values():
             if char_idx == 0:
-                return (char_name, char)
+                return char
             char_idx -= 1
-        return ("", None)
+        return None
+
+    def get_monster_type(self, monster_type_name: str) -> dict[str, any]:
+        return self.module_monster_types.get(monster_type_name) or \
+            self.monster_types.get(monster_type_name)
 
     def evaluate_transitions(self) -> str:
         if self.cur_location_script is None:
@@ -512,8 +644,8 @@ class Game():
     
     @staticmethod
     def check_for_image(base_path: str, name: str, type_name: str) -> str:
-        exts = [ ".png", ".jpg" ]
-        paths = [ "", f"/{type_name}"]
+        exts = [ ".jpg", ".png" ]
+        paths = [ f"/{type_name}", "" ]
         for ext in exts:
             for path in paths:
                 image_path = base_path + path + f"/{name}{ext}"
@@ -532,7 +664,14 @@ class Game():
         return image_path
 
     @staticmethod
-    def die_roll(dice: str) -> int:
+    def die_roll(dice: str, advantage_disadvantage = None) -> int:
+        if advantage_disadvantage:
+            if advantage_disadvantage == "advantage":
+                return max(Game.die_roll(dice), Game.die_roll(dice))
+            elif advantage_disadvantage == "disadvantage":
+                return min(Game.die_roll(dice), Game.die_roll(dice))
+            else:
+                raise RuntimeError("Invalid advantage/disadvantage id")
         if dice is None or dice == "":
             return 0
         match dice:
@@ -551,32 +690,125 @@ class Game():
     def is_character_name(self, maybe_char_name: str) -> bool:
         return maybe_char_name in self.game_state["characters"]
 
+    def is_encounter_monster_name(self, maybe_monster_name: str) -> bool:
+        return self.cur_encounter is not None and \
+            maybe_monster_name in self.cur_encounter["monsters"]
+    
+    def get_encounter_monster_or_npc(self, maybe_name: str) -> dict[str, any] | None:
+        if self.cur_encounter is not None and \
+                maybe_name in self.cur_encounter["monsters"]:
+            unique_name = self.cur_encounter["monsters"][maybe_name]
+            return self.get_object(unique_name)  
+        return None
+
+    def is_nearby_npc_name(self, maybe_name: str) -> bool:
+        if self.cur_location_script is not None:
+            npcs = self.cur_location_script.get("npcs", [])
+            return maybe_name in npcs
+        npcs = self.cur_location.get("npcs", []) 
+        return maybe_name in npcs
+
+    def get_nearby_npc(self, maybe_name: str) -> dict[str, any]:
+        if self.cur_location_script is not None:
+            npcs = self.cur_location_script.get("npcs", [])
+            if maybe_name in npcs:
+                return self.get_object(maybe_name)
+        npcs = self.cur_location.get("npcs", []) 
+        if maybe_name in npcs:
+            return self.get_object(maybe_name)
+        return None
+
+    def is_nearby_being_name(self, maybe_being_name: str) -> bool:
+        return self.is_character_name(maybe_being_name) or \
+            self.is_encounter_monster_name(maybe_being_name) or \
+            self.is_nearby_npc_name(maybe_being_name)
+    
+    def get_nearby_being(self, maybe_name: str) -> dict[str, any] | None:
+        if maybe_name in self.game_state["characters"]:
+            return self.game_state["characters"][maybe_name]
+        monster = self.get_encounter_monster_or_npc(maybe_name)
+        if monster is not None:
+            return monster
+        return self.get_nearby_npc(maybe_name)
+
     @staticmethod
     def is_character(maybe_char: dict[str, any]) -> bool:
-        return maybe_char.get("type", "character") == "character"
+        return maybe_char["type"] == "character"
 
     @staticmethod
     def is_monster(maybe_monster: dict[str, any]) -> bool:
-        return maybe_monster.get("type", "character") == "monster"
+        return maybe_monster["type"] == "monster"
 
     @staticmethod
     def is_npc(maybe_npc: dict[str, any]) -> bool:
-        return maybe_npc.get("type", "character") == "npc"
+        return maybe_npc["type"] == "npc"
 
     @staticmethod
-    def get_skill_ability_modifier(being: dict[str, any], skill_ability: str) -> str:
+    def is_item(maybe_item: dict[str, any]) -> bool:
+        return maybe_item["type"] == "item"
+
+    @staticmethod
+    def is_location_state(maybe_loc_state: dict[str, any]) -> bool:
+        return maybe_loc_state["type"] == "location_state"
+
+    @staticmethod
+    def get_skill_ability_modifier(being: dict[str, any], skill_ability: str) -> tuple[str, str, str]:
         if skill_ability in being.get("stats", {}).get("skills", {}):
-            return being["stats"]["skills"].get(skill_ability, "")
+            advantage_disadvantage = \
+                ("disadvantage" if being.get("disadvantage", {}).get("skills", {}).get(skill_ability) else None) or \
+                ("advantage" if being.get("advantage", {}).get("skills", {}).get(skill_ability) else None)
+            return ( "skills", pydash.get(being, "stats.skills." + skill_ability, ""), advantage_disadvantage or "" )
         if skill_ability in being.get("stats", {}).get("abilities", {}):
-            return being["stats"]["abilities"].get(skill_ability, "")
-        return 0
+            advantage_disadvantage = \
+                ("disadvantage" if being.get("disadvantage", {}).get("abilities", {}).get(skill_ability) else None) or \
+                ("advantage" if being.get("advantage", {}).get("abilities", {}).get(skill_ability) else None)
+            return ( "abilities", pydash.get(being, "stats.abilities." + skill_ability, ""), advantage_disadvantage or "" )
+        return ( "", "", "" )
     
+    @staticmethod
+    def skill_ability_check(being: dict[str, any], skill_ability: str, against: int) -> tuple[str, bool]:
+        _, mod_die, adv_dis = Game.get_skill_ability_modifier(being, skill_ability)
+        if mod_die is None:
+            return (f"no skill or ability {skill_ability}", False)
+        d20_roll = Game.die_roll("d20", adv_dis)
+        mod_roll = Game.die_roll(mod_die)
+        success = d20_roll + mod_roll >= against
+        resp = f"Rolled {skill_ability} check d20 {d20_roll} {adv_dis} + {mod_die} {mod_roll} = {d20_roll + mod_roll} vs {against} - "
+        if success:
+            resp += "SUCCEEDED!"
+        else:
+            resp += "FAILED!"
+        return (resp, success)
+
+    @staticmethod
+    def skill_ability_check_against(being: dict[str, any], skill_ability1: str, target: dict[str, any], skill_ability2: str) -> tuple[str, bool]:
+        _, mod_die1, adv_dis1 = Game.get_skill_ability_modifier(being, skill_ability2)
+        if mod_die1 is None:
+            return (f"no skill or ability {skill_ability1}", False)
+        d20_roll1 = Game.die_roll("d20", adv_dis1)
+        mod_roll1 = Game.die_roll(mod_die1)
+        _, mod_die2, adv_dis2 = Game.get_skill_ability_modifier(target, skill_ability2)
+        if mod_die2 is None:
+            return (f"no skill or ability {skill_ability2}", False)
+        d20_roll2 = Game.die_roll("d20", adv_dis2)
+        mod_roll2 = Game.die_roll(mod_die2)
+        success = d20_roll1 + mod_roll1 >= d20_roll2 + mod_roll2
+        being_name = Game.get_encounter_or_normal_name(being)
+        target_name = Game.get_encounter_or_normal_name(target)
+        resp = f"{being_name} {skill_ability1} {adv_dis1} rolled {d20_roll1 + mod_roll1}" + \
+             f" vs {target_name} {skill_ability2} {adv_dis2} rolled {d20_roll2 + mod_roll2} "
+        if success:
+            resp += "SUCCEEDED!"
+        else:
+            resp += "FAILED!"
+        return (resp, success)
+
     @staticmethod
     def get_equipped_weapon(being: dict[str, any]) -> dict[str, any]:
         if "equpped" in being:
             equipped_weapon_name = being["equipped"]
-            if "inventory" in being:
-                return being["inventory"].get(equipped_weapon_name)
+            if "items" in being:
+                return being["items"].get(equipped_weapon_name)
         return None
     
     @staticmethod
@@ -590,39 +822,36 @@ class Game():
         return "d4"
 
     @staticmethod
-    def get_is_dead(being: dict[str, any]) -> bool:
+    def has_ability(being: dict[str, any], ability: str) -> bool:
+        return ability in being.get("stats", {}).get("abilities", {})
+
+    @staticmethod
+    def is_dead(being: dict[str, any]) -> bool:
         return being.get("dead", False)
 
-    def set_is_dead(self, being_name, being: dict[str, any], dead: bool) -> None:
-        if Game.get_is_dead(being):
+    def set_is_dead(self, being: dict[str, any], dead: bool) -> None:
+        if Game.is_dead(being):
             return
         being["dead"] = dead
         # Add the npc, char, monster's corpse to the items in the room. Make sure their inventory is still
         # accessible
         if dead:
-            if Game.is_character(being):
-                items = copy.deepcopy(being.get("inventory", {}))
-                self.place_item(self.cur_location, f"{being_name}'s Corpse", { "type": "corpse", "character": being_name, "items": items })
-            elif Game.is_npc(being):
-                items = copy.deepcopy(being.get("inventory", {}))
-                self.place_item(self.cur_location, f"{being_name}'s Corpse", { "type": "corpse", "npc": being_name, "items": items })
-            else:
-                # TODO: Get or generate monster treasure
-                items = copy.deepcopy(being.get("items", {}))
-                self.place_item(self.cur_location, f"{being_name}'s Corpse", { "type": "corpse", "monster_type": being["monster_type"], "items": items })
+            being_name = being['name']
+            corpse_item =  { "name": f"{being_name}'s Corpse", "type": "Corpse", "target_unique_name": being_name }
+            self.add_item(self.cur_location_state, corpse_item)
 
     @staticmethod
-    def get_has_escaped(being: dict[str, any]) -> bool:
+    def has_escaped(being: dict[str, any]) -> bool:
         return being["encounter"].get("escaped", False)
 
     @staticmethod
     def set_has_escaped(being_name: str, being: dict[str, any], escaped: bool) -> None:
-        if Game.get_has_escaped(being) == escaped:
+        if Game.has_escaped(being) == escaped:
             return
         being["encounter"]["escaped"] = escaped
 
     @staticmethod
-    def get_cur_health(being: dict[str, any]) -> str:
+    def get_cur_health(being: dict[str, any]) -> int:
         basic_stats = being["stats"]["basic"]
         if "cur_health" not in basic_stats:
             basic_stats["cur_health"] = basic_stats["health"]
@@ -635,7 +864,7 @@ class Game():
             basic_stats["cur_defense"] = basic_stats["defense"]
         return basic_stats["cur_defense"]
 
-    def set_cur_health(self, being_name: str, being: dict[str, any], value: int) -> str:
+    def set_cur_health(self, being: dict[str, any], value: int) -> int:
         basic_stats = being["stats"]["basic"]
         if "cur_health" not in basic_stats:
             basic_stats["cur_health"] = basic_stats["health"]
@@ -644,38 +873,36 @@ class Game():
             basic_stats["cur_health"] = 0
         if basic_stats["cur_health"] > basic_stats["health"]:
             basic_stats["cur_health"] = basic_stats["health"]
-        if basic_stats["cur_health"] == 0 and not Game.get_is_dead(being):
-            self.set_is_dead(being_name, being, True)
+        if basic_stats["cur_health"] == 0 and not Game.is_dead(being):
+            self.set_is_dead(being, True)
         return basic_stats["cur_health"]
 
     def get_players_alive(self) -> int:
         chars_alive = 0
         for char in self.game_state["characters"].values():
-            if not Game.get_is_dead(char):
+            if not Game.is_dead(char):
                 chars_alive += 1
         return chars_alive
     
-    # Used when beginning combat to get a full inflated copy of target monster or npc.
-    # NPC stats are copied back to npc when encounter is over.
-    def merge_monster_type_or_npc_to_encounter(self, being_name: str, being: dict[str, any]) -> None:
-        if "monster_type" in being:
-            monster_type = copy.deepcopy(self.module["monsters"][being["monster_type"]])
-            being.update(monster_type)
-            being["type"] = "monster"
-        elif being_name in self.game_state["npcs"]:
-            npc_info = copy.deepcopy(self.game_state["npcs"][being_name])
-            being.update(npc_info)
-            being["type"] = "npc"
-            del being["description"] # don't need
-            del being["topics"] # don't need
+    def merge_monster(self, monster_name: str, monster_def: dict[str, any]) -> dict[str, any]:
+        monster_type = monster_def["monster_type"]
+        monster_merged = copy.deepcopy(self.get_monster_type(monster_type))
+        monster_merged.update(monster_def)
+        monster_name_no_number = monster_name.strip("0123456789 ")
+        monster_merged["name"] = monster_name_no_number
+        if monster_name_no_number == monster_type or monster_name_no_number in self.object_map:
+            self.get_or_add_unique_name(monster_name_no_number, monster_merged)
         else:
-            raise RuntimeError(f"encounter monter 'being_name' not a valid monster or npc")
-
-    def merge_encounter_npc_back_to_game_state(self, npc_name: str, npc: dict[str, any]) -> None:
-        self.game_state["npcs"][npc_name].upate(npc)
+            monster_merged["unique_name"] = monster_name_no_number
+        monster_merged["type"] = "monster"
+        return monster_merged
 
     @staticmethod
-    def get_can_attack(attacker: dict[str, any], attack_type: str) -> None:
+    def can_do_actions(being: dict[str, any]) -> None:
+        return not Game.is_dead(being)
+
+    @staticmethod
+    def can_attack(attacker: dict[str, any], attack_type: str) -> None:
         # attack_type is "melee" or "ranged"
         if Game.is_monster(attacker):
             if attack_type == "melee":
@@ -699,7 +926,7 @@ class Game():
         weapon_name = attacker["equipped"].get(attack_type + "_weapon")
         if weapon_name is None:
             return None
-        weapon = copy.deepcopy(attacker["inventory"][weapon_name])
+        weapon = copy.deepcopy(attacker["items"][weapon_name])
         if "rules_item" in weapon:
             rules_weapon_name = weapon["rules_item"]
         else:
@@ -718,6 +945,371 @@ class Game():
         if "exits" in self.cur_location_state:
             exits.update(self.cur_location_state["exits"])
         return exits
+    
+    # OBJECT MAP ----------------------------------------------------------
+    
+    @property
+    def object_map(self) -> dict[str, any]:
+        return self.game_state["object_map"]
+    
+    @property
+    def last_object_uid(self) -> int:
+        return self.game_state["state"]["last_object_uid"]
+
+    @last_object_uid.setter
+    def last_object_uid(self, value: int) -> None:
+        self.game_state["state"]["last_object_uid"] = value
+
+    def get_or_add_unique_name(self, obj_name: str, obj: dict[str, any]) -> str:
+        if "unique_name" not in obj:
+            uid = self.last_object_uid
+            self.last_object_uid += 1
+            unique_name = f"{obj_name}#{uid}"
+            obj["unique_name"] = unique_name
+        else:
+            unique_name = obj["unique_name"]
+        return unique_name
+    
+    def make_object_path(self, obj: dict[str, any]) -> str:
+        key = escape_path_key(obj["unique_name"])
+        obj_type = obj["type"]
+        if obj_type == "item":
+            parent_unique_name = obj["parent"]
+            parent_path = self.object_map.get(parent_unique_name)
+            assert parent_path is not None
+            return f"{parent_path}.items.{key}"
+        else:
+            return f"{obj_type}s.{key}"
+
+    # Char, Monster, NPC Items
+    def add_object_items(self, parent: dict[str, any]) -> None:
+        parent_unique_name = parent["unique_name"]
+        parent["items"] = items = parent.get("items", {})
+        for item_name, item in items.items():
+            item["name"] = item_name
+            item["type"] = "item"
+            item["parent"] = parent_unique_name
+            self.add_to_object_map(item)
+
+    def init_object_map(self) -> None:
+        self.game_state["object_map"] = {}
+        self.game_state["state"]["last_object_uid"] = 1000
+        for obj_type in [ "character", "monster", "npc", "game_state", "location_state" ]:
+            obj_dict_name = f"{obj_type}s"
+            obj_dict = self.game_state[obj_dict_name] = self.game_state.get(obj_dict_name, {})
+            for obj_name, obj in obj_dict.items():
+                obj["name"] = obj_name
+                obj["unique_name"] = obj_name
+                obj["type"] = obj_type
+                obj["items"] = obj.get("items", {})
+                self.add_to_object_map(obj)
+                self.add_object_items(obj)
+    
+    def remove_from_object_map(self, obj: dict[str, any]) -> None:
+        unique_name = obj["unique_name"]
+        assert obj["type"] not in [ "location_state", "npc" ] # These can't be removed!
+        del self.object_map[unique_name]
+        if "items" in obj:
+            items = obj["items"]
+            for item in items.values():
+                self.remove_from_object_map(item)
+            
+    def add_to_object_map(self, obj: dict[str, any]) -> None:
+        obj_type = obj["type"]
+        obj_name = obj["name"]
+        unique_name = obj.get("unique_name")
+        if unique_name is None:
+            if obj_type == "item" or obj_name in self.object_map:
+                unique_name = self.get_or_add_unique_name(obj_name, obj)
+            else:
+                unique_name = obj["unique_name"] = obj["name"]
+        path = obj["path"] = self.make_object_path(obj)
+        self.object_map[unique_name] = path
+
+    def get_object(self, unique_name: str) -> dict[str, any] | None:
+        if unique_name is None:
+            return None
+        path = self.object_map.get(unique_name)
+        if path is None:
+            return None
+        return pydash.get(self.game_state, path)
+
+    # EFFECTS ----------------------------------------------------------
+
+    @property
+    def effects(self) -> list:
+        return self.game_state["effects"]
+
+    @property
+    def mods(self) -> dict[str, any]:
+        return self.game_state["mods"]
+
+    @property
+    def last_effect_uid(self) -> int:
+        return self.game_state["state"]["last_effect_uid"]
+    
+    @last_effect_uid.setter
+    def last_effect_uid(self, value: int) -> None:
+        self.game_state["state"]["last_effect_uid"] = value
+
+    def get_mod_path(mod: dict[str, any]) -> str:
+        if "damage" in mod or "heal" in mod:
+            return "stats.basic.cur_health"
+        elif "target_ai_state" in mod:
+            return "states.cur_ai_states" 
+        return mod.get("path")
+
+    def apply_effect_mod(self, target: dict[str, any], path: str, prev_value: any, mod: dict[str, any]) -> any:
+        if path is None:
+            path = mod.get("path")
+        key = None
+        if "set" in mod:
+            mode = "set"
+        elif "add" in mod or "heal" in mod:
+            mode = "add"
+        elif "heal" in mod:
+            key = "heal"
+            path = "stats.basic.cur_health"
+            mode = "add"
+        elif "sub" in mod:
+            mode = "sub"
+        elif "damage" in mod:
+            key = "damage"
+            path = "stats.basic.cur_health"
+            mode = "sub"
+        elif "add_line" in mod:
+            mode = "add_line"
+        elif "mul" in mod:
+            mode = "mul"
+        elif "append" in mod:
+            mode = "append"
+        elif "or" in mod:
+            mode = "or"
+        else:
+            raise RuntimeError(f"invalid effect mode")
+        value = mod[key or mode]
+        if (mode == "add" or mode == "sub") and isinstance(value, str):
+            value = Game.die_roll(value)
+        if mode != "set" and prev_value is None:
+            var_path_items = path.split(".")[-1]
+            var_name = var_path_items[-1]
+            if var_name.startswith("cur_"):
+                prev_path = ".".join(var_path_items[:-1]) + "." + var_name[4:]
+                prev_value = self.get_state_value(prev_path)
+            else:
+                if mode == "add" or mode == "mul":
+                    prev_value = 0
+                elif mode == "append" or (isinstance(value, str) and mode == "or"):
+                    prev_value = []
+                elif isinstance(value, bool) and mode == "or":
+                    prev_value = False
+                else:
+                    raise RuntimeError("invalid prev value in apply_effect_mod()")
+        if mode == "set":
+            new_value = value
+            self.set_state_value(target, path, new_value)
+        elif mode == "add":
+            new_value = prev_value + value
+            self.set_state_value(target, new_value)
+        elif mode == "add_line":
+            new_value =  (value if prev_value == "" else prev_value + "\n" + value)
+            self.set_state_value(target, new_value)
+        elif mode == "mul":
+            new_value = int(prev_value * value)
+            self.set_state_value(target, path, new_value)
+        elif mode == "append":
+            prev_value.append(copy.deepcopy(value))
+            new_value = prev_value
+        elif mode == "or":
+            if isinstance(value, bool):
+                new_value = prev_value or value
+            elif value not in prev_value:
+                prev_value.append(copy.deepcopy(value))
+                new_value = prev_value
+        return new_value
+
+    def apply_effect_mods(self, target: dict[str, any], path: str, mod_list: list[dict[str, any]]) -> any:
+        prev_value = None
+        for mod in mod_list:
+            prev_value = self.apply_effect_mod(target, path, prev_value, mod)
+        return prev_value
+
+    def apply_simple_effect(self, effect_id: str, effect_def: dict[str, any], target: dict[str, any]) -> tuple[str, bool]:
+        match effect_id:
+            case "heal":
+                die = effect_def["heal"]["die"]
+                value = Game.die_roll(die)
+                new_health = self.set_cur_health(target, self.get_cur_health(target) + value)
+                max_health = target["stats"]["basic"]["health"]
+                return (f"Heal {die} {value}, new health: {new_health} of {max_health}\n", False)
+            case "damage":
+                die = effect_def["damage"]["die"]
+                value = Game.die_roll(die)
+                new_health = self.set_cur_health(target, self.get_cur_health(target) - value)
+                max_health = target["stats"]["basic"]["health"]
+                return (f"Damage {die} {value}, new health: {new_health} of {max_health}\n", False)
+            case _:
+                raise RuntimeError(f"unknown simple effect {effect_id}")
+
+    def apply_effects(self, action: str, name: str, source: dict[str, any], targets: list[dict[str, any]], verb: str = None) -> tuple[str, bool]:
+        effect_src = source
+        # If source supports verbs, get the proper verb (i.e. a switch that can be on/off, or torch)
+        if "verbs" in source:
+            if verb is None:
+                if "default_verb" in source:
+                    verb = source["default_verb"]
+                else:
+                    verb = action
+            if verb not in source["verbs"]:
+                return (f"don't know how to {verb} {name}", True)
+            effect_src = source["verbs"][verb]
+        # Get description of action (we use this to tell the AI what it was)
+        if verb is None:
+            verb = action
+        desc = f"{verb} {name}"
+        if len(targets) > 0:
+            desc += " on/with " + ", ".join([target.get("name", "") for target in targets])
+        # Apply the action
+        duration = effect_src.get("duration")       
+        turns = effect_src.get("turns")
+        check = effect_src.get("check")
+        resp = desc + "\n"
+        if duration is not None or turns is not None or check is not None:
+            # Things that have a temporary effect
+            self.last_effect_uid += 1
+            effect_uid = self.last_effect_uid
+            effect_targets = {}
+            mod_paths = []
+            for target in targets:
+                target_unique_name = target["unique_name"]
+                # We add a modifier to a property path, and recalculate the value with all modifiers.
+                for effect_def in effect_src["effects"]:
+                    mod_path = effect_def["path"]
+                    mod_set = self.mods[target_unique_name] = self.mods.get(target_unique_name, {})
+                    mod_list = mod_set[mod_path] = mod_set.get(mod_path, [])
+                    effect_mod = copy.deepcopy(effect_def)
+                    del effect_mod["path"] # don't need this
+                    effect_mod["uid"] = effect_uid
+                    mod_list.append()
+                    self.apply_effect_mods(target, mod_path, mod_list)
+                    mod_paths.append(mod_path)
+                effect_targets[target["unique_name"]] = { mod_paths: mod_paths }
+            effect = { "uid": effect_uid, "description": desc, "start_time": self.cur_time, "targets": effect_targets }
+            # Time limit for this effect
+            if duration is not None:
+                effect["duration"] = duration
+            elif turns is not None:
+                effect["turns"] = turns
+            elif check is not None:
+                effect["check"] = copy.deepcopy(check)
+            # Add to list of currently active effects
+            self.effects.append(effect)
+        else:
+            # Things that have a permanent effect
+            for target in targets:
+                target_unique_name = target["unique_name"]
+                for effect_def in source["effects"]:
+                    if len(effect_def) == 1:
+                        effect_id = next(iter(effect_def))
+                        simp_desc, failed = self.apply_simple_effect(effect_id, effect_def, target)
+                        resp += simp_desc
+                        if failed:
+                            return (resp, True)
+                    else:
+                        mod_path = effect_def.get("path", None)
+                        assert mod_path is not None
+                        self.apply_effect_mod(target, mod_path, None, mod_list)
+        return (resp, False)
+
+    def remove_effect(self, effect: dict[str, any]) -> None:
+        effect_uid = effect["uid"]
+        for unique_target_name, effect_target in effect["targets"].items():
+            target = self.get_object(unique_target_name)
+            if target is None:
+                continue
+            # We remove the modifier for the given property path, and recaculate the value of 
+            # the target path after it's removed
+            for mod_path in effect_target.get("mod_paths", []):
+                mod_list: list[any] = self.mods.get(unique_target_name, {}).get(mod_path, [])
+                del_idx = None
+                for idx, mod in enumerate(mod_list):
+                    if mod["uid"] == effect_uid:
+                        del_idx = idx
+                        break
+                if del_idx is not None:
+                    del mod_list[del_idx]
+                    self.apply_effect_mods(target, mod_path, mod_list)             
+        self.effects.remove(effect)
+
+    def update_effect(effect: dict[str, any]) -> None:
+        pass
+
+    def update_effect_list(self, effect_list: list) -> None:
+        remove_list = []
+        for effect_idx, effect in enumerate(self.effects):
+            remove = False
+            duration = effect.get("duration")
+            if duration is not None:
+                start_time = effect["start_time"]
+                if isinstance(duration, str) and duration == "":
+                    if duration == "encounter" and self.cur_encounter is None:
+                        remove = True
+                    else:
+                        raise RuntimeError(f"duration value '{duration}' not recognized")
+                elif isinstance(duration, int):
+                    mins_elapsed = time_difference_mins(self.cur_time, start_time) 
+                    if mins_elapsed >= duration:
+                        remove = True
+                else:
+                    raise RuntimeError("duration is not a valid type (int|str)")
+            turns = effect.get("turns")
+            if turns is not None:
+                turns -= 1
+                effect["turns"] = turns
+                if turns == 0:
+                    remove = True
+            check = effect.get("check")
+            if check is not None:
+                pass # TODO: implement check termination
+            if remove:
+                self.remove_effect(effect)
+                remove_list.append(effect_idx)
+            else:
+                self.update_effect(effect)
+        for idx in reversed(remove_list):
+            del effect_list[idx]
+
+    def update_all_effects(self) -> None:
+        self.update_effects_list(self.game_state["effects"])
+        if self.cur_encounter is not None:
+            self.update_effect_list(self.cur_encounter["effects"])
+
+    def check_requirements(self, being: dict[str, any], source: dict[str, any], targets: list[dict[str, any]]) -> tuple[str, bool]:
+        require = source.get("require", [])
+        resp = ""
+        for req in require:
+            if "check" in req:
+                check = req["check"]
+                if "ability1" in check:
+                    for index, target in reversed(list(enumerate(targets))):
+                        skill_ability1 = check.get("skill1") or check.get("ability1")
+                        skill_ability2 = check.get("skill2") or check.get("ability2")
+                        check_resp, success = Game.skill_ability_check_against(being, skill_ability1, target, skill_ability2)
+                        resp = resp + check_resp + "\n"
+                        if not success:
+                            del targets[index]
+                    if len(targets) == 0:
+                        return (resp, True)
+                else:
+                    skill_ability = check.get("skill") or check.get("ability")
+                    roll_against = check["roll"]
+                    check_resp, success = Game.skill_ability_check(being, skill_ability, roll_against)
+                    resp = resp + check_resp + "\n"
+                    if not success:
+                        return (resp, True)
+        if resp == "":
+            resp = "ok"
+        return (resp, False)
 
     # GENERAL ACTIONS ----------------------------------------------------------
 
@@ -767,15 +1359,25 @@ class Game():
             resp = f"{desc}{changes}{instr}{exits}{items}{tasks}{npcs}{topics}"
         return (resp, False)
 
+    def stats(self, being_name: str) -> tuple[str, bool]:
+        being = self.get_nearby_being(being_name)
+        if being is None:
+            {f"{being_name}' is not nearby", True}
+        being_name = Game.get_encounter_or_normal_name
+        resp = ""
+        resp += f"Character: '{being_name}'\n"
+        resp += "  stats - " + json.dumps(being["stats"]["basic"]).strip("{}").replace("\"", "") + "\n"
+        resp += "  attributes - " + json.dumps(being["stats"]["attributes"]).strip("{}").replace("\"", "") + "\n"
+        resp += "  skills - " + json.dumps(being["stats"]["skills"]).strip("{}").replace("\"", "") + "\n"
+        resp += "  abilities - " + json.dumps(being["stats"]["abilities"]).strip("[]").replace("\"", "") + "\n"
+        resp += "  inventory - " + json.dumps(list(being["items"].keys())).strip("[]").replace("\"", "") + "\n\n"
+        return (resp, False)
+
     def describe_party(self) -> tuple[str, bool]:
         resp = ""
-        for char_name, char in self.game_state["characters"].items():
-            resp += f"Character: '{char_name}'\n"
-            resp += "  stats - " + json.dumps(char["stats"]["basic"]).strip("{}").replace("\"", "") + "\n"
-            resp += "  attributes - " + json.dumps(char["stats"]["attributes"]).strip("{}").replace("\"", "") + "\n"
-            resp += "  skills - " + json.dumps(char["stats"]["skills"]).strip("{}").replace("\"", "") + "\n"
-            resp += "  abilities - " + json.dumps(char["stats"]["abilities"]).strip("[]").replace("\"", "") + "\n"
-            resp += "  inventory - " + json.dumps(list(char["inventory"].keys())).strip("[]").replace("\"", "") + "\n\n"
+        for char_name in self.game_state["characters"].keys():
+            stats_resp, _ = self.stats(char_name)
+            resp += stats_resp
         return (resp, False)
 
     def topic(self, npc: str, topic: str) -> tuple[str, bool]:
@@ -790,29 +1392,52 @@ class Game():
                     "you can try again using one of these, or creatively improvise a response consistent with the story and rules\n", False)
         return (topic_resp, False)
 
-    def give(self, char_name: str, to_name: str, item_name: any, extra: any) -> tuple[str, bool]:
-        if not isinstance(char_name, str) or not isinstance(to_name, str) or not isinstance(item_name, str):
+    def give(self, from_name: str, to_name: str, item_name: any, extra: any) -> tuple[str, bool]:
+        if not isinstance(from_name, str) or not isinstance(to_name, str) or not isinstance(item_name, str):
             return ("invalid command", True)
-        if not self.is_character(char_name):
-            return (f"not a character '{char_name}'", True)
-        if not self.is_character(to_name):
-            return (f"not a character '{to_name}'", True)        
-        char = self.characters[char_name]
-        (item_name, item) = find_case_insensitive(char["inventory"], item_name)
+        if from_name == to_name:
+            return ("can not give to self", True)
+        if not self.is_character_name(from_name) and not self.is_nearby_being_name(from_name):
+            return (f"{from_name} is not a character or nearby monster or npc", True)
+        if not self.is_character_name(to_name) and not self.is_nearby_being_name(to_name):
+            return (f"{to_name} is not a character or nearby monster or npc", True)
+        from_being = self.get_object(from_name)
+        assert from_being is not None
+        to_being = self.get_object(to_name)
+        assert to_being is not None
+        (item_unique_name, item) = find_case_insensitive(from_being["items"], item_name)
         if item is None:
             return (f"no item '{item_name}", True)
-        item_qty = item.get("qty", 1)
+        item_qty = item.get("qty")        
         qty, err = any_to_int(extra)
         if err:
             qty = 1
         if qty > item_qty:
             return ("only has {item_qty}", False)
-        resp, err = self.remove_item(char_name, item_name, qty)
-        if err:
+        resp, err = self.remove_item(from_being, item_unique_name, qty)
+        if err: 
             return (resp, err)
-        return self.add_item(to_name, item_name, qty)
+        return self.add_item(to_being, item_unique_name, qty)
 
-    def look(self, subject) -> tuple[str, bool]:
+    def help(self, subject) -> tuple[str, bool]:
+        if subject.endswith(" spell"):
+            subject = subject[:-6]
+        elif subject.endswith(" equipemnt"):
+            subject = subject[:-10]
+        look_info = self.help_index.get(subject.lower())
+        if look_info != None:
+            match look_info["type"]:
+                case "spell":
+                    return self.describe_spell(look_info["name"])
+                case "magic_categories":
+                    return self.describe_magic(look_info["name"])
+                case "equipment":
+                    return self.describe_equipment(look_info["name"])
+                case _:
+                    raise RuntimeError("Invalid help index type")
+        return (f"no help subject {subject} found", False)
+            
+    def look(self, subject, object) -> tuple[str, bool]:
         if subject is None or subject == self.cur_location_name or subject == "location":
             return self.describe_location()
         elif subject == "party":
@@ -870,39 +1495,46 @@ class Game():
     def invent(self, char_name) -> tuple[str, bool]:
         if not self.is_character_name(char_name):
             return (f"not a character '{char_name}'", True)
-        return (json.dumps(self.characters[char_name]["inventory"]) + "\n", False)
+        invent_items = {}
+        for item in self.characters[char_name]["items"].values():
+            item_name = item["name"]
+            if item_name not in invent_items:
+                if "qty" in item:
+                    invent_items[item_name] = { "qty": item["qty"] }
+                else:
+                    invent_items[item_name] = {}
+            else:
+                invent_items[item_name] = { "qty": invent_items.get("qty", 1) + item.get("qty", 1) }
+        return (json.dumps(invent_items) + "\n", False)
 
-    def pickup(self, char_name: str, item_name: str, extra: any) -> tuple[str, bool]:
-        if not isinstance(char_name, str) or not isinstance(item_name, str):
+    def pickup(self, being_name: str, item_name: str, extra: any) -> tuple[str, bool]:
+        if not isinstance(being_name, str) or not isinstance(item_name, str):
             return ("invalid command", True)     
-        if not self.is_character(char_name):
-            return (f"not a character '{char_name}'", True)
+        if not self.is_nearby_being_name(being_name):
+            return (f"'{being_name}' is not here", True)
+        being = self.get_nearby_being(being_name)
+        if not Game.can_do_actions(being):
+            return (f"'{being_name}' is not here", True)        
         (item_name, item) = find_case_insensitive(self.cur_location_state.get("items", {}), item_name)
         if item is None:
             return (f"no item '{item_name}", True)
         qty, err = any_to_int(extra)
         if err:
             qty = 1
-        item_qty = item.get("qty", 1)
-        if qty > item_qty:
-            return ("only {item_qty} available", False)
-        elif qty == item_qty:
-            del self.cur_location_state["items"][item_name]
-        else:
-            new_qty = item_qty - qty
-            if new_qty == 1 and "qty" in item:
-                del item["qty"]
-            else:
-                item["qty"] = new_qty
-        return self.add_item(char_name, item_name, qty)
+        pickup_item, resp, err = self.remove_item(self.cur_location_state, item, qty)
+        if err:
+            return (resp, err)
+        return self.add_item(being, pickup_item, qty)
 
-    def drop(self, char_name: str, item_name: str, extra: any) -> tuple[str, bool]:
-        if not isinstance(char_name, str) or not isinstance(item_name, str):
-            return ("invalid command", True)
-        if not self.is_character(char_name):
-            return (f"not a character '{char_name}'", True)
-        char = self.characters[char_name]
-        (item_name, item) = find_case_insensitive(char["inventory"], item_name)
+    def drop(self, being_name: str, item_name: str, extra: any) -> tuple[str, bool]:
+        if not isinstance(being_name, str) or not isinstance(item_name, str):
+            return ("invalid command", True)     
+        if not self.is_nearby_being_name(being_name):
+            return (f"'{being_name}' is not here", True)
+        being = self.get_nearby_being(being_name)
+        if not Game.can_do_actions(being):
+            return (f"'{being_name}' is not here", True)  
+        (item_name, item) = find_case_insensitive(being["items"], item_name)
         if item is None:
             return (f"no item '{item_name}", True)
         item_qty = item.get("qty", 1)
@@ -911,20 +1543,10 @@ class Game():
             qty = 1
         if qty > item_qty:
             return ("only has {item_qty}", False)
-        loc_items = self.cur_location_state.get("items")
-        if loc_items is None:
-            loc_items = {}
-            self.cur_location_state["items"] = loc_items
-        loc_item = loc_items.get(item_name)
-        if loc_item is None:
-            loc_item = {}
-            if qty > 1:
-                loc_item["qty"] = qty
-            self.cur_location_state["items"][item_name] = loc_item
-        else:
-            loc_item_qty = loc_item.get("qty", 1)
-            loc_item["qty"] = qty + loc_item_qty
-        return self.remove_item(char_name, item_name, qty)
+        drop_item, resp, err = self.remove_item(being, item, qty)
+        if err:
+            return (resp, err)
+        return self.add_item(self.cur_location_state, drop_item, qty)       
 
     def resume(self) -> tuple[str, bool]:
         resp = ""
@@ -962,7 +1584,8 @@ class Game():
         resp = ""
         rewards = task.get("rewards", {})
         for item_name, item in rewards.items():
-            char_name, char = self.get_random_character()
+            char = self.get_random_character()
+            char_name = char["name"]
             qty = item.get("qty", 1)
             self.add_item(char_name, item_name, qty)
             resp = resp + f"{char_name} was rewarded with '{item_name}' " + json.dumps(item) + "\n"
@@ -1026,19 +1649,187 @@ class Game():
         del self.cur_location_state["hidden"][found_idx]
         return (f"{desc}{found_items_list}{found_exits_list}", False)
     
-    def use(self, subject: str, object: str, extra: any, use_synonym: str) -> tuple[str, bool]:
-        # just assume it worked (for now)
-        return ("ok", False)
+    def use(self, args: list[str], use_verb: str) -> tuple[str, bool]:
 
-    def do_expore_action(self, action: any, subject: any, object: any, extra: any) -> tuple[str, bool]:
+        being_name = None
+        being = None
+        item = None
+        target_item = None
+        target_being = None  
+
+        if len(args) < 1:
+            return ("No item", True)
+
+        # Check if first arg is character (if it isn't we guess the character)
+        if isinstance(args[0], str) and self.is_nearby_being_name(args[0]):
+            being = self.get_nearby_being(args[0])
+            being_name = Game.get_encounter_or_normal_name(being)
+            del args[0]
+
+        if being == None and self.has_item(being_name or "any", args[0]):
+            item_name = args[0]
+            del args[0]
+            being, item = self.find_item(being_name or "any", item_name)
+        elif args[0] in self.cur_location_state["usables"]:
+            usable_name = args[0]
+            del args[0]
+            usable = self.cur_location_state["usables"][usable_name]
+            if being is None:
+                being = self.get_random_character()
+        else:
+            return (f"{args[0]} is not a usable item or thing", True)
+
+        # If we're in an encounter, make sure we haven't moved yet
+        can_move_msg, can_move = self.check_encounter_can_move("cast", being)
+        if not can_move:
+            return (can_move_msg, True)
+
+        # Get the thing to use the item or usable with
+        if len(args) > 0:
+            if self.is_nearby_being_name(args[0]):
+                target_being_name = args[0]
+                del args[0]
+                target_being = self.get_nearby_being(target_being_name)
+            elif self.has_item(being_name or "any", args[0]):
+                target_item_name = args[0]
+                del args[0]
+                _, target_item = self.find_item(being_name, target_item_name)
+            elif args[0] in self.cur_location_state["usables"]:
+                target_usable_name = args[0]
+                del args[0]
+                target_usable = self.cur_location_state["usables"][target_usable_name]
+
+        item_or_usable_name = item_name or usable_name
+
+        resp = f"{being_name} uses {item_or_usable_name}"
+        if target_being or target_item or target_usable:
+            target_name = target_being_name or target_item_name or target_usable_name
+            resp += f" on {target_name}\n"
+        else:
+            resp += "\n"
+
+        # If we're in an encounter, using something counts as a move
+        self.mark_encounter_moved(being)
+
+        # Can we use this?
+        req_resp, failed = self.check_requirements(being, item or usable, [ target_item or target_being ])
+        if failed:
+            return (resp + req_resp, True)
+
+        # Use it and apply the effects - note this counts as a move even if we fail to apply the effect
+        use_effect_resp, failed = self.apply_effects("use", item_name or usable_name, item or usable, [ target_item or target_being ], use_verb)
+        resp += use_effect_resp + "\n"
+
+        return (resp, failed)
+
+    def describe_spell(self, spell_name) -> tuple[str, bool]:
+        if not spell_name or spell_name.lower() == "spells" or spell_name.lower() == "all":
+            return ("SPELLS:\n" + json.dumps(list(self.rules["spells"].keys())) + "\n", False)
+        spell_name, spell = find_case_insensitive(self.rules["spells"], spell_name)
+        if spell is None:
+            return (f"no spell {spell_name}", True)
+        spell["category"] = spell["category"] + " Magic"
+        image_path = self.check_for_image(self.rules_path + "/images", spell_name, "spells")
+        if image_path:
+            self.action_image_path = image_path
+        return (f"SPELL DESCRIPTION: {spell_name}\n" + json.dumps(spell) + "\n", False)
+
+    def describe_magic(self, magic_category) -> tuple[str, bool]:
+        if not magic_category or magic_category.lower() == "magic categories" or magic_category.lower() == "all":
+            categories = [name + " Magic" for name in self.rules["magic_categories"].keys()]
+            categories.sort()
+            return ("MAGIC CATEGORIES:\n" + json.dumps(categories) + "\n", False)
+        magic_category_name, magic_category = find_case_insensitive(self.rules["magic_categories"], magic_category)
+        if magic_category is None:
+            return (f"no magic category {magic_category}", True)
+        spell_names = [spell_name for spell_name, spell in self.rules["spells"].items() if spell["category"] == magic_category_name]
+        image_path = self.check_for_image(self.rules_path + "/images", magic_category_name + " Magic", "magic_categories")
+        if image_path:
+            self.action_image_path = image_path
+        return (f"MAGIC DESCRIPTION: Please elaborate on the following with a two paragraph descripton..\n\n{magic_category_name}\n" + 
+                json.dumps(magic_category) + "\n\nSPELLS: list the names only without description\n" + json.dumps(spell_names) + "\n", False)
+
+    def cast(self, args: list[str]) -> tuple[str, bool]:
+
+        being_name = None
+        being = None
+        target_item = None
+        target_being = None  
+
+        if len(args) < 1:
+            return ("No spell", True)
+
+        # Check if first arg is character (if it isn't we guess the character)
+        if isinstance(args[0], str) and self.is_nearby_being_name(args[0]):
+            being = self.get_nearby_being(args[0])
+            being_name = Game.get_encounter_or_normal_name(being)
+            del args[0]
+
+        if being is None:
+            return ("no spell caster specified", True)
+
+        # If we're in an encounter, make sure we haven't moved yet (aren't dead, etc.)
+        can_move_msg, can_move = self.check_encounter_can_move("cast", being)
+        if not can_move:
+            return (can_move_msg, True)
+
+        if len(args) > 0:
+            spell_name, spell = find_case_insensitive(self.rules["spells"], args[0])
+            if spell is None:
+                return (f"'{spell_name}' is not a spell", True)
+            magic_ability = spell["category"] + " Magic"
+            if not Game.has_ability(being, magic_ability):
+                return (f"Can't cast {spell_name}. {being_name} does have the {magic_ability} ability.", True)
+            del args[0]
+        else:
+            return ("need spell name as second arg", True)
+
+        # Get the thing to use the item or usable with
+        if len(args) > 0:
+            if self.is_nearby_being_name(args[0]):
+                target_being_name = args[0]
+                del args[0]
+                target_being = self.get_nearby_being(target_being_name)
+            elif self.has_item(being_name or "any", args[0]):
+                target_item_name = args[0]
+                del args[0]
+                _, target_item = self.find_item(being_name, target_item_name)
+            elif args[0] in self.cur_location_state["usables"]:
+                target_usable_name = args[0]
+                del args[0]
+                target_usable = self.cur_location_state["usables"][target_usable_name]
+
+        resp = f"{being_name} casts {spell['category']} Magic spell {spell_name}"
+        if target_being or target_item or target_usable:
+            target_name = target_being_name or target_item_name or target_usable_name
+            resp += f" on {target_name}\n"
+        else:
+            resp += "\n"
+        if "description" in spell:
+            resp += "  DESCRIPTION: " + spell["description"] + "\n"
+
+        # If we're in an encounter, spell casting counts as a move
+        self.mark_encounter_moved(being)
+
+        # Can we cast this?
+        req_resp, failed = self.check_requirements(being, spell, [ target_item or target_being ])
+        if failed:
+            return (resp + req_resp, True)
+
+        # Apply the spell effects. Note we count this as a move even if the spell effect couldn't be applied.
+        cast_effect_resp, failed = self.apply_effects("cast", spell_name, spell, [ target_item or target_being or target_usable ])
+        resp += cast_effect_resp + "\n"
+
+        # image?
+        image_path = self.check_for_image(self.rules_path + "/images", spell_name, "spells")
+        if image_path:
+            self.action_image_path = image_path          
+
+        return (resp, failed)
+
+    def do_explore_action(self, action: any, subject: any, object: any, extra: any, extra2: any) -> tuple[str, bool]:
         resp = ""
         error = False
-
-        use_synonym = ""
-        if action in ("light", "extinguish", "eat", "drink", "open", "close", "push", "pull", 
-                      "activate", "press", "lock", "unlock"):
-            use_synonym = action
-            action = "use"
 
         if action in ("move", "goto"):
             action = "go"
@@ -1081,25 +1872,32 @@ class Game():
 
     def check_random_encounter(self) -> tuple[bool, dict[str, any] | None]:
         return None
-    
+
     def get_cur_location_encounter(self) -> dict[str, any]:
-        if self.cur_location_script is not None and "encounter" in self.cur_location_script:
-            return self.cur_location_script["encounter"]
-        return self.cur_location_state.get("encounter", None)
+        encounter: dict[str, any] = None
+        if self.cur_location_script is not None and "script_encounters" in self.cur_location_state:
+            encounter = self.cur_location_state["script_encounters"].get(self.cur_script_state)
+        if encounter is None:
+            encounter = self.cur_location_state.get("encounter")
+        return encounter
     
     def remove_cur_location_encounter(self) -> None:
-        if self.cur_location_script is not None and "encounter" in self.cur_location_script:
-            del self.cur_location_script["encounter"]
-        else:
-            del self.cur_location["encounter"]
+        if self.cur_location_script is not None and \
+                "script_encounters" in self.cur_location_state and \
+                self.cur_script_state in self.cur_location_state["script_encounters"]:
+            del self.cur_location_state["script_encounters"][self.cur_script_state]
+        elif "encounter" in self.cur_location_state:
+            del self.cur_location_state["encounter"]
 
     def start_encounter(self, random_encounter: dict[str, any] = None) -> tuple[str, bool]:
+        assert self.cur_encounter is None and self.cur_game_state_name != "encounter"
+        self.cur_game_state_name = "encounter"
         encounter: dict[str, any] = None
         if random_encounter is not None:
             if self.get_cur_location_encounter() is not None:
                 return ("random encounter not possible, there are already monsters in area", True)
-            encounter = random_encounter
-            self.cur_location_state["encounter"] = copy.deepcopy(random_encounter)
+            encounter = copy.deepcopy(random_encounter)
+            self.cur_location_state["encounter"] = encounter
         else:
             encounter = self.get_cur_location_encounter()
             if encounter is None:
@@ -1125,16 +1923,25 @@ class Game():
             encounter["min_range"] = -(15 * range_bands)
             encounter["max_range"] = 15 * range_bands
         # Add temp encounter states to characters/monsters
-        for char in self.game_state["characters"].values():
+        encounter["characters"] = {}
+        for char_name, char in self.game_state["characters"].items():
             char["encounter"] = {}
+            char["encounter"]["name"] = char["name"]
             char["encounter"]["moved_round"] = 0
             char["encounter"]["range"] = encounter["starting_range"]
-        for monster_name, monster in encounter["monsters"].items():
-            # Note: a 'monster' can be an npc, we just use monster for enemies
-            self.merge_monster_type_or_npc_to_encounter(monster_name, monster)
+            self.cur_encounter["characters"][char_name] = char_name
+        for monster_name, monster_def in encounter["monsters"].items():
+            # Note: a 'monster' can be an npc, we just use the name monster to mean any enemy
+            monster = self.get_object(monster_def.get("unique_name") or monster_name)
+            if monster is None:
+                monster = self.merge_monster(monster_name, monster_def)
+                self.game_state["monsters"][monster["unique_name"]] = monster
+                self.add_to_object_map(monster)
             monster["encounter"] = {}
+            monster["encounter"]["name"] = monster_name
             monster["encounter"]["moved_round"] = 0
             monster["encounter"]["range"] = 0
+            self.cur_encounter["monsters"][monster_name] = monster["unique_name"]
         # Initiative? For now players first..
         self.cur_encounter["turn"] = "players" 
         self.cur_encounter["round"] = 1
@@ -1152,19 +1959,19 @@ class Game():
         resp += self.rules["encounter_prompt"] + "\n\n"
         monster_types = {}
         monsters_desc = ""
-        for monster_name, monster in self.cur_encounter["monsters"].items():
-            monster_type = monster['monster_type']
+        for monster_name, monster_unique_name in self.cur_encounter["monsters"].items():
+            monster = self.get_object(monster_unique_name)
             if monster["type"] == "monster":
                 monster_type = monster["monster_type"]
-                monster_types[monster_type] = self.module["monsters"][monster_type]
-            if Game.get_is_dead(monster):
+                monster_types[monster_type] = self.get_monster_type(monster_type)
+            if Game.is_dead(monster):
                 monsters_desc += f"  '{monster_name}' is DEAD!\n"
                 continue
-            if Game.get_has_escaped(monster):
+            if Game.has_escaped(monster):
                 monsters_desc += f"  '{monster_name}' has ESCAPED!\m"
                 continue
             stats = json.dumps(monster['stats']['basic']).strip("{}").replace("\"", "")
-            range_attack = ("YES" if Game.get_can_attack(monster, "range") else "NO")
+            range_attack = ("YES" if Game.can_attack(monster, "range") else "NO")
             monsters_desc += f'  "{monster_name}" type: "{monster_type}", has_range_attack: {range_attack}, stats -- {stats}\n'
         resp += "MONSTER TYPES:\n\n" + json.dumps(monster_types) + "\n\n"
         resp += f"MONSTERS:\n\n{monsters_desc}\n"
@@ -1177,14 +1984,15 @@ class Game():
         if self.cur_game_state_name != "encounter":
             return ("not in encounter", True)
         self.cur_game_state_name = "exploration"
-        for char in self.game_state["characters"].values():
+        for char_unique_name in self.cur_encounter["characters"].values():
+            char = self.get_object(char_unique_name)
             del char["encounter"]
-        for monster_npc_name, monster_npc in self.cur_encounter["monsters"].items():
-            del monster_npc["encounter"]
-            if monster_npc["type"] == "npc":
-                self.merge_encounter_npc_back_to_game_state(monster_npc_name, monster_npc)
+        for monster_unique_name in self.cur_encounter["monsters"].values():
+            monster = self.get_object(monster_unique_name)
+            del monster["encounter"]
         self.game_state["encounter"] = None
         self.cur_encounter = None
+        self.remove_cur_location_encounter()
         if players_left > 0:
             return ("Player were victorious!", False)
         players_alive = self.get_players_alive()
@@ -1197,24 +2005,26 @@ class Game():
     
     def get_attacker(self, attacker_name) -> dict[str, any]:
         if self.cur_encounter["turn"] == "players":
-            return self.game_state["characters"].get(attacker_name)
+            return self.get_object(self.cur_encounter["characters"].get(attacker_name))
         else:
-            return self.cur_encounter["monsters"].get(attacker_name)
+            return self.get_object(self.cur_encounter["monsters"].get(attacker_name))
 
     def get_attack_target(self, target_name) -> dict[str, any]:
         if self.cur_encounter["turn"] == "monsters":
-            return self.game_state["characters"].get(target_name)
+            return self.get_object(self.cur_encounter["characters"].get(target_name))
         else:
-            return self.cur_encounter["monsters"].get(target_name)
+            return self.get_object(self.cur_encounter["monsters"].get(target_name))
 
     def get_players_monsters_left(self) -> tuple[int, int]:
         chars_left = 0
         monsters_left = 0
-        for char in self.game_state["characters"].values():
-            if Game.get_is_still_fighting(char):
+        for char_unique_name in self.cur_encounter["characters"].values():
+            char = self.get_object(char_unique_name)
+            if Game.is_still_fighting(char):
                 chars_left += 1
-        for monster in self.cur_encounter["monsters"].values():
-            if Game.get_is_still_fighting(monster):
+        for monster_unique_name in self.cur_encounter["monsters"].values():
+            monster = self.get_object(monster_unique_name)
+            if Game.is_still_fighting(monster):
                 monsters_left += 1
         return (chars_left, monsters_left)
 
@@ -1222,8 +2032,9 @@ class Game():
         if self.cur_encounter["turn"] != "players":
             return (0, "")       
         left_to_go = []
-        for char_name, char in self.game_state["characters"].items():
-            if not Game.get_is_dead(char) and char["encounter"]["moved_round"] != self.cur_encounter["round"]:
+        for char_name, char_unique_name in self.game_state["characters"].items():
+            char = self.get_object(char_unique_name)
+            if Game.can_attack(char) and char["encounter"]["moved_round"] != self.cur_encounter["round"]:
                 left_to_go.append(char_name)
         left_to_go.sort()
         resp = ""
@@ -1234,12 +2045,19 @@ class Game():
         return (num_left_to_go, resp)
 
     @staticmethod
-    def get_is_still_fighting(being: dict[str, any]) -> bool:
-        return not Game.get_is_dead(being) and not Game.get_has_escaped(being)
+    def get_encounter_or_normal_name(being: dict[str, any]) -> str:
+        encounter_name = being.get("encounter", {}).get("name")
+        if encounter_name is not None:
+            return encounter_name
+        return being["name"]
 
     @staticmethod
-    def get_range_dist(from_entity: dict[str, any], to_entity: dict[str, any]) -> int:
-        return abs(from_entity["encounter"]["range"] - to_entity["encounter"]["range"])
+    def is_still_fighting(being: dict[str, any]) -> bool:
+        return not Game.is_dead(being) and not Game.has_escaped(being)
+
+    @staticmethod
+    def get_range_dist(from_being: dict[str, any], to_being: dict[str, any]) -> int:
+        return abs(from_being["encounter"]["range"] - to_being["encounter"]["range"])
     
     @staticmethod
     def get_range_str(range_ft) -> str:
@@ -1251,12 +2069,14 @@ class Game():
     
     def get_closest_ranges(self) -> tuple[int, int]:
         closest_monster = -10000
-        for monster in self.cur_encounter["monsters"].values():
-            if Game.get_is_still_fighting(monster):
+        for monster_unique_name in self.cur_encounter["monsters"].values():
+            monster = self.get_object(monster_unique_name)
+            if Game.is_still_fighting(monster):
                 closest_monster = max(monster["encounter"]["range"], closest_monster)
         closest_char = 10000
-        for char in self.game_state["characters"].values():
-            if Game.get_is_still_fighting(char):
+        for char_unique_name in self.cur_encounter["characters"].values():
+            char = self.get_object(char_unique_name)
+            if Game.is_still_fighting(char):
                 closest_char = min(char["encounter"]["range"], closest_char)
         return (closest_monster, closest_char)
 
@@ -1306,20 +2126,22 @@ class Game():
         
     def get_attacker_encounter_states(self) -> str:
         if self.cur_encounter["turn"] == "players":
-            attackers = self.game_state["characters"]
+            attackers = self.cur_encounter["characters"]
             targets = self.cur_encounter["monsters"]
             turn_name = "CHARACTER"
         else:
             attackers = self.cur_encounter["monsters"]
-            targets = self.game_state["characters"]
+            targets = self.cur_encounter["characters"]
             turn_name = "MONSTER"
         resp = ""
-        for attacker_name, attacker in attackers.items():
-            if not Game.get_is_still_fighting(attacker):
+        for attacker_name, attacker_unique_name in attackers.items():
+            attacker = self.get_object(attacker_unique_name)
+            if not Game.is_still_fighting(attacker):
                 continue
             ranges = []
-            for target_name, target in targets.items():
-                if Game.get_is_still_fighting(target):
+            for target_name, target_unique_name in targets.items():
+                target = self.get_object(target_unique_name)
+                if Game.is_still_fighting(target):
                     range = Game.get_range_str(Game.get_range_dist(attacker, target))
                     ranges.append(f"'{target_name}' - range: {range}")
             ranges_str = ", ".join(ranges)
@@ -1335,16 +2157,18 @@ class Game():
             _, monsters_left = self.get_players_monsters_left()
             if monsters_left == 0:
                 return ("no monsters left", 0)
-            for char_name, char in self.game_state["characters"].items():
-                if Game.get_is_still_fighting(char) and char["encounter"]["moved_round"] != self.cur_encounter["round"]:
+            for char_name, char_unique_name in self.cur_encounter["characters"].items():
+                char = self.get_object(char_unique_name)
+                if Game.is_still_fighting(char) and char["encounter"]["moved_round"] != self.cur_encounter["round"]:
                     left_to_go.append(char_name)
             resp += "Characters who haven't moved yet (AI Referee please tell players): " + ", ".join(left_to_go) + "\n"
         else:
             _, monsters_left = self.get_players_monsters_left()
             if monsters_left == 0:
                 return ("all players", 0)
-            for monster_name, monster in self.cur_encounter["monsters"].items():
-                if Game.get_is_still_fighting(monster) and monster["encounter"]["moved_round"] != self.cur_encounter["round"]:
+            for monster_name, monster_unique_name in self.cur_encounter["monsters"].items():
+                monster = self.get_object(monster_unique_name)
+                if Game.is_still_fighting(monster) and monster["encounter"]["moved_round"] != self.cur_encounter["round"]:
                     left_to_go.append(monster_name)
         return (resp, len(left_to_go))
 
@@ -1374,6 +2198,34 @@ class Game():
                 print("\n\nNOW PLAYERS TURN...\n\n")
         return (self.describe_encounter_turn(), False)
 
+    def check_encounter_can_move(self, move: str, attacker: dict[str, any]) -> tuple[str, bool]:
+        if self.cur_game_state_name == "encounter":
+            attacker_name = attacker["name"]
+            if attacker["encounter"]["moved_round"] == self.cur_encounter["round"]:
+                return (f"'{move}' FAILED - '{attacker_name} already moved this round", True)
+            if Game.is_dead(attacker):
+                return (f"'{move}' FAILED - '{attacker_name}' is dead", True)
+            if Game.has_escaped(attacker):
+                return (f"'{move}' FAILED - '{attacker_name}' has escaped", True)
+        return ( "ok", True )
+
+    def mark_encounter_moved(self, attacker: dict[str, any]) -> None:
+        if self.cur_game_state_name == "encounter":
+            attacker["encounter"]["moved_round"] = self.cur_encounter["round"]
+
+    def check_encounter_next_turn(self, resp: str) -> str:
+        if self.cur_game_state_name == "encounter":
+            _, left = self.get_attackers_left_to_go()
+            if left == 0:
+                turn_resp, err = self.next_encounter_turn()
+                if err:
+                    return (turn_resp, err)
+                return (resp + "\n" + turn_resp + "\n", False)
+            else:
+                return (resp, False)
+        else:
+            return (resp, False)
+
     def attack_move(self, move: str, attacker_name: str, target_name: str) -> tuple[str, bool]:
         resp = ""
 
@@ -1398,27 +2250,25 @@ class Game():
                 return (f"{attacker_name} can't move because it is currently {self.cur_encounter['turn']} turn ", True)
             else:
                 return (f"attacker '{attacker_name}' not found", True)
-        if attacker["encounter"]["moved_round"] == self.cur_encounter["round"]:
-            return (f"'{move}' FAILED - '{attacker_name} already moved this round", True)
-        if Game.get_is_dead(attacker):
-            return (f"'{move}' FAILED - '{attacker_name}' is dead", True)
-        if Game.get_has_escaped(attacker):
-            return (f"'{move}' FAILED - '{attacker_name}' has escaped", True)
+        
+        can_move_msg, can_move = self.check_encounter_can_move(move, attacker)
+        if not can_move:
+            return (can_move_msg, True)
 
         target = None        
         if move in [ "attack", "press", "shoot" ]:
             target = self.get_attack_target(target_name)
             if target is None:
                 return (f"'{move}' FAILED - target '{target_name}' not found", True)
-            if Game.get_is_dead(target):
+            if Game.is_dead(target):
                 return (f"'{move}' FAILED - target '{target_name}' is dead", True)
-            if Game.get_has_escaped(target):
+            if Game.has_escaped(target):
                 return (f"'{move}' FAILED - target '{target_name}' has escaped", True)
 
         if move in [ "attack", "press", "shoot" ]:
             attack_type = ("ranged" if move == "shoot" else "melee")
             ability_name = ("Melee Combat" if attack_type == "melee" else "Ranged Combat")
-            if not Game.get_can_attack(attacker, attack_type):
+            if not Game.can_attack(attacker, attack_type):
                 return (f"'{move}' FAILED - '{attacker_name}' doesn't have a {attack_type} attack", True)
             range = Game.get_range_dist(attacker, target)
             if move == "press" and range != 0:
@@ -1431,10 +2281,10 @@ class Game():
             weapon = self.get_merged_equipped_weapon(attacker, attack_type)
             if weapon is None:
                 return (f"'{move}' FAILED - '{attacker_name}' does not have a {attack_type}", True)
-            roll = random.randint(1, 20)
-            attack_mod_die = Game.get_skill_ability_modifier(attacker, ability_name) or ""
+            _, attack_mod_die, attack_adv_dis = Game.get_skill_ability_modifier(attacker, ability_name)
+            roll = Game.die_roll("d20", attack_adv_dis)
             attack_mod_roll = Game.die_roll(attack_mod_die)
-            defense = target["stats"]["basic"]["defense"]
+            defense = cur_value(target, "stats.basic", "defense")
             total_attack = roll + attack_mod_roll
             ability_mod_str = ""
             if not Game.is_monster(attacker):
@@ -1448,12 +2298,13 @@ class Game():
                 if cur_health < 0:
                     cur_health = 0
                     resp += " DEAD"
-                self.set_cur_health(target_name, target, cur_health)
+                self.set_cur_health(target, cur_health)
             else:
                 resp += " MISS!"
             if self.agent.logging:
                 print("    " + resp)
-            attacker["encounter"]["moved_round"] = self.cur_encounter["round"]
+            self.mark_encounter_moved(attacker)
+            return (resp, False)
 
         elif move in [ "advance", "charge", "retreat", "flee" ]:
             err = False
@@ -1466,20 +2317,13 @@ class Game():
             resp += "  " + moved_desc
             if self.agent.logging:
                 print("  " + resp)
-            attacker["encounter"]["moved_round"] = self.cur_encounter["round"]
+            self.mark_encounter_moved(attacker)
+            return (resp, False)
 
         elif move == "pass":
             err = False
             resp = f"'{attacker_name}' passes this turn"
-            attacker["encounter"]["moved_round"] = self.cur_encounter["round"]
-
-        _, left = self.get_attackers_left_to_go()
-        if left == 0:
-            turn_resp, err = self.next_encounter_turn()
-            if err:
-                return (turn_resp, err)
-            return (resp + "\n" + turn_resp + "\n", False)
-        else:
+            self.mark_encounter_moved(attacker)
             return (resp, False)
 
     def get_encounter_response_end(self) -> str:
@@ -1488,7 +2332,7 @@ class Game():
             return "\n\n  " + left_resp + "\n"
         return ""       
 
-    def do_encounter_action(self, action: any, subject: any, object: any, extra: any) -> tuple[str, bool]:
+    def do_encounter_action(self, action: any, subject: any, object: any, extra: any, extra2: any) -> tuple[str, bool]:
         resp = ""
         error = False
 
@@ -1506,7 +2350,7 @@ class Game():
 
     # DIALOG ACTIONS ----------------------------------------------------------
 
-    def do_dialog_action(self, action: any, subject: any, object: any, extra: any) -> tuple[str, bool]:
+    def do_dialog_action(self, action: any, subject: any, object: any, extra: any, extra2: any) -> tuple[str, bool]:
         resp = ""
         error = False
         match action:
@@ -1517,7 +2361,7 @@ class Game():
     
     # STORE ACTIONS ----------------------------------------------------------
 
-    def do_store_action(self, action: any, subject: any, object: any, extra: any) -> tuple[str, bool]:
+    def do_store_action(self, action: any, subject: any, object: any, extra: any, extra2: any) -> tuple[str, bool]:
         resp = ""
         error = False
         match action:
@@ -1553,9 +2397,20 @@ class Game():
         if self.game_over and action != "restart":
             return "Players lost and game is over - players must ask AI to \"restart\" the game"
 
+        use_verb = None
+        if action in ("light", "extinguish", "eat", "drink", "open", "close", "push", "pull", 
+                      "activate", "press", "lock", "unlock"):
+            use_verb = action
+            action = "use"
+
         match action:
+            case "cast":
+                args = [ subject, object, extra, extra2 ]
+                resp, error = self.cast(args)
             case "describe":
-                resp, error = self.look(subject)
+                resp, error = self.look(subject, object)
+            case "help":
+                resp, error = self.help(subject)
             case "party":
                 resp, error = self.describe_party()
             case "topic":
@@ -1563,26 +2418,35 @@ class Game():
             case "give":
                 resp, error = self.give(subject, object, extra, extra2)
             case "look":
-                resp, error = self.look(subject)
+                resp, error = self.look(subject, object)
             case "resume":
                 resp, error = self.resume()
             case "restart":
                 resp, error = self.restart()
+            case "stats":
+                resp, error = self.stats(subject)
+            case "use":
+                args = [ subject, object, extra, extra2 ]
+                resp, error = self.use(args, use_verb)
             case _:
                 match self.cur_game_state_name:
                     case "exploration":
-                        resp, error = self.do_expore_action(action, subject, object, extra)
+                        resp, error = self.do_explore_action(action, subject, object, extra, extra2)
                     case "encounter":
-                        resp, error = self.do_encounter_action(action, subject, object, extra)
+                        resp, error = self.do_encounter_action(action, subject, object, extra, extra2)
                     case "dialog":
-                        resp, error = self.do_dialog_action(action, subject, object, extra)
+                        resp, error = self.do_dialog_action(action, subject, object, extra, extra2)
                     case "store":
-                        resp, error = self.do_store_action(action, subject, object, extra)
+                        resp, error = self.do_store_action(action, subject, object, extra, extra2)
                     case _:
                         resp = "unknown game state {self.cur_game_state_name}'"
                         self.cur_game_state_name = "exploration"
                         error = True
-        
+
+        if self.cur_game_state_name == "encounter":
+            resp, next_turn_error = self.check_encounter_next_turn(resp)
+            error = error or next_turn_error        
+
         if error:
             if self.agent.logging:
                 print(f"  ERROR: {resp}")
