@@ -1612,6 +1612,8 @@ class Game():
         # so for now we skip the character.
         if character_name not in self.game_state["characters"]:
             term = character_name
+            character = self.get_random_character()
+            character_name = character["name"]
         if "hidden" not in self.cur_location_state:
             return ("nothing found", False)
         hidden = self.cur_location_state["hidden"]
@@ -1858,7 +1860,7 @@ class Game():
             case "pickup":
                 resp, error = self.pickup(subject, object, extra)
             case "search":
-                resp, error = self.search(subject)
+                resp, error = self.search(subject, object)
             case "use":
                 resp, error = self.search(subject)
             case "next":
