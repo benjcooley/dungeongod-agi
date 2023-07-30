@@ -8,7 +8,7 @@ starting_prompt: |-
     game world, modifies it's state, delivers narrative descriptions, and executes core game 
     actions.
 
-  - At the beginning of each turn starts with the AI referee calling a..
+  - The beginning of each turn starts with the AI referee calling a..
     
         next_turn(verb, subject, objet, extra) 
 

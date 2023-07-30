@@ -25,7 +25,7 @@ def find_case_insensitive(dic: dict, key: str) -> tuple[str, any]:
         if name.casefold() == lower_key:
             # Always return the key as the name
             return (k, v)
-    return (key, None)
+    return (None, None)
 
 def any_to_int(val: any) -> tuple[int, bool]:
     if isinstance(val, int):
@@ -455,7 +455,7 @@ class Game():
         # Check moving qty for items which use qty (gold, arrows, etc.)
         if "qty" in item:
             # Look for item with same name (not it's unique name)
-            target_item = find_case_insensitive(parent["items"], item["name"])
+            _, target_item = find_case_insensitive(parent["items"], item["name"])
             if target_item is not None:
                 # Just add qty to existing item
                 target_item["qty"] = target_item.get("qty", 1) + item["qty"]
@@ -471,7 +471,7 @@ class Game():
         assert parent["type"] in [ "monster", "character", "npc", "location_state", "item" ]
         if isinstance(item, str):
             item_name: str = item
-            item = find_case_insensitive(parent["items"], item)
+            _, item = find_case_insensitive(parent["items"], item)
             if item is None:
                 return (None, f"'{item_name}' not found", True)
         else:
@@ -502,6 +502,18 @@ class Game():
         for _, item in from_obj["items"].items():
             self.remove_item(from_obj, item)
             self.add_item(to_obj)
+
+    @staticmethod
+    def get_item_list_desc(items: dict[str, any]) -> list[str]:
+        item_descs = []
+        for item_name, item in items.items():
+            if "name" in item:
+                item_name = item["name"]
+            if "qty" in item and item["qty"] > 1:
+                item_descs.append(f"{item['qty']} {item_name}")
+            else:
+                item_descs.append(item_name)       
+        return item_descs 
 
     def set_location(self, new_loc_name: str) -> None:
         if self.cur_location_name == new_loc_name:
@@ -982,14 +994,18 @@ class Game():
             return f"{obj_type}s.{key}"
 
     # Char, Monster, NPC Items
-    def add_object_items(self, parent: dict[str, any]) -> None:
+    def add_object_items(self, parent: dict[str, any], items: dict[str, any]) -> None:
         parent_unique_name = parent["unique_name"]
-        parent["items"] = items = parent.get("items", {})
-        for item_name, item in items.items():
-            item["name"] = item_name
+        parent["items"] = parent_items = parent.get("items", {})
+        items_copy = copy.deepcopy(items)
+        for item_name, item in items_copy.items():
+            if "name" not in item:
+                item["name"] = item_name
             item["type"] = "item"
             item["parent"] = parent_unique_name
             self.add_to_object_map(item)
+            item_unique_name = item["unique_name"]
+            parent_items[item_unique_name] = item
 
     def init_object_map(self) -> None:
         self.game_state["object_map"] = {}
@@ -1001,9 +1017,10 @@ class Game():
                 obj["name"] = obj_name
                 obj["unique_name"] = obj_name
                 obj["type"] = obj_type
-                obj["items"] = obj.get("items", {})
                 self.add_to_object_map(obj)
-                self.add_object_items(obj)
+                obj_items = obj.get("items", {})
+                obj["items"] = {}
+                self.add_object_items(obj, obj_items)
     
     def remove_from_object_map(self, obj: dict[str, any]) -> None:
         unique_name = obj["unique_name"]
@@ -1023,7 +1040,7 @@ class Game():
                 unique_name = self.get_or_add_unique_name(obj_name, obj)
             else:
                 unique_name = obj["unique_name"] = obj["name"]
-        path = obj["path"] = self.make_object_path(obj)
+        path = self.make_object_path(obj)                
         self.object_map[unique_name] = path
 
     def get_object(self, unique_name: str) -> dict[str, any] | None:
@@ -1334,7 +1351,8 @@ class Game():
             exits = "exits: " + exits + "\n"
         items = ""
         if "items" in self.cur_location_state and len(self.cur_location_state["items"]) != 0:
-            items = "items: " + json.dumps(self.cur_location_state["items"]) + "\n"
+            item_descs = Game.get_item_list_desc(self.cur_location_state["items"])
+            items = "items: " + json.dumps(item_descs) + "\n"
         tasks = self.describe_tasks()
         if tasks != "":
             tasks = "tasks: " + tasks + "\n"
@@ -1363,14 +1381,15 @@ class Game():
         being = self.get_nearby_being(being_name)
         if being is None:
             {f"{being_name}' is not nearby", True}
-        being_name = Game.get_encounter_or_normal_name
+        being_name = Game.get_encounter_or_normal_name(being)
         resp = ""
         resp += f"Character: '{being_name}'\n"
         resp += "  stats - " + json.dumps(being["stats"]["basic"]).strip("{}").replace("\"", "") + "\n"
         resp += "  attributes - " + json.dumps(being["stats"]["attributes"]).strip("{}").replace("\"", "") + "\n"
         resp += "  skills - " + json.dumps(being["stats"]["skills"]).strip("{}").replace("\"", "") + "\n"
         resp += "  abilities - " + json.dumps(being["stats"]["abilities"]).strip("[]").replace("\"", "") + "\n"
-        resp += "  inventory - " + json.dumps(list(being["items"].keys())).strip("[]").replace("\"", "") + "\n\n"
+        item_descs = Game.get_item_list_desc(being["items"])
+        resp += "  inventory - " + json.dumps(item_descs).strip("[]").replace("\"", "") + "\n\n"
         return (resp, False)
 
     def describe_party(self) -> tuple[str, bool]:
@@ -1405,7 +1424,7 @@ class Game():
         assert from_being is not None
         to_being = self.get_object(to_name)
         assert to_being is not None
-        (item_unique_name, item) = find_case_insensitive(from_being["items"], item_name)
+        item_unique_name, item = find_case_insensitive(from_being["items"], item_name)
         if item is None:
             return (f"no item '{item_name}", True)
         item_qty = item.get("qty")        
@@ -1504,7 +1523,7 @@ class Game():
                 else:
                     invent_items[item_name] = {}
             else:
-                invent_items[item_name] = { "qty": invent_items.get("qty", 1) + item.get("qty", 1) }
+                invent_items[item_name] = { "qty": invent_items[item_name].get("qty", 1) + item.get("qty", 1) }
         return (json.dumps(invent_items) + "\n", False)
 
     def pickup(self, being_name: str, item_name: str, extra: any) -> tuple[str, bool]:
@@ -1515,7 +1534,7 @@ class Game():
         being = self.get_nearby_being(being_name)
         if not Game.can_do_actions(being):
             return (f"'{being_name}' is not here", True)        
-        (item_name, item) = find_case_insensitive(self.cur_location_state.get("items", {}), item_name)
+        _, item = find_case_insensitive(self.cur_location_state.get("items", {}), item_name)
         if item is None:
             return (f"no item '{item_name}", True)
         qty, err = any_to_int(extra)
@@ -1524,7 +1543,7 @@ class Game():
         pickup_item, resp, err = self.remove_item(self.cur_location_state, item, qty)
         if err:
             return (resp, err)
-        return self.add_item(being, pickup_item, qty)
+        return self.add_item(being, pickup_item)
 
     def drop(self, being_name: str, item_name: str, extra: any) -> tuple[str, bool]:
         if not isinstance(being_name, str) or not isinstance(item_name, str):
@@ -1534,7 +1553,7 @@ class Game():
         being = self.get_nearby_being(being_name)
         if not Game.can_do_actions(being):
             return (f"'{being_name}' is not here", True)  
-        (item_name, item) = find_case_insensitive(being["items"], item_name)
+        _, item = find_case_insensitive(being["items"], item_name)
         if item is None:
             return (f"no item '{item_name}", True)
         item_qty = item.get("qty", 1)
@@ -1546,7 +1565,7 @@ class Game():
         drop_item, resp, err = self.remove_item(being, item, qty)
         if err:
             return (resp, err)
-        return self.add_item(self.cur_location_state, drop_item, qty)       
+        return self.add_item(self.cur_location_state, drop_item)       
 
     def resume(self) -> tuple[str, bool]:
         resp = ""
@@ -1614,6 +1633,8 @@ class Game():
             term = character_name
             character = self.get_random_character()
             character_name = character["name"]
+        if not term:
+            term = "any"
         if "hidden" not in self.cur_location_state:
             return ("nothing found", False)
         hidden = self.cur_location_state["hidden"]
@@ -1639,14 +1660,15 @@ class Game():
         if found_items is not None:
             if "items" not in self.cur_location_state:
                 self.cur_location_state["items"] = {}
-            found_items_list = "found items " + json.dumps(found_items.keys()).strip("[]") + "\n"
-            self.cur_location_state["items"].update(found_items)
+            item_descs = Game.get_item_list_desc(found_items)
+            found_items_list = "found items " + json.dumps(item_descs).strip("[]").replace("\"", "") + "\n"
+            self.add_object_items(self.cur_location_state, found_items)
         found_exits = found_state.get("exits")
         found_exits_list = ""
         if found_exits is not None:
             if "exits" not in self.cur_location_state:
                 self.cur_location_state["exits"] = copy.deepcopy(self.cur_location.get("exits", {}))
-            found_exits_list = "found exits " + json.dumps(found_exits.keys()).strip("[]") + "\n"
+            found_exits_list = "found exits " + json.dumps(list(found_exits.keys())).strip("[]") + "\n"
             self.cur_location_state["exits"].update(found_exits)
         del self.cur_location_state["hidden"][found_idx]
         return (f"{desc}{found_items_list}{found_exits_list}", False)

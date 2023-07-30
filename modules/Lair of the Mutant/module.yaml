@@ -467,7 +467,7 @@ locations:
     description: |-
       - Spartan kitchen with basic cupboards and equipment.
       - Searching reveals usual household utensils, cutlery, pots, etc.
-      - From the kitchen players can move to: storage room, lounge.
+      - From the kitchen players can move to: storage room, lounge. Use 'outside' to exit house.
     instructions: |-
       - Using the "search" action players can discover some hidden coins.
     exits:
@@ -475,24 +475,26 @@ locations:
       "lounge" : { to: "Farmhouse Lounge" }
     state:
       hidden:
-        any:
-          items:
-            "sp": { "qty": 100 }
+      - items:
+          "sp": { "qty": 100 }
 
   "Farmhouse Storage Room":
     area: "Farmhouse"
     description: |-
       - Cellar area with neatly organised cupboards, shelves,
           barrels, boxes, containing (foodstuffs and water).
-      - From here players can move back to: kitchen"
+      - From here players can move back to: kitchen. Use 'outside' to exit house.
     instructions: |-
       - If players search the "boxes" to reveal items there.
       - Keep the items SECRET until the players search for them.
     exits:
       "kitchen": { to: "Farmhouse Kitchen" }
     state:
+      items:
+        "Ants Teeth": { qty: 10 }
       hidden:
-      - description: There are several useful items Barus has stashed away in the boxes.
+      - terms: [ "boxes" ]
+        description: There are several useful items Barus has stashed away in the boxes.
         items:
           "Lantern" : { "qty": 2 }
           "Oil" : { "qty" : 4 }
@@ -505,14 +507,15 @@ locations:
       - Appears to be a child's bedroom with a bed; drawers;
           cupboards.
       - Wooden "Carved Toy Soldier" qty: 34 scattered on the floor.
-      - From here players can move to: lounge.
+      - From here players can move to: lounge. Use 'outside' to exit house.
     exits:
       "lounge": { to: "Farmhouse Lounge" }
     state:
       items:
         "Carved Toy Soldier": { "qty": 34 }
       hidden:
-      - description: Hidden among the toy soliders is a Jacob's small knife.
+      - terms: [ "any", "toys", "soldiers", "toy soldiers" ]
+        description: Hidden among the toy soliders is a Jacob's small knife.
         items:
           "Small Knife": { damage: "d4" }
 
@@ -521,13 +524,7 @@ locations:
     description: |-
       - Bedroom contains a double bed, cupboards, drawers, small
           desk and chair.
-      - From here players can move to: lounge.
-    instructions: |-
-      - Desk contains a mirror, hand-drawn picture of the family
-          (including deceased wife), silver ring on a chain (50 sp).
-      - Large Chest (in Cupboard contains chainmail armour,
-          helmet and battle-axe (d8).
-      - DON'T reveal the armor until players do a search of the cupboard.
+      - From here players can move to: lounge. Use 'outside' to exit house.
     state:
       hidden:
       - terms: [ "cupboard" ]
@@ -535,8 +532,13 @@ locations:
           "Chainmail Armor" : { }
           "Helmet" : { }
           "Battle Axe" : { damage: "d8" }
+      - terms: [ "desk" ]
+        items:
+          "Family Picture" : { description: "This is a hand drawn family picture. It includes Barus, Jacob and what is likely Barus's dead wife." }
+          "Silver Ring" : { description: "A silver ring on a chain", sp: 50 }
     exits:
       "lounge": { to: "Farmhouse Lounge" }
+      "outside": { to: "Farmhouse" }
 
   "Farmhouse Barn":
     area: "Farmhouse"  
@@ -728,7 +730,6 @@ locations:
           "Torch": { qty: 6 }
           "Tinderbox": { qty: 2 }
           "Candles": { qty: 10 }
-
 
   "Moathouse Guest Rooms":
     area: "Moathouse"
