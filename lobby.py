@@ -195,8 +195,9 @@ class Lobby():
         return (str(module_info) + "\n", False)
 
     async def list_chars(self, query_type: str, filter: str) -> tuple[str, bool]:
-        if not isinstance(query_type, str):
-            return ("Empty query type", True)
+        if not isinstance(query_type, str) or query_type not in ["class", "level", "race", "name"]:
+            query_type = "name"
+            filter = "A"
         if not isinstance(filter, str):
             filter = ""
         err_str, err, char_list = self.engine.get_char_list(query_type, filter)
@@ -214,7 +215,7 @@ class Lobby():
             count += 1
             if count >= 20:
                 break
-        return (resp, False)
+        return (f"Character list results for query_type: {query_type}, with filter: {filter}\n\n" + resp, False)
     
     async def describe_char(self, char_name: str) -> tuple[str, bool]:
         if not isinstance(char_name, str):
