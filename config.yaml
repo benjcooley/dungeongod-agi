@@ -14,7 +14,7 @@ dev:
       module_name: "Encounter Test"
       party_name: "Band of Heroes"
 prod:
-  bot_name: billy-bot
+  bot_name: billy-the-dgod-bot
   channel_prefix: dgod-
   default_party_name: "Band of Heroes"
   default_module_name: "Lair of the Mutant"
