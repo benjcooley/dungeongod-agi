@@ -121,15 +121,15 @@ class Lobby():
 
     async def create_party(self, party_name: str) -> tuple[str, bool]:
         if not isinstance(party_name, str):
-            return (True, "Empty party name")
+            return ( "Empty party name", True)
         err_str, err, _ = await self.engine.create_party(self.user, party_name)
         return err_str, err
 
     async def add_char(self, party_name: str, char_name: str) -> tuple[str, bool]:
         if not isinstance(party_name, str):
-            return (True, "Empty party name")
+            return ("Empty party name", True)
         if not isinstance(char_name, str):
-            return (True, "Empty character name")
+            return ("Empty character name", True)
         if self.engine.char_exists(party_name):
             temp = party_name
             party_name = char_name
@@ -138,9 +138,9 @@ class Lobby():
 
     async def remove_char(self, party_name: str, char_name: str) -> tuple[str, bool]:
         if not isinstance(party_name, str):
-            return (True, "Empty party name")
+            return ("Empty party name", True)
         if not isinstance(char_name, str):
-            return (True, "Empty character name")
+            return ("Empty character name", True)
         if self.engine.char_exists(party_name):
             temp = party_name
             party_name = char_name
