@@ -193,6 +193,8 @@ class Agent():
             print("\n--------------------------------------------------------------------------------------------------------------\n\n")
 
         # Write out log
+        if not os.path.exists("logs"):
+            os.makedirs("logs")
         with open(self.log_file_name, "a") as f:
             indent_query = textwrap.indent(query, prefix="    ")
             resp_lines = str.splitlines(response)
