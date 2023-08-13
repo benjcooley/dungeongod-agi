@@ -198,8 +198,18 @@ class Lobby():
         if not isinstance(query_type, str) or query_type not in ["class", "level", "race", "name"]:
             query_type = "name"
             filter = "A"
-        if not isinstance(filter, str):
-            filter = ""
+        if query_type in ["class", "race", "name"] and (not isinstance(filter, str) or filter == ""):
+            if query_type == "class":
+                filter = "Adventurer"
+            elif query_type == "race":
+                filter = "Human"
+            elif query_type == "name":
+                filter = "A"
+        elif query_type == "level":
+            if filter is None or filter == "":
+                filter = 1
+            else:
+                filter = int(filter)
         err_str, err, char_list = self.engine.get_char_list(query_type, filter)
         if err:
             return (err_str, err)

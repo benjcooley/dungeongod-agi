@@ -1,4 +1,3 @@
-import agent
 import os
 import traceback
 from dotenv import load_dotenv
@@ -17,6 +16,7 @@ import discord
 load_dotenv()
 
 DEVELOPER_MODE = (os.getenv('DEVELOPER_MODE') == "true")
+ERROR_LOGGING = ((os.getenv('ERROR_LOGGING') or "true") == "true")
 CONFIG_TAG = ("dev" if DEVELOPER_MODE else "prod")
 
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
@@ -356,7 +356,7 @@ async def on_message(message: discord.Message):
                 result = await game.start_game()
     except:
         result = traceback.format_exc()
-        if agent.logging:
+        if ERROR_LOGGING:
             print(result)
 
     if result != "":
@@ -416,7 +416,7 @@ async def dgod_new_game(interaction: discord.Interaction, party_name: str = engi
         result = await game.start_game()
     except:
         result = traceback.format_exc()
-        if agent.logging:
+        if ERROR_LOGGING:
             print(result)
 
     if result != "":
@@ -466,7 +466,7 @@ async def dgod_resume_game(interaction: discord.Interaction):
         result = await game.start_game()
     except:
         result = traceback.format_exc()
-        if agent.logging:
+        if ERROR_LOGGING:
             print(result)
 
     if result != "":
@@ -515,7 +515,7 @@ async def dgod_lobby(interaction: discord.Interaction):
 
     except:
         result = traceback.format_exc()
-        if agent.logging:
+        if ERROR_LOGGING:
             print(result)
 
     if result != "":

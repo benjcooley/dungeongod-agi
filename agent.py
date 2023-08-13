@@ -13,6 +13,8 @@ load_dotenv()
 
 RESPONSE_RESERVE=500
 
+AGENT_LOGGING = ((os.getenv('AGENT_LOGGING') or "true") == "true")
+
 OPENAI_MODEL = os.getenv("OPENAI_MODEL") or "gpt-3.5-turbo-16k"
 OPENAI_MAX_TOKENS = int(os.getenv("OPENAI_MAX_TOKENS") or 16384) - RESPONSE_RESERVE
 OPENAI_TEMPERATURE = float(os.getenv("OPENAI_TEMPERATURE") or 0.3)
@@ -66,7 +68,7 @@ class Agent():
         self.memory = None
         self.thought_id_count = int(counter['count'])
         self.last_message = ""
-        self.logging = True
+        self.logging = AGENT_LOGGING
         self.first_query = True
         self.prompt_tokens = 0
         self.gen_tokens = 0
