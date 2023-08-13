@@ -4,4 +4,5 @@
 __pycache__
 memory_count.yaml
 /attic
-/save_games
+/db
+/logs

@@ -18,10 +18,13 @@ quests_completed: {}
 
 encounter: null
 
+info:
+  party_name: ""
+  module_name: ""
+
 state:
   cur_location_name: ""
   cur_game_state: ""
   cur_time: "JAN 1 3050 12:00"
   location_since: "JAN 1 3050 12:00"
   script_state_since: "JAN 1 3050 12:00"
-  party: []

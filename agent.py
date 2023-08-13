@@ -6,17 +6,22 @@ import yaml
 from dotenv import load_dotenv
 from datetime import datetime
 import json
+import textwrap
 
 # Load default environment variables (.env)
 load_dotenv()
 
 RESPONSE_RESERVE=500
 
-OPENAI_MODEL = os.getenv("OPENAI_MODEL") or "gpt-4"
-OPENAI_MAX_TOKENS = int(os.getenv("OPENAI_MAX_TOKENS") or 8192) - RESPONSE_RESERVE
+OPENAI_MODEL = os.getenv("OPENAI_MODEL") or "gpt-3.5-turbo-16k"
+OPENAI_MAX_TOKENS = int(os.getenv("OPENAI_MAX_TOKENS") or 16384) - RESPONSE_RESERVE
 OPENAI_TEMPERATURE = float(os.getenv("OPENAI_TEMPERATURE") or 0.3)
+OPENAI_PROMPT_COST = float(os.getenv("OPENAI_PROMPT_COST") or 0.003)
+OPENAI_GEN_COST = float(os.getenv("OPENAI_GEN_COST") or 0.004)
 OPENAI_SECONDARY_MODEL = os.getenv("OPENAI_SECONDARY_MODEL") or OPENAI_MODEL
 OPENAI_SECONDARY_TEMPERATURE = float(os.getenv("OPENAI_SECONDARY_TEMPERATURE") or OPENAI_TEMPERATURE)
+OPENAI_SECONDARY_PROMPT_COST = float(os.getenv("OPENAI_SECONDARY_PROMPT_COST") or 0.0015)
+OPENAI_SECONDARY_GEN_COST = float(os.getenv("OPENAI_SECONDARY_GEN_COST") or 0.002)
 
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -54,7 +59,6 @@ def get_ada_embedding(text):
 
 class Agent():
     def __init__(self, agent_name, user_name) -> None:
-        self.messages = []
         self.previous_memories = ""
         self.previous_response = ""
         self.agent_name = agent_name
@@ -63,9 +67,14 @@ class Agent():
         self.thought_id_count = int(counter['count'])
         self.last_message = ""
         self.logging = True
-        self.first_query = True        
+        self.first_query = True
+        self.prompt_tokens = 0
+        self.gen_tokens = 0
+        self.secondary_prompt_tokens = 0
+        self.secondary_gen_tokens = 0
+        self.log_file_name = f"logs/log_{agent_name}_" + datetime.now().strftime('%Y-%m-%d_%H-%M-%S') + ".txt"
         # Prompt Initialization
-        with open('prompts/prompts.yaml', 'r') as f:
+        with open('data/prompts/prompts.yaml', 'r') as f:
             self.prompts = yaml.load(f, Loader=yaml.FullLoader)        
         # Creates Pinecone Index
         #self.table_name = table_name
@@ -96,51 +105,102 @@ class Agent():
         # Give memory
         self.memory = pinecone.Index(self.table_name)
 
-    def generate(self, query: str, primary: bool = True, keep: bool = False) -> None:
+    def make_prefix(self, messages: list[str]) -> list[dict]:
+        out_prefix = []
+        for msg_index, msg in enumerate(messages):
+            role = ("user" if msg_index % 2 == 0 else "assistant")
+            out_prefix.append({ "role": role, "content": msg })
+        return out_prefix
 
-        query_size = len(token_enc.encode(query))
+    @staticmethod
+    def make_message(role: str, content: str, source: str, keep: bool = False) -> dict[str, any]:
+        tokens = len(token_enc.encode(content))
+        return { "role": role, "content": content, "source": source, "tokens": tokens, "keep": keep }
+
+    async def generate(self, messages: list[dict], primary: bool = True, keep: bool = False, maxlen: int = -1) -> dict[str, any]:
+
+        # If both models are the same, we're using primary
+        if OPENAI_MODEL == OPENAI_SECONDARY_MODEL:
+            primary = True
+
+        if maxlen == -1:
+            maxlen = OPENAI_MAX_TOKENS
+        else:
+            maxlen = min(OPENAI_MAX_TOKENS, maxlen)
+
+        query = messages[-1]["content"]
 
         if self.logging:
             print("\n----------------------------------------------  QUERY  -------------------------------------------------------\n\n" +
                   f"{query}\n")
-
-        size = query_size
-        for msg in self.messages:
+        
+        size = 0
+        for msg in messages:
             size += msg["tokens"]
 
-        while size > OPENAI_MAX_TOKENS:
-            for idx, msg in enumerate(self.messages):
+        # shallow copy so we can modify this list
+        messages = messages.copy()
+
+        # Make sure message fits in max context size
+        while size > maxlen:
+            for idx, msg in enumerate(messages):
                 if not msg["keep"]:
                     size -= msg["tokens"]
-                    del self.messages[idx]
+                    del messages[idx]
                     break
 
         send_messages = []
-        for msg in self.messages:
+        for msg in messages:
             send_messages.append({ "role": msg["role"], "content": msg["content"] })
 
-        if query != "":
-            query_message = [{ "role": "user", "content": query }]
-            save_query_message = [{ "role": "user", "content": query, "keep": keep, "tokens": query_size }]
+        if primary:
+            self.prompt_tokens += size
         else:
-            query_message = []
-            save_query_message = []
+            self.secondary_prompt_tokens += size
 
-        completion = openai.ChatCompletion.create(
-            model=(OPENAI_MODEL if primary else OPENAI_SECONDARY_MODEL),
-            temperature=(OPENAI_TEMPERATURE if primary else OPENAI_SECONDARY_TEMPERATURE),
-            messages=send_messages + query_message
+        model = OPENAI_MODEL if primary else OPENAI_SECONDARY_MODEL
+        temp = OPENAI_TEMPERATURE if primary else OPENAI_SECONDARY_TEMPERATURE
+
+        completion = await openai.ChatCompletion.acreate(
+            model=model,
+            temperature=temp,
+            messages=send_messages
         )
 
         response = completion.choices[0].message["content"]
+        resp_size = len(token_enc.encode(response))
+
+        if primary:
+            self.gen_tokens += resp_size
+        else:
+            self.secondary_gen_tokens += resp_size
+
+        if primary:
+            prompt_tokens = self.prompt_tokens
+            prompt_cost = prompt_tokens * OPENAI_PROMPT_COST * 0.001
+            gen_tokens = self.gen_tokens
+            gen_cost = gen_tokens * OPENAI_GEN_COST * 0.001
+        else:
+            prompt_tokens = self.secondary_prompt_tokens
+            prompt_cost = prompt_tokens * OPENAI_SECONDARY_PROMPT_COST * 0.001
+            gen_tokens = self.secondary_gen_tokens
+            gen_cost = gen_tokens * OPENAI_SECONDARY_GEN_COST * 0.001
 
         if self.logging:
             print("\n---------------------------------------------  RESPONSE  -----------------------------------------------------\n\n" +\
-                  f"{response}\n")
+                  f"{response}\n\n" + \
+                  f"    {model} - new_tokens: {size+resp_size} prompt_tokens: {prompt_tokens} prompt_cost: {prompt_cost:.2f} gen_tokens: {gen_tokens} gen_cost: {gen_cost:.2f}\n")
             print("\n--------------------------------------------------------------------------------------------------------------\n\n")
 
-        self.messages += save_query_message + \
-            [{"role": "assistant", "content": response, "keep": False, "tokens": len(token_enc.encode(response))}]
+        # Write out log
+        with open(self.log_file_name, "a") as f:
+            indent_query = textwrap.indent(query, prefix="    ")
+            resp_lines = str.splitlines(response)
+            indent_response = ""
+            for line in resp_lines:
+                indent_response += textwrap.fill(line, width=100) + "\n"
+            indent_response = textwrap.indent(indent_response, prefix="    ")
+            f.write(f"USER:\n\n{indent_query}\n\nASSISTANT:\n\n{indent_response}\n\n")
 
         return response
 

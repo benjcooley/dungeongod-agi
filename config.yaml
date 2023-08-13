@@ -1,7 +1,21 @@
-channels:
-  "dg-lair-of-the-mutant":
-    module: "Lair of the Mutant"
-    party: "Band of Heroes"
-  "dg-encounter-test":
-    module: "Encounter Test" 
-    party: "Band of Heroes"
+dev:
+  bot_name: freddy-bot
+  channel_prefix: dev-dgod-
+  default_party_name: "Band of Heroes"
+  default_module_name: "Lair of the Mutant"
+  dev_guild: bc1000003-1
+  dev_user: bc1000003
+  dev_guild_id: 1123076100738789477
+  dev_channels:
+    "dev-dg-lair-of-the-mutant":
+      module_name: "Lair of the Mutant"
+      party_name: "Band of Heroes"
+    "dev-dg-encounter-test":
+      module_name: "Encounter Test"
+      party_name: "Band of Heroes"
+prod:
+  bot_name: billy-bot
+  channel_prefix: dgod-
+  default_party_name: "Band of Heroes"
+  default_module_name: "Lair of the Mutant"
+

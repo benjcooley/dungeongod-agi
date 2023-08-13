@@ -1,0 +1,16 @@
+modules:
+  "Caves of Madness":
+    short_description: "A simple test module for debugging the engine"
+    description: "A Simple test module for debugging the engine"
+  "Lair of the Mutant":
+    short_description: "Lair of the Mutant - An Introductory Adventure"
+    description: |-
+      In the introductory adventure "Lair of the Mutant" for the Heroes of Adventure RPG system, players, 
+      as 1st-level heroes, embark on a mission in the Farlands, near the border outpost Skenrith 
+      Keep. In this adventure they must solve a mystery and use their wits and their abilities to
+      rescue innocent friends taken by a hideously monsterous mutant force.
+    levels: 1-3
+    players: 2-6
+  "Encounter Test":
+    short_description: "Test for encounters - Giant Ant Battle"
+    description: "Test for encounters - Giant Ant Battle"

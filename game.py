@@ -1,4 +1,8 @@
 from agent import Agent
+from db import Db
+from engine import Engine
+from user import User
+import asyncio
 import copy
 from datetime import datetime, timedelta
 import json
@@ -7,117 +11,141 @@ import os.path as path
 import random
 import yaml
 import pydash
-
-def find_case_insensitive(dic: dict, key: str) -> tuple[str, any]:
-    # Unique name will always be the right case (i.e "Dagger#1001")
-    value = dic.get(key)
-    if value is not None:
-        return (key, value)
-    # Search the dictionary linearly for non unique name. Sometimes this 
-    # may not match case as the AI sometimes doesn't get casing right.
-    lower_key = key.casefold()
-    for k, v in dic.items():
-        # We use the "name" prop if it has one, otherwise use k
-        if isinstance(v, dict):
-            name = v.get("name") or k
-        else:
-            name = k
-        if name.casefold() == lower_key:
-            # Always return the key as the name
-            return (k, v)
-    return (None, None)
-
-def any_to_int(val: any) -> tuple[int, bool]:
-    if isinstance(val, int):
-        return (val, False)
-    if not isinstance(val, str):
-        return (0, True)
-    s = val.strip()
-    p = len(s) - 1
-    while p >= 0:
-        if s[p].isdigit():
-            return (int(s[:p + 1]), False)
-    return (0, True)
-
-def parse_date_time(time_str: str) -> datetime:
-    return datetime.strptime(time_str, "%b %d %Y %H:%M")   
-
-def time_difference_mins(time1_str, time2_str) -> int:
-    delta = parse_date_time(time1_str) - parse_date_time(time2_str)
-    return int(delta.total_seconds() / 60)
-
-def escape_path_key(key: str) -> str:
-    key = key.replace("\\", r"\\")
-    key = key.replace(".", r"\.")
-    return key
+from utils import find_case_insensitive, any_to_int, parse_date_time, \
+    time_difference_mins, escape_path_key, check_for_image, extract_arguments
 
 def cur_value(obj: dict[str, any], path: str, value: str) -> any:
     return pydash.get(obj, path + ".cur_" + value) or pydash.get(obj, path + "." + value)
 
 class Game():
-    def __init__(self, agent: Agent, module_name: str, party_name: str, save_game_name: str) -> None:
-        self.module_name = module_name
+
+    def __init__(self, 
+                 engine: Engine, 
+                 user: User, 
+                 agent: Agent,
+                 start_game_action: str = "new_game",
+                 module_name: str = "", 
+                 party_name: str = "",
+                 save_game_name: str = "") -> None:
+        self.engine: Engine = engine
+        self.db = engine.db
+        self.user: User = user
         self.agent: Agent = agent
+        self.start_game_action = start_game_action
+        self.module_name = module_name
+        self.party_name = party_name
         self.game_started = False
         self.cur_location: dict[str, any] = {}
         self.cur_location_state: dict[str, any] = {}
         self.cur_location_script: dict[str, any] | None = None
         self.cur_encounter: dict[str, any] | None = None
-        self.party_name = party_name
-        with open(f"{self.parties_path}/party.yaml", "r") as f:
-            self.party = yaml.load(f, Loader=yaml.FullLoader)
-        with open(f"{self.module_path}/module.yaml", "r") as f:
-            self.module = yaml.load(f, Loader=yaml.FullLoader)
-        with open(f"{self.rules_path}/rules.yaml", "r") as f:
-            self.rules = yaml.load(f, Loader=yaml.FullLoader)
-        self.help_index = {}
-        self.init_help_index()
+        self.object_map: dict[str, any] = {}
         self.save_game_name = save_game_name
         self.game_state: dict[str, any] = {}
         self.action_image_path: str | None = None
         self.response_id = 1
         self.player_results_id = 0
         self.monster_results_id = 0
-        self.load_game()
+        self.exit_to_lobby = False
+        self.messages = [ Agent.make_message("assistant", "I'm Ready!", "referee", True) ]
 
     @property
     def is_started(self) -> bool:
         return self.game_started
 
-    def start_game(self) -> str:
-        self.game_started = True        
-        resp = self.agent.generate(self.rules["starting_prompt"], primary=True, keep=True)
+    async def start_game(self) -> str:
+        if self.game_started:
+            return "This game has already been started."
+        self.game_started = True
+        if self.start_game_action == "new_game":
+            assert self.module_name is not None and self.save_game is not None
+            await self.new_game()
+        elif self.start_game_action == "resume_game":
+            if not self.save_game_name:
+                self.save_game_name = "latest"
+            await self.load_game(self.save_game_name)
+        else:
+            assert False
         resume_prompt = self.agent.make_prompt(self.rules["resume_game_prompt"], self.module["info"])
-        return self.system_action(resume_prompt, \
+        return await self.system_action(resume_prompt, \
                            'call next_turn("resume")', \
                            'AI Referee, you must use [call next_turn("resume")] to start the game. Please try again.\n')
 
     # A per user response hint to focus the AI (not usually used unless AI has trouble)
     def add_query_hint(self, query) -> str:
-        return "PLAYERS RESPONSE:\n\n" + \
-            query + "\n\n" + \
+        return query + "\n\n" + \
             self.rules["instructions_prompt"] + "\n\n" + \
             self.cur_location_script["hint"] + "\n\n"
 
-    def system_action(self, query: str, expected_action: str = None, retry_msg: str = None) -> str:
-        return self.process_action(True, query, expected_action, retry_msg)
+    def filter_messages(self, sources: list[str], max_msgs: int = -1) -> list[dict[str, any]]:
+        filtered_msgs: list[str] = []
+        for msg in self.messages:
+            if msg["source"] in sources:
+                filtered_msgs.append(msg)
+        if max_msgs != -1:
+            filtered_msgs = filtered_msgs[-max_msgs:]
+        return filtered_msgs
 
-    def user_action(self, query: str) -> str:
-        return self.process_action(False, query)
+    async def generate(self, instr_query: str, query: str, mode: str, source: str, primary: bool = True, keep: bool = False) -> str:
+        query_msg = Agent.make_message("user", query, source, keep=keep)
+        if instr_query:
+            instr_msg = Agent.make_message("user", instr_query, source, keep=keep)
+        else:
+            instr_msg = query_msg
+        match mode:
+            case "exploration_action":
+                msgs = self.exploration_prefix + \
+                    self.filter_messages(["player", "referee", "engine"]) + \
+                    [ instr_msg ]
+                resp = await self.agent.generate(msgs, primary, keep)
+                resp_msg = Agent.make_message("assistant", resp, "actioner", keep=False)
+            case "encounter_action":
+                msgs = self.encounter_prefix + \
+                    self.filter_messages(["player", "referee", "engine"]) + \
+                    [ instr_msg ]
+                resp = await self.agent.generate(msgs, primary, keep)
+                resp_msg = Agent.make_message("assistant", resp, "actioner", keep=False)
+            case "engine_response":
+                msgs = self.response_prefix + \
+                    self.filter_messages(["player", "referee", "engine"]) + \
+                    [ instr_msg ]
+                resp = await self.agent.generate(msgs, primary, keep)
+                resp_msg = Agent.make_message("assistant", resp, "referee", keep=False)
+            case "referee_response":
+                msgs = self.response_prefix + \
+                    self.filter_messages(["player", "referee", "engine"], max_msgs=4) + \
+                    [ instr_msg ]
+                resp = await self.agent.generate(msgs, primary, keep)
+                resp_msg = Agent.make_message("assistant", resp, "referee", keep=False)
+        self.messages.append(query_msg)
+        self.messages.append(resp_msg)
+        return resp_msg["content"]
+
+    async def system_action(self, query: str, expected_action: str = None, retry_msg: str = None) -> str:
+        return await self.process_action("system", query, expected_action, retry_msg)
+
+    async def player_action(self, query: str) -> str:
+        return await self.process_action("player", query)
             
-    def process_action(self, is_system: bool, query: str, expected_action: str = None, retry_msg: str = None) -> str:
+    async def process_action(self, source: str, query: str, expected_action: str = None, retry_msg: str = None) -> str:
         self.action_image_path = None
-        if not is_system and self.cur_location_script and "hint" in self.cur_location_script:
-            query = self.add_query_hint(query)
-        resp = self.agent.generate(query, primary=True)
+        is_system = (source == "system")
+        if is_system:
+            action_instr = query
+        else:
+            if self.cur_location_script and "hint" in self.cur_location_script:
+                query = self.add_query_hint(query)
+            action_instr = "<PLAYER>\n" + query + "\n" + self.rules["action_instr_prompt"] + "\n"
+        action_mode = self.cur_game_state_name + "_action"
+        resp = await self.generate(action_instr, query, action_mode, source, primary=True, keep=False)
         if not is_system:
             trans_action = self.evaluate_transitions()
             if trans_action is not None:
                 resp = resp + trans_action
         if expected_action is not None and expected_action not in resp:
             while expected_action not in resp:
-                resp = self.agent.generate(retry_msg, primary=True)
-        processed_resp = self.process_response(resp, 1)
+                resp = await self.generate("", retry_msg, action_mode, "system", primary=True, keep=False)
+        processed_resp = await self.process_response(query, resp, 1)
         if not is_system:
             self.inc_cur_time(self.turn_period)
         if self.action_image_path is not None:
@@ -125,39 +153,55 @@ class Game():
             self.action_image_path = None
         return processed_resp
 
-    def process_response(self, response: str, level: int) -> str:
-        if level == 3:
+    async def process_response(self, query: str, response: str, level: int) -> str:
+        if level == 4:
             return response.strip(" \n\t")
         lines = response.split("\n")
-        ai_next_turn_resp = ""
         results = ""
         for line in lines:
-            line = line.replace("<HIDDEN>", "").strip()
-            if line.startswith("call next_turn("):
-                exec_text = line.replace("call next_turn(", "game_resp = self.next_turn(")
-                loc = { 'self': self, 'game_resp': "" }
-                exec(exec_text, globals(), loc)
-                game_resp = loc["game_resp"]
-                if "call next_turn(" in game_resp:
-                    game_resp = self.process_response(game_resp, level + 1)
+            line = line.strip()
+            if line == "PASS" and query != "":
+                results = ""
+                break
+            elif line == "NOT ALLOWED":
+                # Action AI says this is an invalid player action. Ignore it.
+                results = ""
+                query = "This player action is not allowed."
+                break
+            if "next_turn(\"" in line:
+                args = extract_arguments(line, 5)
+                game_resp = await self.next_turn(args[0], args[1], args[2], args[3], args[4])
                 results += game_resp + "\n"
         if results != "":
-            ai_next_turn_resp = self.agent.generate("<RESPONSE>\n" + \
-                                                    self.get_current_game_state_str() + "\n\n" + \
-                                                    self.get_response_start() + \
-                                                    results + \
-                                                    self.get_response_end(), primary=False)
+            instr_query = "<RESPONSE>\n" + \
+                        self.get_current_game_state_str() + "\n\n" + \
+                        self.get_response_start() + \
+                        results + \
+                        self.get_response_end()
+            resp_list = instr_query.split("<INSTRUCTIONS>\n")
+            # If there are any instructions we use the action prefix for the game state so we get the state
+            # specific rules. Otherwise we just let the AI create a narrative response (no rules needed).
+            has_instr = len(resp_list) > 1
+            mode = (self.cur_game_state_name + "_action" if has_instr else "engine_response")
+            query = resp_list[0] # Instructions will be at the end
+            ai_result = await self.generate(instr_query, query, mode, "engine", primary=False, keep=False)
             self.response_id += 1
-        if "call next_turn(" in ai_next_turn_resp:
-            ai_next_turn_resp = self.process_response(ai_next_turn_resp, level + 1)
-        vis_resp = self.agent.remove_hidden(response)
-        turn_vis_resp = self.agent.remove_hidden(ai_next_turn_resp)
-        if turn_vis_resp != "":
-            resp = vis_resp + "\n\n" + turn_vis_resp
+            if "call next_turn(" in ai_result:
+                ai_result = await self.process_response("", ai_result, level + 1)                
+            addl_resp = self.get_addl_response()
+            if addl_resp:
+                addl_resp_instr = addl_resp
+                resp_list = addl_resp_instr.split("<INSTRUCTIONS>\n")
+                has_instr = len(resp_list) > 1
+                mode = (self.cur_game_state_name + "_action" if has_instr else "engine_response")
+                addl_query = resp_list[0]
+                ai_addl_resp = await self.generate(addl_resp_instr, addl_query, mode, "engine", primary=False)
+                ai_addl_result = await self.process_response(query, ai_addl_resp, level + 1)
+                ai_result = ai_result.strip("\n") + "\n\n" + ai_addl_result
+            return ai_result.strip(" \t\n")
         else:
-            resp = vis_resp
-        resp = resp.strip(" \t\n")
-        return resp
+            # Action AI says this is a user query, so pass query through, referee handles it.
+            return await self.generate("", query, "referee_response", "referee", primary=False, keep=False)
 
     def init_help_index(self) -> None:
         all_spells = { "name": "all", "type": "spells" }
@@ -174,7 +218,7 @@ class Game():
         for equipment_name in self.rules["equipment"].keys():
             self.help_index[equipment_name.lower()] = { "name": equipment_name, "type": "equipment" }
 
-    def init_game(self) -> None:
+    async def init_game(self) -> None:
         self.init_session_state()
         self.init_object_map()
         if self.cur_location_name is not None:
@@ -191,13 +235,29 @@ class Game():
             else:
                 self.cur_game_state_name = "exploration"
 
-    def new_game(self) -> None:
+    async def load_module(self) -> None:
+        _, err, self.module = await self.engine.load_module(self.module_name)
+        assert not err
+        self.rules = await self.engine.load_rules(self.rules_path)
+        # Prefix messages we prepend to our message stream which has the rules/instructions for various modes
+        self.exploration_prefix = [Agent.make_message("user", self.rules["exploration_prompt"], "prefix", keep=True)]
+        self.encounter_prefix = [Agent.make_message("user", self.rules["encounter_prompt"], "prefix", keep=True)]
+        self.response_prefix = [Agent.make_message("user", self.rules["response_prompt"], "prefix", keep=True)]
+        self.help_index = {}
+        self.init_help_index()
+
+    async def new_game(self) -> None:
+        await self.load_module()
+        _, err, party = await self.engine.load_party(self.user, self.party_name)
+        assert not err
         game_path = 'data/new_game_state.yaml'
         with open(game_path, 'r') as f:
             self.game_state = yaml.load(f, Loader=yaml.FullLoader)
-            self.game_state["characters"] = copy.deepcopy(self.party["characters"])
+            self.game_state["characters"] = copy.deepcopy(party["characters"])
             self.game_state["npcs"] = copy.deepcopy(self.module["npcs"])
             self.game_state["monsters"] = copy.deepcopy(self.module["monsters"])
+            self.game_state["info"]["party_name"] = self.party_name
+            self.game_state["info"]["module_name"] = self.module_name
             self.game_state["state"]["last_effect_uid"] = 1000
             self.game_state["state"]["last_object_uid"] = 1000
             self.cur_game_state_name = self.module["starting_game_state"]
@@ -205,25 +265,28 @@ class Game():
             self.cur_time = self.module["starting_time"]
         for loc_name, loc in self.module["locations"].items():
             self.location_states[loc_name] = copy.deepcopy(loc.get("state", {}))
-        self.init_game()
-        self.save_game()
+        await self.init_game()
+        await self.save_game(wait_done=True)
 
-    def load_game(self) -> None:
-        game_path = f'save_games/{self.module_name}/{self.save_game_name}.yaml'
-        if path.exists(game_path):
-            with open(game_path, 'r') as f:
-                self.game_state = yaml.load(f, Loader=yaml.FullLoader)
-            self.init_game()
+    async def load_game(self, save_name: str = "latest") -> None:
+        save_key = f'{self.user.user_path}/save_games/{save_name}'
+        game_state = await self.db.get(save_key)
+        if game_state:
+            self.game_state = game_state
+            self.module_name = self.game_state["info"]["module_name"]
+            self.party_name = self.game_state["info"]["party_name"]
+            await self.load_module()
+            await self.init_game()
         else:
-            self.new_game()
+            await self.new_game()
 
-    def save_game(self) -> None:
-        module_save_path = f'save_games/{self.module_name}'
-        game_save_path = f'save_games/{self.module_name}/{self.save_game_name}.yaml'       
-        if not path.exists(module_save_path):
-            os.makedirs(module_save_path)
-        with open(game_save_path, 'w') as f:
-            yaml.dump(self.game_state, f)
+    async def save_game(self, save_name: str = "latest", wait_done: bool = False) -> None:
+        save_key = f'{self.user.user_path}/save_games/{save_name}'
+        if wait_done:
+            await self.db.put(save_key, self.game_state)
+        else:
+            # If we're going to do this async, make a copy of the state first
+            asyncio.create_task(self.db.put(save_key, copy.deepcopy(self.game_state)))
 
     def init_session_state(self) -> None:
         # Temporary session states (disappear when session is over)
@@ -296,13 +359,14 @@ class Game():
 
     @property
     def module_path(self) -> str:
-        return f"modules/{self.module_name}"
+        return f"data/modules/{self.module_name}"
 
     @property
     def rules_path(self) -> str:
         return f"rules/{self.module['info']['game']}/{self.module['info']['game_version']}"
 
     @property
+    # Premade parties (not user parties)
     def parties_path(self) -> str:
         return f"parties/{self.party_name}"
 
@@ -320,7 +384,9 @@ class Game():
     
     @game_over.setter
     def game_over(self, value: bool) -> None:
-        self.game_state["state"]["game_over"] = value    
+        self.game_state["state"]["game_over"] = value 
+        if value:
+            self.return_to_lobby = True
 
     @property
     def cur_game_state_name(self) -> str:
@@ -414,7 +480,7 @@ class Game():
         equipment_type = self.rules["equipment"].get(equipment_name)
         if equipment_type is None:
             return (f"no equipment type {equipment_name}", True)
-        image_path = self.check_for_image(self.rules_path + "/images", equipment_name, "equipment")
+        image_path = check_for_image(self.rules_path + "/images", equipment_name, "equipment")
         if image_path:
             self.action_image_path = image_path
         return ("EQUIPMENT TYPE:\n" + json.dumps(equipment_type) + "\n", False)
@@ -653,26 +719,15 @@ class Game():
             session_loc["players_have_seen"] = True
             image_path = self.module_path + "/" + self.cur_location["image"]
         return image_path
-    
-    @staticmethod
-    def check_for_image(base_path: str, name: str, type_name: str) -> str:
-        exts = [ ".jpg", ".png" ]
-        paths = [ f"/{type_name}", "" ]
-        for ext in exts:
-            for path in paths:
-                image_path = base_path + path + f"/{name}{ext}"
-                if os.path.exists(image_path):
-                    return image_path
-        return None
 
     def other_image(self, name, type_name) -> str:
-        image_path = Game.check_for_image(self.module_path + "/images", name, type_name)
+        image_path = check_for_image(self.module_path + "/images", name, type_name)
         if image_path is not None:
             return image_path
-        image_path = Game.check_for_image(self.rules_path + "/images", name, type_name)
+        image_path = check_for_image(self.rules_path + "/images", name, type_name)
         if image_path is not None:
             return image_path
-        image_path = Game.check_for_image(self.parties_path + "/images", name, type_name)
+        image_path = check_for_image(self.parties_path + "/images", name, type_name)
         return image_path
 
     @staticmethod
@@ -938,7 +993,8 @@ class Game():
         weapon_name = attacker["equipped"].get(attack_type + "_weapon")
         if weapon_name is None:
             return None
-        weapon = copy.deepcopy(attacker["items"][weapon_name])
+        _, orig_weapon = find_case_insensitive(attacker["items"], weapon_name)
+        weapon = copy.deepcopy(orig_weapon)
         if "rules_item" in weapon:
             rules_weapon_name = weapon["rules_item"]
         else:
@@ -959,10 +1015,6 @@ class Game():
         return exits
     
     # OBJECT MAP ----------------------------------------------------------
-    
-    @property
-    def object_map(self) -> dict[str, any]:
-        return self.game_state["object_map"]
     
     @property
     def last_object_uid(self) -> int:
@@ -1008,7 +1060,7 @@ class Game():
             parent_items[item_unique_name] = item
 
     def init_object_map(self) -> None:
-        self.game_state["object_map"] = {}
+        self.object_map = {}
         self.game_state["state"]["last_object_uid"] = 1000
         for obj_type in [ "character", "monster", "npc", "game_state", "location_state" ]:
             obj_dict_name = f"{obj_type}s"
@@ -1334,13 +1386,6 @@ class Game():
         desc = "description: " + self.cur_location["description"].strip(" \n\t") + "\n\n"
         if self.cur_location_script is not None:
             desc += "\n" + self.cur_location_script["description"].strip(" \t\n") + "\n"
-        instr = self.cur_location.get("instructions", "").strip(" \n\t")
-        if self.cur_location_script is not None and "instructions" in self.cur_location_script:
-            if instr != "":
-                instr += "\n\n"
-            instr += self.cur_location_script["instructions"].strip(" \n\t") + "\n"
-        if instr != "":
-            instr = self.rules["instructions_prompt"].strip(" \n\t") + "\n\n" + instr + "\n"
         changes = ""
         if "changes" in self.cur_location_state:
             changes = self.cur_location_state["changes"]
@@ -1369,12 +1414,19 @@ class Game():
         # Make sure we've marked all NPCs as "known" by the players once they've seen them
         for npc_name in all_npcs:
             self.game_state["npcs"][npc_name]["has_player_met"] = True
+        instr = self.cur_location.get("instructions", "").strip(" \n\t")
+        if self.cur_location_script is not None and "instructions" in self.cur_location_script:
+            if instr != "":
+                instr += "\n\n"
+            instr += self.cur_location_script["instructions"].strip(" \n\t") + "\n"
+        if instr != "":
+            instr = "\n" + self.rules["instructions_prompt"].strip(" \n\t") + "\n\n" + instr + "\n"
         # If we're in encounter mode.. use an abbreviated location description with encounter insructions/rules
         encounter = self.describe_encounter()
         if encounter != "":
             resp = f"{desc}{npcs}{encounter}"
         else:
-            resp = f"{desc}{changes}{instr}{exits}{items}{tasks}{npcs}{topics}"
+            resp = f"{desc}{changes}{exits}{items}{tasks}{npcs}{topics}{instr}"
         return (resp, False)
 
     def stats(self, being_name: str) -> tuple[str, bool]:
@@ -1385,11 +1437,15 @@ class Game():
         resp = ""
         resp += f"Character: '{being_name}'\n"
         resp += "  stats - " + json.dumps(being["stats"]["basic"]).strip("{}").replace("\"", "") + "\n"
-        resp += "  attributes - " + json.dumps(being["stats"]["attributes"]).strip("{}").replace("\"", "") + "\n"
-        resp += "  skills - " + json.dumps(being["stats"]["skills"]).strip("{}").replace("\"", "") + "\n"
-        resp += "  abilities - " + json.dumps(being["stats"]["abilities"]).strip("[]").replace("\"", "") + "\n"
-        item_descs = Game.get_item_list_desc(being["items"])
-        resp += "  inventory - " + json.dumps(item_descs).strip("[]").replace("\"", "") + "\n\n"
+        if "attributes" in being["stats"]:
+            resp += "  attributes - " + json.dumps(being["stats"]["attributes"]).strip("{}").replace("\"", "") + "\n"
+        if "skills" in being["stats"]:
+            resp += "  skills - " + json.dumps(being["stats"]["skills"]).strip("{}").replace("\"", "") + "\n"
+        if "abilities" in being["stats"]:
+            resp += "  abilities - " + json.dumps(being["stats"]["abilities"]).strip("[]").replace("\"", "") + "\n"
+        if "items" in being:
+            item_descs = Game.get_item_list_desc(being["items"])
+            resp += "  inventory - " + json.dumps(item_descs).strip("[]").replace("\"", "") + "\n\n"
         return (resp, False)
 
     def describe_party(self) -> tuple[str, bool]:
@@ -1583,17 +1639,21 @@ class Game():
         resp_loc, error = self.describe_location()
         if error:
             return (resp_loc, error)
-        resp += "FIRST LOCATION:\n\n" + resp_loc + "\n\n"
-        resp += self.rules["overview_prompt"]
+        resp += "FIRST LOCATION:\n\n" + resp_loc + "\n\n" 
+        resp += self.rules["overview_prompt"]       
         return (resp, False)
 
-    def restart(self) -> tuple[str, bool]:
+    async def restart(self) -> tuple[str, bool]:
 #        if not self.game_over:
 #            return ("current game is not over", True)
-        self.new_game()
-        return self.resume()
+        await self.new_game()
+        return await self.resume()
 
-    def complete(self, task_name: str) -> tuple[str, bool]:
+    def lobby(self) -> tuple[str, bool]:
+        self.exit_to_lobby = True
+        return ("ok", False)
+
+    async def complete(self, task_name: str) -> tuple[str, bool]:
         if task_name in self.game_state["tasks_completed"] and self.game_state["tasks_completed"][task_name]:
             (f"task '{task_name}' is already completed", True)
         self.game_state["tasks_completed"][task_name] = True
@@ -1694,7 +1754,7 @@ class Game():
             item_name = args[0]
             del args[0]
             being, item = self.find_item(being_name or "any", item_name)
-        elif args[0] in self.cur_location_state["usables"]:
+        elif args[0] in self.cur_location_state.get("usables", {}):
             usable_name = args[0]
             del args[0]
             usable = self.cur_location_state["usables"][usable_name]
@@ -1753,7 +1813,7 @@ class Game():
         if spell is None:
             return (f"no spell {spell_name}", True)
         spell["category"] = spell["category"] + " Magic"
-        image_path = self.check_for_image(self.rules_path + "/images", spell_name, "spells")
+        image_path = check_for_image(self.rules_path + "/images", spell_name, "spells")
         if image_path:
             self.action_image_path = image_path
         return (f"SPELL DESCRIPTION: {spell_name}\n" + json.dumps(spell) + "\n", False)
@@ -1767,7 +1827,7 @@ class Game():
         if magic_category is None:
             return (f"no magic category {magic_category}", True)
         spell_names = [spell_name for spell_name, spell in self.rules["spells"].items() if spell["category"] == magic_category_name]
-        image_path = self.check_for_image(self.rules_path + "/images", magic_category_name + " Magic", "magic_categories")
+        image_path = check_for_image(self.rules_path + "/images", magic_category_name + " Magic", "magic_categories")
         if image_path:
             self.action_image_path = image_path
         return (f"MAGIC DESCRIPTION: Please elaborate on the following with a two paragraph descripton..\n\n{magic_category_name}\n" + 
@@ -1845,13 +1905,13 @@ class Game():
         resp += cast_effect_resp + "\n"
 
         # image?
-        image_path = self.check_for_image(self.rules_path + "/images", spell_name, "spells")
+        image_path = check_for_image(self.rules_path + "/images", spell_name, "spells")
         if image_path:
             self.action_image_path = image_path          
 
         return (resp, failed)
 
-    def do_explore_action(self, action: any, subject: any, object: any, extra: any, extra2: any) -> tuple[str, bool]:
+    async def do_explore_action(self, action: any, subject: any, object: any, extra: any, extra2: any) -> tuple[str, bool]:
         resp = ""
         error = False
 
@@ -1872,7 +1932,7 @@ class Game():
             case "drop":
                 resp, error = self.drop(subject, object, extra)
             case "give":
-                resp, error = ("ok", True)
+                resp, error = self.give(subject, object, extra, extra2)
             case "go":
                 resp, error = self.go(subject, object)
             case "invent":
@@ -1883,8 +1943,6 @@ class Game():
                 resp, error = self.pickup(subject, object, extra)
             case "search":
                 resp, error = self.search(subject, object)
-            case "use":
-                resp, error = self.search(subject)
             case "next":
                 resp, error = self.next_script_state(subject)
             case _:
@@ -1980,7 +2038,6 @@ class Game():
         resp = ""
         if "description" in self.cur_encounter:
             resp += "ENCOUNTER DESCRIPTION:\n\n" + self.cur_encounter["description"] + "\n\n"
-        resp += self.rules["encounter_prompt"] + "\n\n"
         monster_types = {}
         monsters_desc = ""
         for monster_name, monster_unique_name in self.cur_encounter["monsters"].items():
@@ -2003,7 +2060,7 @@ class Game():
         resp += turn_desc
         return resp
 
-    def end_encounter(self) -> tuple[str, bool]:
+    async def end_encounter(self) -> tuple[str, bool]:
         players_left, monsters_left = self.get_players_monsters_left()
         if self.cur_game_state_name != "encounter":
             return ("not in encounter", True)
@@ -2014,8 +2071,20 @@ class Game():
         for monster_unique_name in self.cur_encounter["monsters"].values():
             monster = self.get_object(monster_unique_name)
             del monster["encounter"]
+        for monster in self.game_state["monsters"].values():
+            monster.pop("encounter", None)
+            if monster["dead"]:
+                monster.pop("stats", None)
+                monster.pop("info", None)
+                monster.pop("melee_attack", None)
+                monster.pop("ranged_attack", None)
+        for char in self.game_state["characters"].values():
+            char.pop("encounter", None)
+        for npc in self.game_state["npcs"].values():
+            npc.pop("encounter", None)
         self.game_state["encounter"] = None
         self.cur_encounter = None
+        self.cur_game_state_name = "exploration"
         self.remove_cur_location_encounter()
         if players_left > 0:
             return ("Player were victorious!", False)
@@ -2024,7 +2093,7 @@ class Game():
             self.game_over = True
             return ("All players were killed - game over", False)
         self.set_location(self.prev_location_name)
-        resp, err = self.describe_location()
+        resp, _ = await self.describe_location()
         return ("Your party has escaped!\n\n" + resp, False)
     
     def get_attacker(self, attacker_name) -> dict[str, any]:
@@ -2052,7 +2121,7 @@ class Game():
                 monsters_left += 1
         return (chars_left, monsters_left)
 
-    def get_players_left_to_go(self) -> tuple[int, str]:
+    def get_attackers_left_to_go(self) -> tuple[int, str]:
         if self.cur_encounter["turn"] != "players":
             return (0, "")       
         left_to_go = []
@@ -2149,6 +2218,7 @@ class Game():
             return (new_range - old_range, escaped, resp)
         
     def get_attacker_encounter_states(self) -> str:
+        self.check_encounter_next_turn("")
         if self.cur_encounter["turn"] == "players":
             attackers = self.cur_encounter["characters"]
             targets = self.cur_encounter["monsters"]
@@ -2177,47 +2247,50 @@ class Game():
     def get_attackers_left_to_go(self) -> tuple[str, int]:
         left_to_go = []
         resp = ""
+        players_left, monsters_left = self.get_players_monsters_left()
+        if monsters_left == 0:
+            return ("no monsters left", 0)
+        if players_left == 0:
+            return ("no players left", 0)
         if self.cur_encounter["turn"] == "players":
-            _, monsters_left = self.get_players_monsters_left()
-            if monsters_left == 0:
-                return ("no monsters left", 0)
             for char_name, char_unique_name in self.cur_encounter["characters"].items():
                 char = self.get_object(char_unique_name)
                 if Game.is_still_fighting(char) and char["encounter"]["moved_round"] != self.cur_encounter["round"]:
                     left_to_go.append(char_name)
-            resp += "Characters who haven't moved yet (AI Referee please tell players): " + ", ".join(left_to_go) + "\n"
+            if len(left_to_go) > 0:
+                resp = "Players who haven't moved yet (AI Referee please tell players): " + ", ".join(left_to_go) + "\n"
+            else:
+                resp = "All players have moved\n"
         else:
-            _, monsters_left = self.get_players_monsters_left()
-            if monsters_left == 0:
-                return ("all players", 0)
             for monster_name, monster_unique_name in self.cur_encounter["monsters"].items():
                 monster = self.get_object(monster_unique_name)
                 if Game.is_still_fighting(monster) and monster["encounter"]["moved_round"] != self.cur_encounter["round"]:
                     left_to_go.append(monster_name)
+            if len(left_to_go) > 0:
+                resp = "Please choose moves for these monsters: " + ", ".join(left_to_go) + "\n"
+            else:
+                resp = "All monsters have moved\n"
         return (resp, len(left_to_go))
 
     def describe_encounter_turn(self) -> str:
+        resp = self.get_attacker_encounter_states() + "\n"
         if self.cur_encounter["turn"] == "monsters":
-            resp = self.get_attacker_encounter_states() + "\n" + self.rules["monster_turn_prompt"].strip("\n")
+            resp += self.rules["monster_turn_prompt"].strip("\n")
         else:
-            resp = self.get_attacker_encounter_states() + "\n" + self.rules["player_turn_prompt"].strip("\n")
+            resp += self.rules["player_turn_prompt"].strip("\n")
         return resp
 
     def next_encounter_turn(self) -> tuple[str, bool]:
+        players_left, monsters_left = self.get_players_monsters_left()
+        if players_left == 0 or monsters_left == 0:
+            return self.end_encounter()
         if self.cur_encounter["turn"] == "players":
-            _, monsters_left = self.get_players_monsters_left()
-            if monsters_left == 0:
-                return self.end_encounter()
             self.cur_encounter["turn"] = "monsters"
             if self.agent.logging:
                 print("\n\nNOW MONSTERS TURN...\n\n")
         else:
-            players_left, _ = self.get_players_monsters_left()
-            if players_left == 0:
-                return self.end_encounter()
             self.cur_encounter["turn"] = "players"
             self.cur_encounter["round"] += 1
-            left_to_go_str, _ = self.get_attackers_left_to_go()
             if self.agent.logging:
                 print("\n\nNOW PLAYERS TURN...\n\n")
         return (self.describe_encounter_turn(), False)
@@ -2317,10 +2390,9 @@ class Game():
             if total_attack >= defense:
                 damage_die = weapon["damage"]
                 damage = Game.die_roll(damage_die)
-                cur_health = Game.get_cur_health(target) - damage
+                cur_health = max(0, Game.get_cur_health(target) - damage)
                 resp += f" HIT! - dealing damage -{damage} leaving health {cur_health}"
-                if cur_health < 0:
-                    cur_health = 0
+                if cur_health == 0:
                     resp += " DEAD"
                 self.set_cur_health(target, cur_health)
             else:
@@ -2350,13 +2422,26 @@ class Game():
             self.mark_encounter_moved(attacker)
             return (resp, False)
 
-    def get_encounter_response_end(self) -> str:
+    def get_response_encounter_end(self) -> str:
+        players_left, monsters_left = self.get_players_monsters_left()
+        if players_left == 0 or monsters_left == 0:
+            resp, _ = self.check_encounter_next_turn("")
+            return resp
         left_resp, left = self.get_attackers_left_to_go()
         if left != 0:
-            return "\n\n  " + left_resp + "\n"
-        return ""       
+            return "\n  " + left_resp + "\n"
+        if self.cur_encounter["turn"] == "monsters":
+            resp, _ = self.check_encounter_next_turn("")
+            return resp
+        return "\nAll players have gone. NOW MONSTERS TURN!\n"
+    
+    def get_addl_response_encounter(self) -> str:
+        if self.cur_encounter["turn"] == "players":
+            resp, _ = self.check_encounter_next_turn("")
+            return resp
+        return ""
 
-    def do_encounter_action(self, action: any, subject: any, object: any, extra: any, extra2: any) -> tuple[str, bool]:
+    async def do_encounter_action(self, action: any, subject: any, object: any, extra: any, extra2: any) -> tuple[str, bool]:
         resp = ""
         error = False
 
@@ -2372,28 +2457,6 @@ class Game():
                     error = True
         return (resp, error)
 
-    # DIALOG ACTIONS ----------------------------------------------------------
-
-    def do_dialog_action(self, action: any, subject: any, object: any, extra: any, extra2: any) -> tuple[str, bool]:
-        resp = ""
-        error = False
-        match action:
-            case _:
-                resp = f"can't do action '{action}'"
-                error = True
-        return (resp, error)
-    
-    # STORE ACTIONS ----------------------------------------------------------
-
-    def do_store_action(self, action: any, subject: any, object: any, extra: any, extra2: any) -> tuple[str, bool]:
-        resp = ""
-        error = False
-        match action:
-            case _:
-                resp = f"can't do action '{action}'"
-                error = True
-        return (resp, error)
-
     # NEXT TURN ----------------------------------------------------------
 
     def get_response_start(self) -> str:
@@ -2402,11 +2465,20 @@ class Game():
     def get_response_end(self) -> str:
         match self.cur_game_state_name:
             case "encounter":
-                return self.get_encounter_response_end()
+                return self.get_response_encounter_end()
             case _:
                 return ""
 
-    def next_turn(self, action: any, 
+    # Response that causes AI to do additional next_turn() processing
+    def get_addl_response(self) -> str:
+        match self.cur_game_state_name:
+            case "encounter":
+                resp = self.get_addl_response_encounter()
+            case _:
+                resp = ""
+        return resp
+
+    async def next_turn(self, action: any, 
                   subject: any = None, 
                   object: any = None, 
                   extra: any = None, 
@@ -2419,11 +2491,17 @@ class Game():
             print(f"  ACTION: {action} {subject} {object} {extra}")
         
         if self.game_over and action != "restart":
-            return "Players lost and game is over - players must ask AI to \"restart\" the game"
+            return "Players lost and game is over - players must ask AI to \"restart\" the game or return to lobby."
+
+        if action == "exit" or action == "quit":
+            action = "lobby"
 
         use_verb = None
-        if action in ("light", "extinguish", "eat", "drink", "open", "close", "push", "pull", 
-                      "activate", "press", "lock", "unlock"):
+        if self.cur_game_state_name != "encounter" and action == "press":
+            use_verb = "press"  # Press is also an encounter action!
+            action = "use"
+        elif action in ("light", "extinguish", "eat", "drink", "open", "close", "push", "pull", 
+                        "activate", "lock", "unlock"):
             use_verb = action
             action = "use"
 
@@ -2435,6 +2513,8 @@ class Game():
                 resp, error = self.look(subject, object)
             case "help":
                 resp, error = self.help(subject)
+            case "lobby":
+                resp, error = self.lobby()
             case "party":
                 resp, error = self.describe_party()
             case "topic":
@@ -2445,8 +2525,6 @@ class Game():
                 resp, error = self.look(subject, object)
             case "resume":
                 resp, error = self.resume()
-            case "restart":
-                resp, error = self.restart()
             case "stats":
                 resp, error = self.stats(subject)
             case "use":
@@ -2455,36 +2533,21 @@ class Game():
             case _:
                 match self.cur_game_state_name:
                     case "exploration":
-                        resp, error = self.do_explore_action(action, subject, object, extra, extra2)
+                        resp, error = await self.do_explore_action(action, subject, object, extra, extra2)
                     case "encounter":
-                        resp, error = self.do_encounter_action(action, subject, object, extra, extra2)
-                    case "dialog":
-                        resp, error = self.do_dialog_action(action, subject, object, extra, extra2)
-                    case "store":
-                        resp, error = self.do_store_action(action, subject, object, extra, extra2)
+                        resp, error = await self.do_encounter_action(action, subject, object, extra, extra2)
                     case _:
-                        resp = "unknown game state {self.cur_game_state_name}'"
+                        resp = f"unknown game state {self.cur_game_state_name}'"
                         self.cur_game_state_name = "exploration"
-                        error = True
-
-        if self.cur_game_state_name == "encounter":
-            resp, next_turn_error = self.check_encounter_next_turn(resp)
-            error = error or next_turn_error        
+                        error = True    
 
         if error:
             if self.agent.logging:
                 print(f"  ERROR: {resp}")
             return resp
         
-        self.save_game()
+        # Note, we don't wait for it to finish saving
+        await self.save_game()
 
         return resp
-    
-    # USER COMMANDS ----------------------------------------------------------
-
-    def restart_command(self) -> str:
-        resp, err = self.restart()
-        if err:
-            return resp
-        return self.process_response(resp, 1)
 
