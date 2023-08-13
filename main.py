@@ -30,8 +30,9 @@ with open('config.yaml', 'r') as f:
     config_all = yaml.load(f, Loader=yaml.FullLoader)
     config = config_all[CONFIG_TAG]
 
-BOT_NAME = config.get("bot_name")
 CHANNEL_PREFIX = config.get("channel_prefix")
+BOT_NAME = config.get("bot_name")
+BOT_ID = config.get("bot_id")
 DEV_DISCORD_GUILD = config.get("dev_guild")
 DEV_DISCORD_GUILD_ID = config.get("dev_guild_id")
 
@@ -133,8 +134,7 @@ async def start_session(user: discord.User,
                 type=discord.ChannelType.private_thread
             )
             # Add the bot/user to the thread
-            bot = guild.get_member_named(BOT_NAME)
-            await thread.add_user(bot)
+            await thread.add_user(discord_client.user)
             await thread.add_user(user)
             new_thread = True
         thread.join()
