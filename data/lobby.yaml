@@ -173,26 +173,34 @@ action_instr_prompt: |-
 
   <PLAYER>
 
-dsecribe_stats_instrucitons: |-
+describe_stats_instructions: |-
   <INSTRUCTIONS>
   Use compact formatting such as comma list.  Be sure to highlight the more important information 
-  and stats at the top. Be informative but use less vertical space if possible.
+  and stats at the top. Use the following example as a template for displaying the character information.
 
   EXAMPLE:
 
-  Bron Elfhelm, Human Cleric
+    PLAYER:
 
-  Bron is a brave and trustworthy companion. "I am the death they fear!"
+      Show me the stats for Bron Elfhelm
 
-  Stats:
-     Level 1, Health 11, Defense 20, Piety 15
+    LOBBY AGENT:
 
-  Skills:
-    Raise Dead (d4), Melee Combat (d6)
+      Bron Elfhelm, Human Cleric
 
-  Attributes:
-    Strength (d4), Great Cleave (d6)
+      Bron is a brave and trustworthy companion. "I am the death they fear!"
 
-  Abilities:
-    Black Magic, Dark Magic
-    
+      Stats:
+        Level 1, Health 11, Defense 20, Piety 15
+
+      Skills:
+        Raise Dead (d4), Melee Combat (d6), Ranged Combat (d4)
+
+      Attributes:
+        Strength (d4), Great Cleave (d6)
+
+      Abilities:
+        Black Magic, Dark Magic
+
+      Items:
+        Shield (defense: 2), Sword (damage: d4), sp (qty: 200)

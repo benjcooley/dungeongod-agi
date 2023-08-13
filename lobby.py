@@ -235,7 +235,7 @@ class Lobby():
             return (err_str, err)
         full_name = char["info"]["basic"]["full_name"]
         self.action_image_path = check_for_image("data/characters/images", full_name)
-        return (str(char) + "\n\n" + self.lobby["dsecribe_stats_instrucitons"] + "\n", False)
+        return (str(char) + "\n\n" + self.lobby["describe_stats_instructions"] + "\n", False)
 
     async def start_game(self, module_name: str, party_name: str) -> tuple[str, bool]:
         if not isinstance(module_name, str):
