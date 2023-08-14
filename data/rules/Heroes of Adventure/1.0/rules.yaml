@@ -62,8 +62,8 @@ exploration_prompt: |-
   The following python actions are available in all states:
 
       "resume" - Starts the game from where the player left off.
-      "lobby" - Exit the game and return back to the lobby.
-         Also "quit" or "exit" to exit the game.     
+      "lobby" - Exit or quit the game and return back to the lobby (also "exit" or "quit").
+      "save_game", <save_game_name> - Saves the current game with a given name.
       "look" - <subjec> - Returns a description of the current location, NPC's
           monsters, items, directions and exits. i.e. "What does _ look like?" 
       "help" - <search subject> - Returns information on any subject in the rules such as spells, equipment,

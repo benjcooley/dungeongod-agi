@@ -249,10 +249,7 @@ async def send_to_channel(channel: any, msg: str) -> None:
 async def on_ready():
 
     # Sync our command tree here
-    if DEVELOPER_MODE:
-        await discord_tree.sync(guild=discord.Object(id=DEV_DISCORD_GUILD_ID))
-    else:
-        await discord_tree.sync()
+    await discord_tree.sync()
 
     # Start our dev channels
     if DEVELOPER_MODE:
@@ -403,12 +400,13 @@ async def dgod_new_game(interaction: discord.Interaction, party_name: str = engi
         await channel.send(err_str)
         return
 
-    session = result["ssession"]
+    session = result["session"]
     game: Game = session["game"]
-    thread: discord.Thread = result["thread"]
+    is_thread: bool = session["is_thread"]
+    thread: discord.Thread = (session["channel"] if is_thread else None)
 
     try:
-        if thread:
+        if is_thread:
             await interaction.response.send_message(f"Your game is started in thread <#{thread.id}>.")
         else:
             await interaction.response.send_message(f"Starting game...")
@@ -455,10 +453,11 @@ async def dgod_resume_game(interaction: discord.Interaction):
 
     session = result["session"]
     game: Game = session["game"]
-    thread: discord.Thread = result["thread"]
+    is_thread: bool = session["is_thread"]
+    thread: discord.Thread = (session["channel"] if is_thread else None)
 
     try:
-        if thread:
+        if is_thread:
             await interaction.response.send_message(f"Your game has been resumed in thread <#{thread.id}>.")
         else:
             await interaction.response.send_message(f"Resuming game...")
@@ -503,10 +502,11 @@ async def dgod_lobby(interaction: discord.Interaction):
 
     session = result["session"]
     lobby: Lobby = session["lobby"]
-    thread: discord.Thread = result["thread"]
+    is_thread: bool = session["is_thread"]
+    thread: discord.Thread = (session["channel"] if is_thread else None)
 
     try:
-        if thread:
+        if is_thread:
             await interaction.response.send_message(f"Your lobby has been started in thread <#{thread.id}>.")
         else:
             await interaction.response.send_message(f"Starting lobby...")

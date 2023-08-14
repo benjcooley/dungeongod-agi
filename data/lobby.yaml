@@ -56,6 +56,7 @@ lobby_prompt: |-
       "describe_module", <module_name> - Detailed description of a module the players can play.
       "start_game", <module_name>, <party_name> - Starts a game with a given module and given party.
       "resume_game" - Resumes the game the player most recently played.
+      "load_game", <save_game_name> - Loads and plays a previously saved game given a save game name.
 
   REMEMBER:
 
@@ -164,6 +165,8 @@ start_lobby_prompt: |-
       2. They can then browse and choose a game module to play.
   
       3. Once they have their party ready and have selected a game module they can start a new game.
+
+      4. Players at any time can also resume the most recent game, or load a saved game if they wish.
 
   Be sure to tell them they can ask for help or assistance at any time.
 
