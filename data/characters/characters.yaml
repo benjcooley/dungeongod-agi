@@ -4386,12 +4386,14 @@ characters:
     spells: []
     stats:
       abilities:
-      - Arcane Magic
-      - Dark Vision
-      - Iron Skin
-      - Long Lived
-      - Shadow Magic
-      - Totem Magic
+        - Dark Vision
+        - Earth Magic
+        - Water Magic
+        - Ghost Walker
+        - Iron Skin
+        - Long-Lived
+        - Shape Change
+        - Suggestion
       attributes:
         Agility: d4
         Fortitude: d6
