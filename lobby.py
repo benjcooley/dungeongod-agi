@@ -31,7 +31,8 @@ class Lobby():
         self.start_game_save_game_name = "latest"
         self.lobby_active = False
 
-    async def generate(self, query: str, source: str, primary: bool = True, keep: bool = False) -> str:
+    async def generate(self, query: str, source: str, 
+                       primary: bool = True, keep: bool = False, chunk_handler: any = None) -> str:
         instr_prompt = "<INSTRUCTIONS>" in query
         instr_prefix_prompt= "<PLAYER>" in query
         if instr_prompt or instr_prefix_prompt:
@@ -49,19 +50,21 @@ class Lobby():
         msgs = self.lobby_prefix + \
             self.messages + \
             [ instr_msg ]
-        resp = await self.agent.generate(msgs, primary, keep)
+        resp = await self.agent.generate(msgs, primary, keep, chunk_handler=chunk_handler)
         resp_msg = Agent.make_message("assistant", resp, "lobby", keep=False)
         self.messages.append(query_msg)
         self.messages.append(resp_msg)
         return resp_msg["content"]
 
-    async def system_action(self, query: str, expected_action: str = None, retry_msg: str = None) -> str:
-        return await self.process_action("system", query, expected_action, retry_msg)
+    async def system_action(self, query: str, expected_action: str = None, retry_msg: str = None, chunk_handler: any = None) -> str:
+        return await self.process_action("system", query, expected_action, retry_msg, chunk_handler=chunk_handler)
 
-    async def player_action(self, query: str) -> str:
-        return await self.process_action("player", query)
+    async def player_action(self, query: str, chunk_handler: any = None) -> str:
+        return await self.process_action("player", query, chunk_handler=chunk_handler)
             
-    async def process_action(self, source: str, query: str, expected_action: str = None, retry_msg: str = None) -> str:
+    async def process_action(self, source: str, query: str, 
+                             expected_action: str = None, retry_msg: str = None, 
+                             chunk_handler: any = None) -> str:
         self.action_image_path = None
         is_system = (source == "system")
         if is_system:
@@ -71,13 +74,13 @@ class Lobby():
         if expected_action is not None and expected_action not in resp:
             while expected_action not in resp:
                 resp = await self.generate(retry_msg, "system", primary=True, keep=False)
-        processed_resp = await self.process_response(query, resp, 1)
+        processed_resp = await self.process_response(query, resp, 1, chunk_handler=chunk_handler)
         if self.action_image_path is not None:
             processed_resp = processed_resp + "\n" + "@image: " + self.action_image_path
             self.action_image_path = None
         return processed_resp
 
-    async def process_response(self, query: str, response: str, level: int) -> str:
+    async def process_response(self, query: str, response: str, level: int, chunk_handler: any = None) -> str:
         if level == 4:
             return response.strip(" \n\t")
         lines = response.split("\n")
@@ -95,7 +98,7 @@ class Lobby():
         if results != "":
             response = "<RESPONSE>\n" + \
                         results
-            ai_result = await self.generate(response, "lobby", primary=False)
+            ai_result = await self.generate(response, "lobby", primary=False, chunk_handler=chunk_handler)
             self.response_id += 1
             if "call next_turn(" in ai_result:
                 ai_result = await self.process_response("", ai_result, level + 1)                

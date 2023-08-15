@@ -200,7 +200,7 @@ async def start_dev_channels(guild: discord.Guild) -> None:
             
             print(f"{channel.name} (id: {channel.id}) (module: {module_name}) (party: {party_name})")
 
-            err_str, err, result = await start_session(user, 
+            err_str, err, info = await start_session(user, 
                                                         guild, 
                                                         action="resume_game", 
                                                         channel=channel,
@@ -211,7 +211,7 @@ async def start_dev_channels(guild: discord.Guild) -> None:
                 await channel.send(err_str)
                 return
             
-            channel_session = result["session"]
+            channel_session = info["session"]
             game: Game = channel_session["game"]
             
             if not game.is_started:
@@ -220,7 +220,7 @@ async def start_dev_channels(guild: discord.Guild) -> None:
                 except:
                     result = traceback.format_exc()
             
-            await send_to_channel(channel, result)
+                await send_to_channel(channel, result)
 
 # ------------------
 # Message Sender

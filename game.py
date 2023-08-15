@@ -86,7 +86,8 @@ class Game():
             filtered_msgs = filtered_msgs[-max_msgs:]
         return filtered_msgs
 
-    async def generate(self, instr_query: str, query: str, mode: str, source: str, primary: bool = True, keep: bool = False) -> str:
+    async def generate(self, instr_query: str, query: str, mode: str, source: str, 
+                       primary: bool = True, keep: bool = False, chunk_handler: any = None) -> str:
         query_msg = Agent.make_message("user", query, source, keep=keep)
         if instr_query:
             instr_msg = Agent.make_message("user", instr_query, source, keep=keep)
@@ -97,37 +98,49 @@ class Game():
                 msgs = self.exploration_prefix + \
                     self.filter_messages(["player", "referee", "engine"]) + \
                     [ instr_msg ]
-                resp = await self.agent.generate(msgs, primary, keep)
+                resp = await self.agent.generate(msgs, primary, keep, chunk_handler=chunk_handler)
                 resp_msg = Agent.make_message("assistant", resp, "actioner", keep=False)
             case "encounter_action":
                 msgs = self.encounter_prefix + \
                     self.filter_messages(["player", "referee", "engine"]) + \
                     [ instr_msg ]
-                resp = await self.agent.generate(msgs, primary, keep)
+                resp = await self.agent.generate(msgs, primary, keep, chunk_handler=chunk_handler)
                 resp_msg = Agent.make_message("assistant", resp, "actioner", keep=False)
             case "engine_response":
                 msgs = self.response_prefix + \
-                    self.filter_messages(["player", "referee", "engine"]) + \
+                    self.filter_messages(["player", "referee"]) + \
                     [ instr_msg ]
-                resp = await self.agent.generate(msgs, primary, keep)
+                # Don't use GPT-4 for big responses
+                if instr_msg["tokens"] > 200:
+                    primary = True
+                resp = await self.agent.generate(msgs, primary, keep, chunk_handler=chunk_handler)
                 resp_msg = Agent.make_message("assistant", resp, "referee", keep=False)
             case "referee_response":
                 msgs = self.response_prefix + \
-                    self.filter_messages(["player", "referee", "engine"], max_msgs=4) + \
+                    self.filter_messages(["player", "referee"], max_msgs=4) + \
                     [ instr_msg ]
-                resp = await self.agent.generate(msgs, primary, keep)
+                # Don't use GPT-4 for big responses
+                if instr_msg["tokens"] > 200:
+                    primary = True
+                resp = await self.agent.generate(msgs, primary, keep, chunk_handler=chunk_handler)
                 resp_msg = Agent.make_message("assistant", resp, "referee", keep=False)
         self.messages.append(query_msg)
         self.messages.append(resp_msg)
         return resp_msg["content"]
 
-    async def system_action(self, query: str, expected_action: str = None, retry_msg: str = None) -> str:
-        return await self.process_action("system", query, expected_action, retry_msg)
+    async def system_action(self, query: str, 
+                            expected_action: str = None, retry_msg: str = None, 
+                            chunk_handler: any = None) -> str:
+        return await self.process_action("system", query, 
+                                         expected_action, retry_msg, 
+                                         chunk_handler=chunk_handler)
 
-    async def player_action(self, query: str) -> str:
-        return await self.process_action("player", query)
+    async def player_action(self, query: str, chunk_handler: any = None) -> str:
+        return await self.process_action("player", query, chunk_handler=chunk_handler)
             
-    async def process_action(self, source: str, query: str, expected_action: str = None, retry_msg: str = None) -> str:
+    async def process_action(self, source: str, query: str, 
+                             expected_action: str = None, retry_msg: str = None, 
+                             chunk_handler: any = None) -> str:
         self.action_image_path = None
         is_system = (source == "system")
         if is_system:
@@ -145,7 +158,7 @@ class Game():
         if expected_action is not None and expected_action not in resp:
             while expected_action not in resp:
                 resp = await self.generate("", retry_msg, action_mode, "system", primary=True, keep=False)
-        processed_resp = await self.process_response(query, resp, 1)
+        processed_resp = await self.process_response(query, resp, 1, chunk_handler=chunk_handler)
         if not is_system:
             self.inc_cur_time(self.turn_period)
         if self.action_image_path is not None:
@@ -153,7 +166,7 @@ class Game():
             self.action_image_path = None
         return processed_resp
 
-    async def process_response(self, query: str, response: str, level: int) -> str:
+    async def process_response(self, query: str, response: str, level: int, chunk_handler: any = None) -> str:
         if level == 4:
             return response.strip(" \n\t")
         lines = response.split("\n")
@@ -184,7 +197,8 @@ class Game():
             has_instr = len(resp_list) > 1
             mode = (self.cur_game_state_name + "_action" if has_instr else "engine_response")
             query = resp_list[0] # Instructions will be at the end
-            ai_result = await self.generate(instr_query, query, mode, "engine", primary=False, keep=False)
+            ai_result = await self.generate(instr_query, query, mode, "engine", primary=False, keep=False,
+                                           chunk_handler=(chunk_handler if mode != "engine_response" else None))
             self.response_id += 1
             if "call next_turn(" in ai_result:
                 ai_result = await self.process_response("", ai_result, level + 1)                
@@ -195,13 +209,15 @@ class Game():
                 has_instr = len(resp_list) > 1
                 mode = (self.cur_game_state_name + "_action" if has_instr else "engine_response")
                 addl_query = resp_list[0]
-                ai_addl_resp = await self.generate(addl_resp_instr, addl_query, mode, "engine", primary=False)
+                ai_addl_resp = await self.generate(addl_resp_instr, addl_query, mode, "engine", primary=False,
+                                           chunk_handler=(chunk_handler if mode != "engine_response" else None))
                 ai_addl_result = await self.process_response(query, ai_addl_resp, level + 1)
                 ai_result = ai_result.strip("\n") + "\n\n" + ai_addl_result
             return ai_result.strip(" \t\n")
         else:
             # Action AI says this is a user query, so pass query through, referee handles it.
-            return await self.generate("", query, "referee_response", "referee", primary=False, keep=False)
+            return await self.generate("", query, "referee_response", "referee", primary=False, keep=False,
+                                           chunk_handler=chunk_handler)
 
     def init_help_index(self) -> None:
         all_spells = { "name": "all", "type": "spells" }

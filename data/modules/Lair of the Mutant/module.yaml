@@ -480,7 +480,7 @@ locations:
       items:
         "Ants Teeth": { qty: 10 }
       hidden:
-      - terms: [ "boxes" ]
+      - terms: [ "boxes", "box" ]
         description: There are several useful items Barus has stashed away in the boxes.
         items:
           "Lantern" : { "qty": 2 }
@@ -514,7 +514,7 @@ locations:
       - From here players can move to: lounge. Use 'outside' to exit house.
     state:
       hidden:
-      - terms: [ "cupboard" ]
+      - terms: [ "cupboard", "cupboards" ]
         items:
           "Chainmail Armor" : { }
           "Helmet" : { }

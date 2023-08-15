@@ -20,7 +20,9 @@ OPENAI_MAX_TOKENS = int(os.getenv("OPENAI_MAX_TOKENS") or 16384) - RESPONSE_RESE
 OPENAI_TEMPERATURE = float(os.getenv("OPENAI_TEMPERATURE") or 0.3)
 OPENAI_PROMPT_COST = float(os.getenv("OPENAI_PROMPT_COST") or 0.003)
 OPENAI_GEN_COST = float(os.getenv("OPENAI_GEN_COST") or 0.004)
+
 OPENAI_SECONDARY_MODEL = os.getenv("OPENAI_SECONDARY_MODEL") or OPENAI_MODEL
+OPENAI_SECONDARY_MAX_TOKENS = int(os.getenv("OPENAI_SECONDARY_MAX_TOKENS") or OPENAI_MAX_TOKENS)
 OPENAI_SECONDARY_TEMPERATURE = float(os.getenv("OPENAI_SECONDARY_TEMPERATURE") or OPENAI_TEMPERATURE)
 OPENAI_SECONDARY_PROMPT_COST = float(os.getenv("OPENAI_SECONDARY_PROMPT_COST") or 0.0015)
 OPENAI_SECONDARY_GEN_COST = float(os.getenv("OPENAI_SECONDARY_GEN_COST") or 0.002)
@@ -119,16 +121,47 @@ class Agent():
         tokens = len(token_enc.encode(content))
         return { "role": role, "content": content, "source": source, "tokens": tokens, "keep": keep }
 
-    async def generate(self, messages: list[dict], primary: bool = True, keep: bool = False, maxlen: int = -1) -> dict[str, any]:
+    async def chunk_acreate(self, model, messages, temperature=1.0, chunk_handler=None):
+        # send a ChatCompletion request
+        response = await openai.ChatCompletion.acreate(
+            model=model,
+            messages=messages,
+            temperature=temperature,
+            stream=True  # using stream=True
+        )
+
+        # create variables to collect the stream of chunks
+        collected_chunks = []
+        collected_messages = []
+
+        # iterate through the stream of events
+        async for chunk in response:
+            collected_chunks.append(chunk)  # save the event response
+            chunk_message = chunk['choices'][0]['delta']  # extract the message
+            collected_messages.append(chunk_message)  # save the message
+
+            if chunk_handler:
+                await chunk_handler(chunk_message.get('content', ''), time.time())  # process the chunk
+
+        # combine the messages to form the full response
+        full_reply_content = ''.join([m.get('content', '') for m in collected_messages])
+
+        return {
+            "full_reply_content": full_reply_content,
+            "individual_chunks": collected_chunks
+        }
+
+    async def generate(self, messages: list[dict], primary: bool = True, keep: bool = False, maxlen: int = -1, chunk_handler: any = None) -> dict[str, any]:
 
         # If both models are the same, we're using primary
         if OPENAI_MODEL == OPENAI_SECONDARY_MODEL:
             primary = True
 
+        max_tokens = OPENAI_MAX_TOKENS if primary else OPENAI_SECONDARY_MAX_TOKENS
         if maxlen == -1:
-            maxlen = OPENAI_MAX_TOKENS
+            maxlen = max_tokens
         else:
-            maxlen = min(OPENAI_MAX_TOKENS, maxlen)
+            maxlen = min(max_tokens, maxlen)
 
         query = messages[-1]["content"]
 
@@ -163,13 +196,22 @@ class Agent():
         model = OPENAI_MODEL if primary else OPENAI_SECONDARY_MODEL
         temp = OPENAI_TEMPERATURE if primary else OPENAI_SECONDARY_TEMPERATURE
 
-        completion = await openai.ChatCompletion.acreate(
-            model=model,
-            temperature=temp,
-            messages=send_messages
-        )
+        if not chunk_handler:
+            completion = await openai.ChatCompletion.acreate(
+                model=model,
+                temperature=temp,
+                messages=send_messages
+            )
+            response = completion.choices[0].message["content"]
+        else:
+            completion_pair = await self.chunk_acreate(
+                model=model,
+                temperature=temp,
+                messages=send_messages,
+                chunk_handler=chunk_handler
+            )
+            response = completion_pair["full_reply_content"]
 
-        response = completion.choices[0].message["content"]
         resp_size = len(token_enc.encode(response))
 
         if primary:
