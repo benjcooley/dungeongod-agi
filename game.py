@@ -94,30 +94,17 @@ class Game():
         else:
             instr_msg = query_msg
         match mode:
-            case "exploration_action":
+            case "exploration_action" | "encounter_action":
+                # We get the whole msg stack for the "actioner" query (actioner and engine responses).
                 msgs = self.exploration_prefix + \
-                    self.filter_messages(["player", "referee", "engine"]) + \
+                    self.filter_messages(["player", "actioner", "engine", "referee"]) + \
                     [ instr_msg ]
                 resp = await self.agent.generate(msgs, primary, keep, chunk_handler=chunk_handler)
                 resp_msg = Agent.make_message("assistant", resp, "actioner", keep=False)
-            case "encounter_action":
-                msgs = self.encounter_prefix + \
-                    self.filter_messages(["player", "referee", "engine"]) + \
-                    [ instr_msg ]
-                resp = await self.agent.generate(msgs, primary, keep, chunk_handler=chunk_handler)
-                resp_msg = Agent.make_message("assistant", resp, "actioner", keep=False)
-            case "engine_response":
+            case "engine_response" | "referee_response":
+                # For the user friendly "referee" response we only need player/referee msgs.
                 msgs = self.response_prefix + \
-                    self.filter_messages(["player", "referee", "engine"]) + \
-                    [ instr_msg ]
-                # Don't use GPT-4 for big responses
-                if instr_msg["tokens"] > 200:
-                    primary = True
-                resp = await self.agent.generate(msgs, primary, keep, chunk_handler=chunk_handler)
-                resp_msg = Agent.make_message("assistant", resp, "referee", keep=False)
-            case "referee_response":
-                msgs = self.response_prefix + \
-                    self.filter_messages(["player", "referee", "engine"], max_msgs=4) + \
+                    self.filter_messages(["player", "referee"]) + \
                     [ instr_msg ]
                 # Don't use GPT-4 for big responses
                 if instr_msg["tokens"] > 200:
@@ -131,7 +118,11 @@ class Game():
     # Hand parse some simple actions so they don't round trip to the AI.
     async def parse_simple_action(self, query: str) -> str:
         query = query.strip(".?! \n")
+        if query.startswith("Go to ") or query.startswith("go to "):
+            query = "go " + query[6:]
+        query = query.replace(" go to ", " go ")
         query = query.replace(" the ", " ")
+        query = query.replace(" our ", " ")
         query = query.replace(" to ", ", ")
         query = query.replace(" on ", ", ")
         query = query.replace(" with ", ", ")
@@ -142,7 +133,7 @@ class Game():
             pl = len(prefix)
             if lowq.startswith(prefix):
                 lowq = lowq[pl:]
-                query - query[pl:]
+                query = query[pl:]
         query = query.replace("'s ", " ")
         query = query.replace("'es ", " ")
         lowq_l = lowq.split(" ")
@@ -159,7 +150,7 @@ class Game():
             case "go" | "goto":
                if l >= 2:
                     cmd = "go"
-                    args [ " ".join(q_l[1:]) ]
+                    args = [ " ".join(q_l[1:]) ]
             case "pickup":
                 if l > 2:
                     cmd = "pickup"
@@ -170,7 +161,7 @@ class Game():
                     args = []
                 else:
                     cmd = "search"
-                    args [ " ".join(q_l[1:]) ]
+                    args = [ " ".join(q_l[1:]) ]
             case "drops" | "drop":
                 if l > 2:
                     cmd = "drop"
@@ -181,11 +172,11 @@ class Game():
                     args = []
                 else:
                     cmd = "stats"
-                    args [ " ".join(q_l[1:]) ]
+                    args = [ " ".join(q_l[1:]) ]
             case "invent" | "inventory":
                 if l >= 2:
                     cmd = "invent"
-                    args [ " ".join(q_l[1:]) ]
+                    args = [ " ".join(q_l[1:]) ]
             case "look":
                 if l > 1:
                     cmd = "look"
@@ -214,7 +205,7 @@ class Game():
             case _:
                 pass
         if cmd is None:
-            return ("can't parse", True)
+            return ""
         arg_str = f"\"{cmd}\""
         for arg in args:
             arg_str += ", "
@@ -250,13 +241,14 @@ class Game():
                              chunk_handler: any = None) -> str:
         self.action_image_path = None
         is_system = (source == "system")
-        resp = None
+        resp = ""
         # Try the simple parser (local and way faster for simple responses)
         if not is_system:
             resp = await self.parse_simple_action(query)
-            processed_resp = await self.referee_response(query, resp, level=1, chunk_handler=chunk_handler)
+            if resp:
+                processed_resp = await self.referee_response(query, resp, level=1, chunk_handler=chunk_handler)
         # Send to the AI
-        if resp is None:
+        if not resp:
             if is_system:
                 action_instr = query
             else:
@@ -264,7 +256,7 @@ class Game():
                     query = self.add_query_hint(query)
                 action_instr = "<PLAYER>\n" + query + "\n" + self.rules["action_instr_prompt"] + "\n"
             action_mode = self.cur_game_state_name + "_action"
-            resp = await self.generate(action_instr, query, action_mode, source, primary=True, keep=False)
+            resp = await self.generate(action_instr, query, action_mode, is_system , primary=True, keep=False)
             if not is_system:
                 trans_action = self.evaluate_transitions()
                 if trans_action is not None:
