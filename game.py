@@ -89,7 +89,7 @@ class Game():
     async def generate(self, instr_query: str, query: str, mode: str, source: str, 
                        primary: bool = True, keep: bool = False, chunk_handler: any = None) -> str:
         query_msg = Agent.make_message("user", query, source, keep=keep)
-        if instr_query:
+        if instr_query != query:
             instr_msg = Agent.make_message("user", instr_query, source, keep=keep)
         else:
             instr_msg = query_msg
@@ -108,7 +108,7 @@ class Game():
                 resp_msg = Agent.make_message("assistant", resp, "actioner", keep=False)
             case "engine_response":
                 msgs = self.response_prefix + \
-                    self.filter_messages(["player", "referee"]) + \
+                    self.filter_messages(["player", "referee", "engine"]) + \
                     [ instr_msg ]
                 # Don't use GPT-4 for big responses
                 if instr_msg["tokens"] > 200:
@@ -117,7 +117,7 @@ class Game():
                 resp_msg = Agent.make_message("assistant", resp, "referee", keep=False)
             case "referee_response":
                 msgs = self.response_prefix + \
-                    self.filter_messages(["player", "referee"], max_msgs=4) + \
+                    self.filter_messages(["player", "referee", "engine"], max_msgs=4) + \
                     [ instr_msg ]
                 # Don't use GPT-4 for big responses
                 if instr_msg["tokens"] > 200:
@@ -128,6 +128,113 @@ class Game():
         self.messages.append(resp_msg)
         return resp_msg["content"]
 
+    # Hand parse some simple actions so they don't round trip to the AI.
+    async def parse_simple_action(self, query: str) -> str:
+        query = query.strip(".?! \n")
+        query = query.replace(" the ", " ")
+        query = query.replace(" to ", ", ")
+        query = query.replace(" on ", ", ")
+        query = query.replace(" with ", ", ")
+        query = query.replace(" picks up ", " pickup ")
+        lowq = query.lower()
+        for prefix in ["we will ", "we'll ", "we're going to ", "we ", "what's in my ", 
+                       "what are my ", "show me ", "show ", "give me ", "what are ", "what's "]:
+            pl = len(prefix)
+            if lowq.startswith(prefix):
+                lowq = lowq[pl:]
+                query - query[pl:]
+        query = query.replace("'s ", " ")
+        query = query.replace("'es ", " ")
+        lowq_l = lowq.split(" ")
+        q_l = query.split(" ")
+        l = len(lowq_l)
+        if l == 0:
+            return ""
+        if self.is_character_name(q_l[0]) and l > 1:
+            q_l[0], q_l[1] = q_l[1], q_l[0]
+            lowq_l[0], lowq_l[1] = lowq_l[1], lowq_l[0]
+        cmd = None
+        args = []
+        match lowq_l[0]:
+            case "go" | "goto":
+               if l >= 2:
+                    cmd = "go"
+                    args [ " ".join(q_l[1:]) ]
+            case "pickup":
+                if l > 2:
+                    cmd = "pickup"
+                    args = q_l[1:]
+            case "search":
+                if l == 1:
+                    cmd = "search"
+                    args = []
+                else:
+                    cmd = "search"
+                    args [ " ".join(q_l[1:]) ]
+            case "drops" | "drop":
+                if l > 2:
+                    cmd = "drop"
+                    args = q_l[1:]
+            case "stats" | "abilities" | "attributes" | "skills":
+                if l == 1:
+                    cmd = "stats"
+                    args = []
+                else:
+                    cmd = "stats"
+                    args [ " ".join(q_l[1:]) ]
+            case "invent" | "inventory":
+                if l >= 2:
+                    cmd = "invent"
+                    args [ " ".join(q_l[1:]) ]
+            case "look":
+                if l > 1:
+                    cmd = "look"
+                    args = [ " ".join(q_l[1:]) ]
+                else:
+                    cmd = "look"
+                    args = []
+            case "cast" | "casts":
+                if l >= 3:
+                    l2 = " ".join(q_l[2:]).split(", ")
+                    cmd = "cast"
+                    args = [ q_l[1], l2[0], l2[1] ]
+            case "use" | "uses":
+                if l >= 3:
+                    l2 = " ".join(q_l[2:]).split(", ")
+                    cmd = "use"
+                    args = [ q_l[1], l2[0], l2[1] ]
+            case "attack" | "attacks":
+                if l > 2:
+                    cmd = "attack"
+                    args = [ q_l[1], " ".join(q_l[2:]) ]
+            case "shoot" | "shoots":
+                if l > 2:
+                    cmd = "shoot"
+                    args = [ q_l[1], " ".join(q_l[2:]) ]
+            case _:
+                pass
+        if cmd is None:
+            return ("can't parse", True)
+        arg_str = f"\"{cmd}\""
+        for arg in args:
+            arg_str += ", "
+            if isinstance(arg, str):
+                arg_str += f"\"{arg}\""
+            else:
+                arg_str += str(arg)
+        args += [None] * (4 - len(args))                
+        resp, err = await self.next_turn(cmd, args[0], args[1], args[2], args[3])
+        if not err:
+            resp_msg = Agent.make_message("user", resp, "player", keep=False)
+            self.messages.append(resp_msg)
+            if self.agent.logging:
+                print(resp_msg["content"])
+            cmd_msg = Agent.make_message("assistant", f"<HIDDEN>\ncall next_turn({arg_str})\n", "engine", keep=False)
+            self.messages.append(cmd_msg)
+            if self.agent.logging:
+                print(cmd_msg["content"])
+        return (resp if not err else "")
+ 
     async def system_action(self, query: str, 
                             expected_action: str = None, retry_msg: str = None, 
                             chunk_handler: any = None) -> str:
@@ -143,22 +250,30 @@ class Game():
                              chunk_handler: any = None) -> str:
         self.action_image_path = None
         is_system = (source == "system")
-        if is_system:
-            action_instr = query
-        else:
-            if self.cur_location_script and "hint" in self.cur_location_script:
-                query = self.add_query_hint(query)
-            action_instr = "<PLAYER>\n" + query + "\n" + self.rules["action_instr_prompt"] + "\n"
-        action_mode = self.cur_game_state_name + "_action"
-        resp = await self.generate(action_instr, query, action_mode, source, primary=True, keep=False)
+        resp = None
+        # Try the simple parser (local and way faster for simple responses)
         if not is_system:
-            trans_action = self.evaluate_transitions()
-            if trans_action is not None:
-                resp = resp + trans_action
-        if expected_action is not None and expected_action not in resp:
-            while expected_action not in resp:
-                resp = await self.generate("", retry_msg, action_mode, "system", primary=True, keep=False)
-        processed_resp = await self.process_response(query, resp, 1, chunk_handler=chunk_handler)
+            resp = await self.parse_simple_action(query)
+            processed_resp = await self.referee_response(query, resp, level=1, chunk_handler=chunk_handler)
+        # Send to the AI
+        if resp is None:
+            if is_system:
+                action_instr = query
+            else:
+                if self.cur_location_script and "hint" in self.cur_location_script:
+                    query = self.add_query_hint(query)
+                action_instr = "<PLAYER>\n" + query + "\n" + self.rules["action_instr_prompt"] + "\n"
+            action_mode = self.cur_game_state_name + "_action"
+            resp = await self.generate(action_instr, query, action_mode, source, primary=True, keep=False)
+            if not is_system:
+                trans_action = self.evaluate_transitions()
+                if trans_action is not None:
+                    resp = resp + trans_action
+            if expected_action is not None and expected_action not in resp:
+                while expected_action not in resp:
+                    resp = await self.generate("", retry_msg, action_mode, "system", primary=True, keep=False)
+            processed_resp = await self.process_response(query, resp, level=1, chunk_handler=chunk_handler)
+        # Process the final response
         if not is_system:
             self.inc_cur_time(self.turn_period)
         if self.action_image_path is not None:
@@ -171,6 +286,7 @@ class Game():
             return response.strip(" \n\t")
         lines = response.split("\n")
         results = ""
+        num_calls = 0
         for line in lines:
             line = line.strip()
             if line == "PASS" and query != "":
@@ -183,8 +299,16 @@ class Game():
                 break
             if "next_turn(\"" in line:
                 args = extract_arguments(line, 5)
-                game_resp = await self.next_turn(args[0], args[1], args[2], args[3], args[4])
+                game_resp, _ = await self.next_turn(args[0], args[1], args[2], args[3], args[4])
                 results += game_resp + "\n"
+                num_calls += 1
+        # Do we need to pass this to the AI? If not just return it.
+        if num_calls == 1 and results.startswith("<RESULTS>\n"):
+            results = results[10:]
+        # Pass it to the AI.
+        return await self.referee_response(query, results, level, chunk_handler=chunk_handler)
+
+    async def referee_response(self, query: str, results: str, level: int, chunk_handler: any = None) -> str:     
         if results != "":
             instr_query = "<RESPONSE>\n" + \
                         self.get_current_game_state_str() + "\n\n" + \
@@ -379,12 +503,12 @@ class Game():
 
     @property
     def rules_path(self) -> str:
-        return f"rules/{self.module['info']['game']}/{self.module['info']['game_version']}"
+        return f"data/rules/{self.module['info']['game']}/{self.module['info']['game_version']}"
 
     @property
     # Premade parties (not user parties)
     def parties_path(self) -> str:
-        return f"parties/{self.party_name}"
+        return f"data/parties/{self.party_name}"
 
     @property
     def locations(self) -> dict[str, dict[str, any]]:
@@ -1446,6 +1570,15 @@ class Game():
         return (resp, False)
 
     def stats(self, being_name: str) -> tuple[str, bool]:
+        if not being_name:
+            responses = []
+            for char_name in self.characters.keys():
+                stats_resp, err = self.stats(char_name)
+                if err:
+                    return (stats_resp, err)
+                responses.append(stats_resp)
+            "\n\n".join(responses)
+            return (responses, False)
         being = self.get_nearby_being(being_name)
         if being is None:
             {f"{being_name}' is not nearby", True}
@@ -1505,10 +1638,10 @@ class Game():
             qty = 1
         if qty > item_qty:
             return ("only has {item_qty}", False)
-        resp, err = self.remove_item(from_being, item_unique_name, qty)
+        give_item, err_str, err = self.remove_item(from_being, item_unique_name, qty)
         if err: 
-            return (resp, err)
-        return self.add_item(to_being, item_unique_name, qty)
+            return (err_str, err)
+        return self.add_item(to_being, give_item)
 
     def help(self, subject) -> tuple[str, bool]:
         if subject.endswith(" spell"):
@@ -2498,7 +2631,7 @@ class Game():
                   subject: any = None, 
                   object: any = None, 
                   extra: any = None, 
-                  extra2: any = None) -> str:
+                  extra2: any = None) -> tuple[str, bool]:
         
         resp = ""
         error = False
@@ -2560,10 +2693,10 @@ class Game():
         if error:
             if self.agent.logging:
                 print(f"  ERROR: {resp}")
-            return resp
+            return (resp, True)
         
         # Note, we don't wait for it to finish saving
         await self.save_game()
 
-        return resp
+        return (resp, False)
 

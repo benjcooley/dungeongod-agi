@@ -40,7 +40,7 @@ class Engine():
     async def load_rules(self, rules_path: str) -> dict[str, any]:
         rules = self.rules_cache.get(rules_path)
         if rules is None:
-            with open(f"data/{rules_path}/rules.yaml", "r") as f:
+            with open(f"{rules_path}/rules.yaml", "r") as f:
                 rules = yaml.load(f, Loader=yaml.FullLoader)
                 self.rules_cache[rules_path] = rules
         return rules
