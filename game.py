@@ -44,6 +44,7 @@ class Game():
         self.game_state: dict[str, any] = {}
         self.action_image_path: str | None = None
         self.response_id = 1
+        self.skip_turn = False
         self.exit_to_lobby = False
         self.messages = [ Agent.make_message("assistant", "I'm Ready!", "referee", True) ]
 
@@ -146,6 +147,10 @@ class Game():
         cmd = None
         args = []
         match lowq_l[0]:
+            case "exit" | "lobby" | "quit":
+               if l == 1:
+                    cmd = "lobby"
+                    args = []
             case "go" | "goto":
                if l >= 2:
                     cmd = "go"
@@ -183,6 +188,10 @@ class Game():
                 else:
                     cmd = "look"
                     args = []
+            case "help":
+                if l > 1:
+                    cmd = "help"
+                    args = [ " ".join(q_l[1:]) ]
             case "cast" | "casts":
                 if l >= 3:
                     l2 = " ".join(q_l[2:]).split(", ")
@@ -255,7 +264,7 @@ class Game():
             else:
                 if self.cur_location_script and "hint" in self.cur_location_script:
                     query = self.add_query_hint(query)
-                action_instr = "<PLAYER>\n" + query + "\n" + self.prompts["action_instr_prompt"] + "\n"
+                action_instr = "<PLAYER>\n" + query + "\n\n" + self.prompts["action_instr_prompt"] + "\n"
             action_mode = self.cur_game_state_name + "_action"
             resp = await self.generate(action_instr, query, action_mode, is_system , primary=True, keep=False)
             if not is_system:
@@ -267,45 +276,51 @@ class Game():
                     resp = await self.generate("", retry_msg, action_mode, "system", primary=True, keep=False)
             processed_resp = await self.process_response(query, resp, level=1, chunk_handler=chunk_handler)
         # Process the final response
-        if not is_system:
+        if not is_system and not self.skip_turn:
             self.inc_cur_time(self.turn_period)
         if self.action_image_path is not None:
             processed_resp = processed_resp + "\n" + "@image: " + self.action_image_path
             self.action_image_path = None
+        # Turn off turn skip flag
+        self.skip_turn = False
         return processed_resp
 
     async def process_response(self, query: str, response: str, level: int, chunk_handler: any = None) -> str:
         if level == 4:
             return response.strip(" \n\t")
-        results, num_calls = await self.process_game_actions(response)
+        query, results, num_calls = await self.process_game_actions(query, response)
         # Do we need to pass this to the AI for further processing? If not just return it.
         if num_calls == 1 and results.startswith("<RESULTS>\n"):
             results = results[10:]
         # Check for additional responses.
-        addl_resp = self.get_addl_response()
-        if addl_resp:
-            addl_resp_instr = results.strip("\n") + "\n\n" + addl_resp
-            resp_list = addl_resp_instr.split("<INSTRUCTIONS>\n")
-            has_instr = len(resp_list) > 1
-            mode = (self.cur_game_state_name + "_action" if has_instr else "engine_response")
-            addl_query = resp_list[0]
-            ai_addl_resp = await self.generate(addl_resp_instr, addl_query, mode, "engine", primary=False)
-            addl_results, _ = await self.process_game_actions(ai_addl_resp)
-            results = results.strip("\n") + "\n\n" + addl_results
+        if results != "" and not self.skip_turn:
+            addl_resp = self.get_addl_response()
+            if addl_resp:
+                addl_resp_instr = results.strip("\n") + "\n\n" + addl_resp
+                resp_list = addl_resp_instr.split("<INSTRUCTIONS>\n")
+                has_instr = len(resp_list) > 1
+                mode = (self.cur_game_state_name + "_action" if has_instr else "engine_response")
+                addl_query = resp_list[0]
+                ai_addl_resp = await self.generate(addl_resp_instr, addl_query, mode, "engine", primary=False)
+                _, addl_results, _ = await self.process_game_actions("", ai_addl_resp)
+                results = results.strip("\n") + "\n\n" + addl_results
         # Pass it to the AI.
         return await self.referee_response(query, results, level, chunk_handler=chunk_handler)
 
-    async def process_game_actions(self, response: str) -> tuple[str, int]:
+    async def process_game_actions(self, query: str, response: str) -> tuple[str, str, int]:
         lines = response.split("\n")
-        results = self.get_response_prefix()
+        prefix = self.get_response_prefix()
+        results = ""
         num_calls = 0
         for line in lines:
             line = line.strip()
-            if line == "PASS" and query != "":
+            if line == "NO ACTION" and query != "":
+                self.skip_turn = True
                 results = ""
                 break
             elif line == "NOT ALLOWED":
                 # Action AI says this is an invalid player action. Ignore it.
+                self.skip_turn = True
                 results = ""
                 query = "This player action is not allowed."
                 break
@@ -314,13 +329,14 @@ class Game():
                 game_resp, _ = await self.do_action(args[0], args[1], args[2], args[3], args[4])
                 results += game_resp + "\n"
                 num_calls += 1
-        results += self.after_process_actions()
-        return (results, num_calls)
+        if not self.skip_turn or num_calls > 1:
+            results = prefix + results + self.after_process_actions()
+        return (query, results, num_calls)
 
     async def referee_response(self, query: str, results: str, level: int, chunk_handler: any = None) -> str:     
         if results != "":
             instr_query = "<RESPONSE>\n" + \
-                        self.get_current_game_state_str() + "\n\n" + \
+                        (self.get_current_game_state_str() + "\n\n" if not self.skip_turn else "") + \
                         self.get_response_start() + \
                         results + \
                         self.get_response_end()
@@ -335,13 +351,20 @@ class Game():
             self.response_id += 1
             if "call do_action(" in ai_result:
                 ai_result = await self.process_response("", ai_result, level + 1)                
-            return ai_result.strip(" \t\n")
         else:
             # Action AI says this is a user query, so pass query through, referee handles it.
-            return await self.generate("", query, "referee_response", "referee", primary=False, keep=False,
+            player_query = "<PLAYER>\n" + query
+            plqyer_query_instr = player_query + "\n\n<INSTRUCTIONS>\nRespond to players message.\n"
+            ai_result = await self.generate(plqyer_query_instr, player_query, "referee_response", "referee", primary=False, keep=False,
                                            chunk_handler=chunk_handler)
+        ai_result.strip(" \t\n")
+        return ai_result
 
     def init_help_index(self) -> None:
+        for help in self.rules["help"].values():
+            text_help = { "type": "text", "help": help["help"] }
+            for keyword in help["keywords"]:
+                self.help_index[keyword] = text_help
         all_spells = { "name": "all", "type": "spells" }
         self.help_index["spells"] = all_spells
         self.help_index["all spells"] = all_spells
@@ -1644,26 +1667,37 @@ class Game():
         return self.add_item(to_being, give_item)
 
     def help(self, subject) -> tuple[str, bool]:
+        if not subject:
+            return ("AI Referee, help players.", False)
+        self.skip_turn = True
         if subject.endswith(" spell"):
             subject = subject[:-6]
         elif subject.endswith(" spells"):
             subject = subject[:-7]
         elif subject.endswith(" equipemnt"):
             subject = subject[:-10]
-        look_info = self.help_index.get(subject.lower())
-        if look_info != None:
-            match look_info["type"]:
+        help = self.help_index.get(subject.lower())
+        if help != None:
+            match help["type"]:
+                case "text":
+                    resp, err = (help["help"], False)
                 case "spell":
-                    return self.describe_spell(look_info["name"])
+                    resp, err = self.describe_spell(help["name"])
                 case "spells_list":
-                    return str(look_info["list"])
+                    resp, err = str(help["list"])
                 case "magic_categories":
-                    return self.describe_magic(look_info["name"])
+                    resp, err = self.describe_magic(help["name"])
                 case "equipment":
-                    return self.describe_equipment(look_info["name"])
+                    resp, err = self.describe_equipment(help["name"])
                 case _:
                     raise RuntimeError("Invalid help index type")
-        return (f"no help subject {subject} found", False)
+        else:
+            resp, err = (f"AI Referee, please attempt to help players with the subject '{subject}' " + \
+                        "but ONLY if you can provide useful and ACCURATE information and rules relevant to the game. " + \
+                        "Otherwise tell players you can't help them with this subject.'", False)
+        if err:
+            return resp, err
+        return "HELP RESPONSE:\n\n" + resp, err
             
     def look(self, subject, object) -> tuple[str, bool]:
         if subject is None or subject == self.cur_location_name or subject == "location":
@@ -1803,6 +1837,7 @@ class Game():
         return await self.resume()
 
     def lobby(self) -> tuple[str, bool]:
+        self.skip_turn = True
         self.exit_to_lobby = True
         return ("ok", False)
 
@@ -2481,7 +2516,7 @@ class Game():
         if self.cur_game_state_name != "encounter" or self.cur_encounter is None:
             return ("'{move}' FAILED - not in 'encounter' game state", True)
         
-        if move not in [ "attack", "press", "shoot", "advance", "retreat", "charge", "flee", "pass" ]:
+        if move not in [ "attack", "press", "shoot", "advance", "retreat", "charge", "flee", "skip" ]:
             return (f"'{move}' FAILED - not a valid encounter action", True)
 
         # Get the attacker. Make sure it's the player's turn if the attacker is a player.
@@ -2568,9 +2603,9 @@ class Game():
             self.mark_encounter_moved(attacker)
             return (resp, False)
 
-        elif move == "pass":
+        elif move == "skip":
             err = False
-            resp = f"'{attacker_name}' passes this turn"
+            resp = f"'{attacker_name}' skips this turn"
             self.mark_encounter_moved(attacker)
             return (resp, False)
 
@@ -2587,7 +2622,9 @@ class Game():
             return resp
         return "\nAll players have gone. NOW MONSTERS TURN!\n"
 
-    def get_response_prefix_encounter(self) -> str:  
+    def get_response_prefix_encounter(self) -> str:
+        if self.skip_turn:
+            return ""
         # Write results header if this is the first action in this response so AI can figure out
         # what's going on
         if self.cur_encounter["turn"] == "players":
@@ -2597,6 +2634,8 @@ class Game():
         return ""
     
     def after_process_actions_encounter(self) -> str:
+        if self.skip_turn:
+            return ""
         # Maker sure we go to the next turn for players after monsters turn
         if self.cur_encounter["turn"] == "monsters":
             resp, _ = self.next_encounter_turn()
@@ -2604,6 +2643,8 @@ class Game():
         return ""    
         
     def get_addl_response_encounter(self) -> str:
+        if self.skip_turn:
+            return ""
         if self.cur_encounter["turn"] == "players":
             resp, _ = self.check_encounter_next_turn("")
             return resp
@@ -2613,10 +2654,7 @@ class Game():
         resp = ""
         error = False
 
-        if action in [ "wait", "hold", "stop", "defend", "no_action" ]:
-            action = "pass"
-
-        if action in [ "charge", "flee", "advance", "retreat", "attack", "press", "block", "shoot", "pass" ]:
+        if action in [ "charge", "flee", "advance", "retreat", "attack", "press", "block", "shoot", "skip" ]:
             resp, error = self.attack_move(action, subject, object)
         else:   
             match action:
@@ -2733,7 +2771,8 @@ class Game():
             return (resp, True)
         
         # Note, we don't wait for it to finish saving
-        await self.save_game()
+        if not self.skip_turn:
+            await self.save_game()
 
         return (resp, False)
 

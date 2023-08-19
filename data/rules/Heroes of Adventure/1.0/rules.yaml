@@ -52,6 +52,23 @@ magic_categories:
   "Water":
     description: "Elemental powers of the seas, oceans and the realm of the Under-Seas."
 
+help:
+  encounters:
+    keywords: [ "attack", "attacks", "combat" ]
+    help: |-
+      During combat players can choose the following actions:
+        - Advance - Advance one 30 ft range band.
+        - Retreat - Retreat one 30 ft range band.
+        - Attack an opponent (with equipped melee weapon) - Regular melee attack, will move forward one 30ft range if needed. Target MUST be within 30ft range to use this action.
+        - Press an opponent - Strong melee attack (advantage), leaves attacker vulnerable to opponent. No movement. Target MUST be at melee/close range to use this action.
+        - Shoot an opponent (with equipped range weapon) - Shot or fire ranged weapon. No movement. Attacker MUST have a ranged attack to use.
+        - Charge - Fast movement (2 30ft range bands) towards opponents.
+        - Flee  - Fast retreat away from opponents (escape) (2 range bands). -1 disadvantage.
+        - Cast a spell on an optional target - Casts a spell. The target can be a character, item, etc. and is optional. 
+        - Use an item on an opponent - Use an item that may have an effect in combat such as a scroll or healing potion.
+        - Equip a melee or ranged weapon - Change your equipped weapon.
+        - Pass - Do nothing this turn.
+
 spells:
   # Air Magic
   "Fly":
