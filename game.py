@@ -95,8 +95,9 @@ class Game():
             instr_msg = query_msg
         match mode:
             case "exploration_action" | "encounter_action":
+                prefix = (self.exploration_prefix if mode == "exploration_action" else self.encounter_prefix)
                 # We get the whole msg stack for the "actioner" query (actioner and engine responses).
-                msgs = self.exploration_prefix + \
+                msgs = prefix + \
                     self.filter_messages(["player", "actioner", "engine", "referee"]) + \
                     [ instr_msg ]
                 resp = await self.agent.generate(msgs, primary, keep, chunk_handler=chunk_handler)
@@ -187,13 +188,15 @@ class Game():
             case "cast" | "casts":
                 if l >= 3:
                     l2 = " ".join(q_l[2:]).split(", ")
-                    cmd = "cast"
-                    args = [ q_l[1], l2[0], l2[1] ]
+                    if l2 == 2:
+                        cmd = "cast"
+                        args = [ q_l[1], q_l[2], l2[1] ]
             case "use" | "uses":
                 if l >= 3:
                     l2 = " ".join(q_l[2:]).split(", ")
-                    cmd = "use"
-                    args = [ q_l[1], l2[0], l2[1] ]
+                    if l2 == 2:
+                        cmd = "use"
+                        args = [ q_l[1], l2[0], l2[1] ]
             case "attack" | "attacks":
                 if l > 2:
                     cmd = "attack"
@@ -338,7 +341,7 @@ class Game():
     def init_help_index(self) -> None:
         all_spells = { "name": "all", "type": "spells" }
         self.help_index["spells"] = all_spells
-        self.help_index["all spells"] = all_spells       
+        self.help_index["all spells"] = all_spells
         for spell_name in self.rules["spells"].keys():
             self.help_index[spell_name.lower()] = { "name": spell_name, "type": "spell" }
         magic_categories = { "name": "magic categories", "type": "magic_categories" }
@@ -346,7 +349,8 @@ class Game():
         self.help_index["magic types"] = magic_categories
         self.help_index["magic"] = magic_categories
         for magic_category_name in self.rules["magic_categories"].keys():
-            self.help_index[(magic_category_name + " Magic").lower()] = { "name": magic_category_name, "type": "magic_categories" }
+            category_lower = (magic_category_name + " Magic").lower()
+            self.help_index[category_lower] = { "name": magic_category_name, "type": "magic_categories" }
         for equipment_name in self.rules["equipment"].keys():
             self.help_index[equipment_name.lower()] = { "name": equipment_name, "type": "equipment" }
 
@@ -1638,6 +1642,8 @@ class Game():
     def help(self, subject) -> tuple[str, bool]:
         if subject.endswith(" spell"):
             subject = subject[:-6]
+        elif subject.endswith(" spells"):
+            subject = subject[:-7]
         elif subject.endswith(" equipemnt"):
             subject = subject[:-10]
         look_info = self.help_index.get(subject.lower())
@@ -1645,6 +1651,8 @@ class Game():
             match look_info["type"]:
                 case "spell":
                     return self.describe_spell(look_info["name"])
+                case "spells_list":
+                    return str(look_info["list"])
                 case "magic_categories":
                     return self.describe_magic(look_info["name"])
                 case "equipment":
@@ -2019,10 +2027,12 @@ class Game():
                 target_item_name = args[0]
                 del args[0]
                 _, target_item = self.find_item(being_name, target_item_name)
-            elif args[0] in self.cur_location_state["usables"]:
+            elif args[0] in self.cur_location_state.get("usables", {}):
                 target_usable_name = args[0]
                 del args[0]
                 target_usable = self.cur_location_state["usables"][target_usable_name]
+            else:
+                return (f"cast target {args[0]} not found", True)
 
         resp = f"{being_name} casts {spell['category']} Magic spell {spell_name}"
         if target_being or target_item or target_usable:
@@ -2237,17 +2247,14 @@ class Game():
         resp, _ = await self.describe_location()
         return ("Your party has escaped!\n\n" + resp, False)
     
-    def get_attacker(self, attacker_name) -> dict[str, any]:
-        if self.cur_encounter["turn"] == "players":
-            return self.get_object(self.cur_encounter["characters"].get(attacker_name))
-        else:
-            return self.get_object(self.cur_encounter["monsters"].get(attacker_name))
-
-    def get_attack_target(self, target_name) -> dict[str, any]:
-        if self.cur_encounter["turn"] == "monsters":
-            return self.get_object(self.cur_encounter["characters"].get(target_name))
-        else:
-            return self.get_object(self.cur_encounter["monsters"].get(target_name))
+    def get_encounter_being(self, attacker_name) -> dict[str, any]:
+        player = self.get_object(self.cur_encounter["characters"].get(attacker_name))
+        if player:
+            return (player, "players")
+        monster = self.get_object(self.cur_encounter["monsters"].get(attacker_name))
+        if monster:
+            return (monster, "monsters")
+        return (None, None)
 
     def get_players_monsters_left(self) -> tuple[int, int]:
         chars_left = 0
@@ -2467,6 +2474,41 @@ class Game():
     def attack_move(self, move: str, attacker_name: str, target_name: str) -> tuple[str, bool]:
         resp = ""
 
+        if self.cur_game_state_name != "encounter" or self.cur_encounter is None:
+            return ("'{move}' FAILED - not in 'encounter' game state", True)
+        
+        if move not in [ "attack", "press", "shoot", "advance", "retreat", "charge", "flee", "pass" ]:
+            return (f"'{move}' FAILED - not a valid encounter action", True)
+
+        # Get the attacker. Make sure it's the player's turn if the attacker is a player.
+        attacker, attacker_side = self.get_encounter_being(attacker_name)
+        if attacker is None:
+            return (f"attacker '{attacker_name}' not found", True)
+        if attacker_side != self.cur_encounter["turn"]:
+            if attacker_side == "players":
+                # A player attack FORCES the end of monsters turn (if if they haven't all gone)
+                err_str, err = self.next_encounter_turn()
+                if err:
+                    return err_str
+            else:
+                return (f"{attacker_name} can't move because it is currently {self.cur_encounter['turn']} turn ", True)
+
+        # Can the attacker do anything (paralyzed, asleep, dead?)
+        can_move_msg, can_move = self.check_encounter_can_move(move, attacker)
+        if not can_move:
+            return (can_move_msg, True)
+
+        # Get the attack target
+        target = None        
+        if move in [ "attack", "press", "shoot" ]:
+            target, _ = self.get_encounter_being(target_name)
+            if target is None:
+                return (f"'{move}' FAILED - target '{target_name}' not found", True)
+            if Game.is_dead(target):
+                return (f"'{move}' FAILED - target '{target_name}' is dead", True)
+            if Game.has_escaped(target):
+                return (f"'{move}' FAILED - target '{target_name}' has escaped", True)
+
         # Write results header if this is the first action in this response so AI can figure out
         # what's going on
         if self.cur_encounter["turn"] == "players" and self.player_results_id != self.response_id:
@@ -2476,33 +2518,7 @@ class Game():
             self.monster_results_id = self.response_id
             resp = "\nMONSTER TURN RESULTS:\n\n"
 
-        if self.cur_game_state_name != "encounter" or self.cur_encounter is None:
-            return ("'{move}' FAILED - not in 'encounter' game state", True)
-        
-        if move not in [ "attack", "press", "shoot", "advance", "retreat", "charge", "flee", "pass" ]:
-            return (f"'{move}' FAILED - not a valid encounter action", True)
-
-        attacker = self.get_attacker(attacker_name)
-        if attacker is None:
-            if self.get_attack_target(attacker_name) is not None:
-                return (f"{attacker_name} can't move because it is currently {self.cur_encounter['turn']} turn ", True)
-            else:
-                return (f"attacker '{attacker_name}' not found", True)
-        
-        can_move_msg, can_move = self.check_encounter_can_move(move, attacker)
-        if not can_move:
-            return (can_move_msg, True)
-
-        target = None        
-        if move in [ "attack", "press", "shoot" ]:
-            target = self.get_attack_target(target_name)
-            if target is None:
-                return (f"'{move}' FAILED - target '{target_name}' not found", True)
-            if Game.is_dead(target):
-                return (f"'{move}' FAILED - target '{target_name}' is dead", True)
-            if Game.has_escaped(target):
-                return (f"'{move}' FAILED - target '{target_name}' has escaped", True)
-
+        # Do the move
         if move in [ "attack", "press", "shoot" ]:
             attack_type = ("ranged" if move == "shoot" else "melee")
             ability_name = ("Melee Combat" if attack_type == "melee" else "Ranged Combat")

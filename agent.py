@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from datetime import datetime
 import json
 import textwrap
+import time
 
 # Load default environment variables (.env)
 load_dotenv()
@@ -482,31 +483,5 @@ class Agent():
     # Make agent think some information
     def think(self, text) -> str:
         self.updateMemory(text, THOUGHTS)
-
-    # Make agent read some information
-    def read(self, url, user_query="") -> str:
-
-        print(f"Summarizing {url}\n")
-
-        try:
-            text = getHtmlText(url)
-        except:
-            return f"Couldn't read {url}."
-
-        summaryRequest = self.prompts['wepbage_summary_request']
-        summaryRequest = summaryRequest \
-            .replace("{query}", user_query) \
-            .replace("{text}", text[0:5000])
-        
-        try:
-            summary = self.generate(summaryRequest) 
-        except:
-            return f"Couldn't summarize {url}."
-
-        self.updateMemory(summary, THOUGHTS)
-
-        response = f"I found this on the web:\n\n\033[35m{summary}\033[0m\n"
-        self.messages += [{"role": "assistant", "content": response}]
-        return response
 
 

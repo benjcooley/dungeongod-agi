@@ -67,7 +67,7 @@ class Engine():
                 char_name = char["info"]["basic"]["full_name"]
                 char_level = char["stats"]["basic"].get("level", 1)
                 if char_level < min_level or char_level > max_level:
-                    error_str += f"Party character {char_name} is level {level}. Allowed levels are {module_levels}.\n"
+                    error_str += f"Party character {char_name} is level {char_level}. Allowed levels are {module_levels}.\n"
         if "players" in module_info:
             module_players = module_info["players"]
             player_items = module_players.split("-")
