@@ -44,8 +44,6 @@ class Game():
         self.game_state: dict[str, any] = {}
         self.action_image_path: str | None = None
         self.response_id = 1
-        self.player_results_id = 0
-        self.monster_results_id = 0
         self.exit_to_lobby = False
         self.messages = [ Agent.make_message("assistant", "I'm Ready!", "referee", True) ]
 
@@ -66,15 +64,15 @@ class Game():
             await self.load_game(self.save_game_name)
         else:
             assert False
-        resume_prompt = self.agent.make_prompt(self.rules["resume_game_prompt"], self.module["info"])
+        resume_prompt = self.agent.make_prompt(self.prompts["resume_game_prompt"], self.module["info"])
         return await self.system_action(resume_prompt, \
-                           'call next_turn("resume")', \
-                           'AI Referee, you must use [call next_turn("resume")] to start the game. Please try again.\n')
+                           'call do_action("resume")', \
+                           'AI Referee, you must use [call do_action("resume")] to start the game. Please try again.\n')
 
     # A per user response hint to focus the AI (not usually used unless AI has trouble)
     def add_query_hint(self, query) -> str:
         return query + "\n\n" + \
-            self.rules["instructions_prompt"] + "\n\n" + \
+            self.prompts["instructions_prompt"] + "\n\n" + \
             self.cur_location_script["hint"] + "\n\n"
 
     def filter_messages(self, sources: list[str], max_msgs: int = -1) -> list[dict[str, any]]:
@@ -217,13 +215,13 @@ class Game():
             else:
                 arg_str += str(arg)
         args += [None] * (4 - len(args))                
-        resp, err = await self.next_turn(cmd, args[0], args[1], args[2], args[3])
+        resp, err = await self.do_action(cmd, args[0], args[1], args[2], args[3])
         if not err:
             resp_msg = Agent.make_message("user", resp, "player", keep=False)
             self.messages.append(resp_msg)
             if self.agent.logging:
                 print(resp_msg["content"])
-            cmd_msg = Agent.make_message("assistant", f"<HIDDEN>\ncall next_turn({arg_str})\n", "engine", keep=False)
+            cmd_msg = Agent.make_message("assistant", f"<HIDDEN>\ncall do_action({arg_str})\n", "engine", keep=False)
             self.messages.append(cmd_msg)
             if self.agent.logging:
                 print(cmd_msg["content"])
@@ -257,7 +255,7 @@ class Game():
             else:
                 if self.cur_location_script and "hint" in self.cur_location_script:
                     query = self.add_query_hint(query)
-                action_instr = "<PLAYER>\n" + query + "\n" + self.rules["action_instr_prompt"] + "\n"
+                action_instr = "<PLAYER>\n" + query + "\n" + self.prompts["action_instr_prompt"] + "\n"
             action_mode = self.cur_game_state_name + "_action"
             resp = await self.generate(action_instr, query, action_mode, is_system , primary=True, keep=False)
             if not is_system:
@@ -279,8 +277,27 @@ class Game():
     async def process_response(self, query: str, response: str, level: int, chunk_handler: any = None) -> str:
         if level == 4:
             return response.strip(" \n\t")
+        results, num_calls = await self.process_game_actions(response)
+        # Do we need to pass this to the AI for further processing? If not just return it.
+        if num_calls == 1 and results.startswith("<RESULTS>\n"):
+            results = results[10:]
+        # Check for additional responses.
+        addl_resp = self.get_addl_response()
+        if addl_resp:
+            addl_resp_instr = results.strip("\n") + "\n\n" + addl_resp
+            resp_list = addl_resp_instr.split("<INSTRUCTIONS>\n")
+            has_instr = len(resp_list) > 1
+            mode = (self.cur_game_state_name + "_action" if has_instr else "engine_response")
+            addl_query = resp_list[0]
+            ai_addl_resp = await self.generate(addl_resp_instr, addl_query, mode, "engine", primary=False)
+            addl_results, _ = await self.process_game_actions(ai_addl_resp)
+            results = results.strip("\n") + "\n\n" + addl_results
+        # Pass it to the AI.
+        return await self.referee_response(query, results, level, chunk_handler=chunk_handler)
+
+    async def process_game_actions(self, response: str) -> tuple[str, int]:
         lines = response.split("\n")
-        results = ""
+        results = self.get_response_prefix()
         num_calls = 0
         for line in lines:
             line = line.strip()
@@ -292,16 +309,13 @@ class Game():
                 results = ""
                 query = "This player action is not allowed."
                 break
-            if "next_turn(\"" in line:
+            if "do_action(\"" in line:
                 args = extract_arguments(line, 5)
-                game_resp, _ = await self.next_turn(args[0], args[1], args[2], args[3], args[4])
+                game_resp, _ = await self.do_action(args[0], args[1], args[2], args[3], args[4])
                 results += game_resp + "\n"
                 num_calls += 1
-        # Do we need to pass this to the AI? If not just return it.
-        if num_calls == 1 and results.startswith("<RESULTS>\n"):
-            results = results[10:]
-        # Pass it to the AI.
-        return await self.referee_response(query, results, level, chunk_handler=chunk_handler)
+        results += self.after_process_actions()
+        return (results, num_calls)
 
     async def referee_response(self, query: str, results: str, level: int, chunk_handler: any = None) -> str:     
         if results != "":
@@ -319,19 +333,8 @@ class Game():
             ai_result = await self.generate(instr_query, query, mode, "engine", primary=False, keep=False,
                                            chunk_handler=(chunk_handler if mode != "engine_response" else None))
             self.response_id += 1
-            if "call next_turn(" in ai_result:
+            if "call do_action(" in ai_result:
                 ai_result = await self.process_response("", ai_result, level + 1)                
-            addl_resp = self.get_addl_response()
-            if addl_resp:
-                addl_resp_instr = addl_resp
-                resp_list = addl_resp_instr.split("<INSTRUCTIONS>\n")
-                has_instr = len(resp_list) > 1
-                mode = (self.cur_game_state_name + "_action" if has_instr else "engine_response")
-                addl_query = resp_list[0]
-                ai_addl_resp = await self.generate(addl_resp_instr, addl_query, mode, "engine", primary=False,
-                                           chunk_handler=(chunk_handler if mode != "engine_response" else None))
-                ai_addl_result = await self.process_response(query, ai_addl_resp, level + 1)
-                ai_result = ai_result.strip("\n") + "\n\n" + ai_addl_result
             return ai_result.strip(" \t\n")
         else:
             # Action AI says this is a user query, so pass query through, referee handles it.
@@ -375,10 +378,11 @@ class Game():
         _, err, self.module = await self.engine.load_module(self.module_name)
         assert not err
         self.rules = await self.engine.load_rules(self.rules_path)
+        self.prompts = await self.engine.load_prompts(self.rules_path)
         # Prefix messages we prepend to our message stream which has the rules/instructions for various modes
-        self.exploration_prefix = [Agent.make_message("user", self.rules["exploration_prompt"], "prefix", keep=True)]
-        self.encounter_prefix = [Agent.make_message("user", self.rules["encounter_prompt"], "prefix", keep=True)]
-        self.response_prefix = [Agent.make_message("user", self.rules["response_prompt"], "prefix", keep=True)]
+        self.exploration_prefix = [Agent.make_message("user", self.prompts["exploration_prompt"], "prefix", keep=True)]
+        self.encounter_prefix = [Agent.make_message("user", self.prompts["encounter_prompt"], "prefix", keep=True)]
+        self.response_prefix = [Agent.make_message("user", self.prompts["response_prompt"], "prefix", keep=True)]
         self.help_index = {}
         self.init_help_index()
 
@@ -834,7 +838,7 @@ class Game():
                         next_state = trans_name
                         break
         if next_state is not None:
-            return f'<HIDDEN>\ncall next_turn("next", "{next_state}")\n'
+            return f'<HIDDEN>\ncall do_action("next", "{next_state}")\n'
         else:
             return None
 
@@ -1346,13 +1350,13 @@ class Game():
                 value = Game.die_roll(die)
                 new_health = self.set_cur_health(target, self.get_cur_health(target) + value)
                 max_health = target["stats"]["basic"]["health"]
-                return (f"Heal {die} {value}, new health: {new_health} of {max_health}\n", False)
+                return (f" - heal {die} {value} - new health is: {new_health} (of max: {max_health})\n", False)
             case "damage":
                 die = effect_def["damage"]["die"]
                 value = Game.die_roll(die)
                 new_health = self.set_cur_health(target, self.get_cur_health(target) - value)
                 max_health = target["stats"]["basic"]["health"]
-                return (f"Damage {die} {value}, new health: {new_health} of {max_health}\n", False)
+                return (f" - damage {die} {value} - new health is: {new_health} (of max: {max_health})\n", False)
             case _:
                 raise RuntimeError(f"unknown simple effect {effect_id}")
 
@@ -1371,14 +1375,14 @@ class Game():
         # Get description of action (we use this to tell the AI what it was)
         if verb is None:
             verb = action
-        desc = f"{verb} {name}"
+        desc = f"  \"{verb}\" - {name}"
         if len(targets) > 0:
             desc += " on/with " + ", ".join([target.get("name", "") for target in targets])
         # Apply the action
         duration = effect_src.get("duration")       
         turns = effect_src.get("turns")
         check = effect_src.get("check")
-        resp = desc + "\n"
+        resp = desc
         if duration is not None or turns is not None or check is not None:
             # Things that have a temporary effect
             self.last_effect_uid += 1
@@ -1556,7 +1560,7 @@ class Game():
                 instr += "\n\n"
             instr += self.cur_location_script["instructions"].strip(" \n\t") + "\n"
         if instr != "":
-            instr = "\n" + self.rules["instructions_prompt"].strip(" \n\t") + "\n\n" + instr + "\n"
+            instr = "\n" + self.prompts["instructions_prompt"].strip(" \n\t") + "\n\n" + instr + "\n"
         # If we're in encounter mode.. use an abbreviated location description with encounter insructions/rules
         encounter = self.describe_encounter()
         if encounter != "":
@@ -1692,7 +1696,7 @@ class Game():
         desc = "description: " + self.cur_location_script["description"].strip(" \t\n") + "\n\n"
         instr = ""
         if "instructions" in self.cur_location_script:
-            instr = self.rules["instructions_prompt"].strip(" \n\t") + "\n\n" + self.cur_location_script["instructions"].strip(" \n\t") + "\n"
+            instr = self.prompts["instructions_prompt"].strip(" \n\t") + "\n\n" + self.cur_location_script["instructions"].strip(" \n\t") + "\n"
         exits = "exits: " + self.describe_exits() + "\n"
         tasks = self.describe_tasks()
         resp = f"{desc}{instr}{exits}{tasks}"
@@ -1789,7 +1793,7 @@ class Game():
         if error:
             return (resp_loc, error)
         resp += "FIRST LOCATION:\n\n" + resp_loc + "\n\n" 
-        resp += self.rules["overview_prompt"]       
+        resp += self.prompts["overview_prompt"]       
         return (resp, False)
 
     async def restart(self) -> tuple[str, bool]:
@@ -1951,7 +1955,7 @@ class Game():
 
         # Use it and apply the effects - note this counts as a move even if we fail to apply the effect
         use_effect_resp, failed = self.apply_effects("use", item_name or usable_name, item or usable, [ target_item or target_being ], use_verb)
-        resp += use_effect_resp + "\n"
+        resp += use_effect_resp.strip("\n")
 
         return (resp, failed)
 
@@ -2034,7 +2038,7 @@ class Game():
             else:
                 return (f"cast target {args[0]} not found", True)
 
-        resp = f"{being_name} casts {spell['category']} Magic spell {spell_name}"
+        resp = f"{being_name} \"cast\" {spell['category']} Magic spell {spell_name}"
         if target_being or target_item or target_usable:
             target_name = target_being_name or target_item_name or target_usable_name
             resp += f" on {target_name}\n"
@@ -2053,7 +2057,7 @@ class Game():
 
         # Apply the spell effects. Note we count this as a move even if the spell effect couldn't be applied.
         cast_effect_resp, failed = self.apply_effects("cast", spell_name, spell, [ target_item or target_being or target_usable ])
-        resp += cast_effect_resp + "\n"
+        resp += cast_effect_resp.strip("\n")
 
         # image?
         image_path = check_for_image(self.rules_path + "/images", spell_name, "spells")
@@ -2423,9 +2427,9 @@ class Game():
     def describe_encounter_turn(self) -> str:
         resp = self.get_attacker_encounter_states() + "\n"
         if self.cur_encounter["turn"] == "monsters":
-            resp += self.rules["monster_turn_prompt"].strip("\n")
+            resp += self.prompts["monster_turn_prompt"].strip("\n")
         else:
-            resp += self.rules["player_turn_prompt"].strip("\n")
+            resp += self.prompts["player_turn_prompt"].strip("\n")
         return resp
 
     def next_encounter_turn(self) -> tuple[str, bool]:
@@ -2509,15 +2513,6 @@ class Game():
             if Game.has_escaped(target):
                 return (f"'{move}' FAILED - target '{target_name}' has escaped", True)
 
-        # Write results header if this is the first action in this response so AI can figure out
-        # what's going on
-        if self.cur_encounter["turn"] == "players" and self.player_results_id != self.response_id:
-            self.player_results_id = self.response_id
-            resp = "\nPLAYER TURN RESULTS:\n\n"
-        elif self.cur_encounter["turn"] == "monsters" and self.monster_results_id != self.response_id:
-            self.monster_results_id = self.response_id
-            resp = "\nMONSTER TURN RESULTS:\n\n"
-
         # Do the move
         if move in [ "attack", "press", "shoot" ]:
             attack_type = ("ranged" if move == "shoot" else "melee")
@@ -2591,7 +2586,23 @@ class Game():
             resp, _ = self.check_encounter_next_turn("")
             return resp
         return "\nAll players have gone. NOW MONSTERS TURN!\n"
+
+    def get_response_prefix_encounter(self) -> str:  
+        # Write results header if this is the first action in this response so AI can figure out
+        # what's going on
+        if self.cur_encounter["turn"] == "players":
+            return "PLAYER TURN RESULTS:\n\n"
+        if self.cur_encounter["turn"] == "monsters":
+            return "MONSTER TURN RESULTS:\n\n"
+        return ""
     
+    def after_process_actions_encounter(self) -> str:
+        # Maker sure we go to the next turn for players after monsters turn
+        if self.cur_encounter["turn"] == "monsters":
+            resp, _ = self.next_encounter_turn()
+            return resp
+        return ""    
+        
     def get_addl_response_encounter(self) -> str:
         if self.cur_encounter["turn"] == "players":
             resp, _ = self.check_encounter_next_turn("")
@@ -2626,7 +2637,25 @@ class Game():
             case _:
                 return ""
 
-    # Response that causes AI to do additional next_turn() processing
+    # Called to add any prefix to action results response
+    def get_response_prefix(self) -> str:
+        match self.cur_game_state_name:
+            case "encounter":
+                resp = self.get_response_prefix_encounter()
+            case _:
+                resp = ""
+        return resp
+    
+    # Called after all actions have been called to update game state
+    def after_process_actions(self) -> str:
+        match self.cur_game_state_name:
+            case "encounter":
+                resp = self.after_process_actions_encounter()
+            case _:
+                resp = ""
+        return resp    
+
+    # Response that causes AI to do additional do_action() processing
     def get_addl_response(self) -> str:
         match self.cur_game_state_name:
             case "encounter":
@@ -2635,7 +2664,7 @@ class Game():
                 resp = ""
         return resp
 
-    async def next_turn(self, action: any, 
+    async def do_action(self, action: any, 
                   subject: any = None, 
                   object: any = None, 
                   extra: any = None, 

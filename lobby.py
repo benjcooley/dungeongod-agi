@@ -91,16 +91,16 @@ class Lobby():
                 return await self.generate(query, "lobby", primary=False)
             elif line == "NOT ALLOWED":
                 return await self.generate("This requst or action is not allowed.", "lobby", primary=False)
-            if "next_turn(" in line:
+            if "do_action(" in line:
                 args = extract_arguments(line, 4)
-                game_resp = await self.next_turn(args[0], args[1], args[2], args[3])
+                game_resp = await self.do_action(args[0], args[1], args[2], args[3])
                 results += game_resp + "\n"
         if results != "":
             response = "<RESPONSE>\n" + \
                         results
             ai_result = await self.generate(response, "lobby", primary=False, chunk_handler=chunk_handler)
             self.response_id += 1
-            if "call next_turn(" in ai_result:
+            if "call do_action(" in ai_result:
                 ai_result = await self.process_response("", ai_result, level + 1)                
             return ai_result.strip(" \t\n")
         else:
@@ -110,8 +110,8 @@ class Lobby():
         self.lobby_active = True        
         resume_prompt = self.lobby["resume_lobby_prompt"]
         return await self.system_action(resume_prompt, \
-                           'call next_turn("resume")', \
-                           'Lobby Agent, you must use [call next_turn("resume")] to start the game. Please try again.\n')
+                           'call do_action("resume")', \
+                           'Lobby Agent, you must use [call do_action("resume")] to start the game. Please try again.\n')
 
     # -------------------
     # Lobby Actions
@@ -281,7 +281,7 @@ class Lobby():
         self.lobby_active = False
         return ("ok", False)
 
-    async def next_turn(self, action: any, arg1: any = None, arg2: any = None, arg3: any = None) -> str:
+    async def do_action(self, action: any, arg1: any = None, arg2: any = None, arg3: any = None) -> str:
         
         resp = ""
         error = False

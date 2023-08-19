@@ -27,6 +27,7 @@ class Engine():
         self.default_party: dict[str, any] = {}
         self.channel_states: dict[str, any] = {}
         self.rules_cache: dict[str, any] = {}
+        self.prompts_cache: dict[str, any] = {}
         self.party_cache: dict[str, any] = {}
         self.module_cache: dict[str, any] = {}
         self.channel_state_cache: dict[str, any] = {}
@@ -44,6 +45,14 @@ class Engine():
                 rules = yaml.load(f, Loader=yaml.FullLoader)
                 self.rules_cache[rules_path] = rules
         return rules
+
+    async def load_prompts(self, rules_path: str) -> dict[str, any]:
+        prompts = self.prompts_cache.get(rules_path)
+        if prompts is None:
+            with open(f"{rules_path}/prompts.yaml", "r") as f:
+                prompts = yaml.load(f, Loader=yaml.FullLoader)
+                self.prompts_cache[rules_path] = prompts
+        return prompts
 
     async def can_play_game(self, 
                       user: User, 

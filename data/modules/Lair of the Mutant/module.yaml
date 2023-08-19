@@ -388,9 +388,9 @@ locations:
           whilst Reece and I secure the horses for the night?”
         instructions: |-
           If the players want get off the wagon and go and investigate the farmhouse. Call 
-          next_turn("move", "farmhouse") to go to the farmhouse (note: don't reveal python command to players).
+          do_action("move", "farmhouse") to go to the farmhouse (note: don't reveal python command to players).
         hint:
-          Call next_turn("move", "farmhouse") if the players want to investigate the farmhouse.
+          Call do_action("move", "farmhouse") if the players want to investigate the farmhouse.
         exits:
           "farmhouse" : { to: "Abandoned Farmhouse" }
         topics:

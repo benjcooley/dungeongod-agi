@@ -83,7 +83,7 @@ def check_for_image(base_path: str, name: str, type_name: str = None) -> str:
     return None
 
 def extract_arguments(text: str, num_args: int) -> list[str]:
-    pattern = r'next_turn\(([^)]*)\)'  # Matches the pattern next_turn(args)
+    pattern = r'do_action\(([^)]*)\)'  # Matches the pattern do_action(args)
     match = re.search(pattern, text)
     
     if not match:

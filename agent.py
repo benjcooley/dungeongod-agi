@@ -270,7 +270,7 @@ class Agent():
         last = len(lines)
         for i in range(len(lines)):
             line = lines[i].strip()
-            if "<HIDDEN>" in line or "[HIDDEN]" in line or "<RESPONSE>" in line or "call next_turn(" in line:
+            if "<HIDDEN>" in line or "[HIDDEN]" in line or "<RESPONSE>" in line or "call do_action(" in line:
                 last = i - 1
                 break
         if last < 0:
