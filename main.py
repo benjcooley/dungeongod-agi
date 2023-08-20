@@ -108,20 +108,22 @@ async def start_session(user: discord.User,
     if session is None:
         agent: Agent = Agent(channel_name, user_name)
         lobby: Lobby = Lobby(engine, game_user, agent)
-        if action == "new_game" or action == "resume_game":
-            game: Game = Game(engine, 
-                            game_user, 
-                            agent,
-                            start_game_action=action,
-                            module_name=module_name, 
-                            party_name=party_name,
-                            save_game_name=save_game_name)
-        else:
-            game = None
     else:
-        agent = session["agent"]
-        lobby = session["lobby"]
-        game = session["game"]
+        agent: Agent = session["agent"]
+        lobby: Lobby = session["lobby"]
+
+    if action == "new_game" or action == "resume_game":
+        game: Game = Game(engine, 
+                        game_user, 
+                        agent,
+                        start_game_action=action,
+                        module_name=module_name, 
+                        party_name=party_name,
+                        save_game_name=save_game_name)
+    elif session is not None:
+        game: Game = session["game"]
+    else:
+        game: Game = None
 
     new_thread = False
     if create_thread and not thread:        
@@ -381,17 +383,18 @@ async def dgod_new_game(interaction: discord.Interaction, party_name: str = engi
         await interaction.response.send_message(f"DungeonGod commands are only available in channels or threads of channels with a \"{CHANNEL_PREFIX}\" prefix.")
         return
 
-    # We create a private thread if this command is called in a channel    
-    create_thread = (channel.type != discord.ChannelType.private_thread and 
-                     channel.type != discord.ChannelType.public_thread)
+    # We create a private thread if this command is called in a channel
+    is_thread: bool = (channel.type == discord.ChannelType.private_thread or 
+                       channel.type == discord.ChannelType.public_thread)
+    thread: discord.Thread = (channel if is_thread else None)
 
-    await channel.send(f"Starting new game..")
     err_str, err, result = await start_session(
                                                 interaction.user, 
                                                 interaction.guild, 
                                                 action="new_game",
                                                 channel=channel,
-                                                create_thread=create_thread,
+                                                create_thread=not is_thread,
+                                                thread=thread,
                                                 module_name=module_name, 
                                                 party_name=party_name 
                                               )
@@ -402,15 +405,14 @@ async def dgod_new_game(interaction: discord.Interaction, party_name: str = engi
 
     session = result["session"]
     game: Game = session["game"]
-    is_thread: bool = session["is_thread"]
-    thread: discord.Thread = (session["channel"] if is_thread else None)
+    is_thread = session["is_thread"]
+    thread = (session["channel"] if is_thread else None)
 
     try:
-        if is_thread:
+        if thread is not None and thread.id != channel.id:
             await interaction.response.send_message(f"Your game is started in thread <#{thread.id}>.")
         else:
-            await interaction.response.send_message(f"Starting game...")
-
+            await interaction.response.send_message(f"Starting game..")
         result = await game.start_game()
     except:
         result = traceback.format_exc()
@@ -433,17 +435,18 @@ async def dgod_resume_game(interaction: discord.Interaction):
         await interaction.response.send_message(f"DungeonGod commands are only available in channels or threads of channels with a \"{CHANNEL_PREFIX}\" prefix.")
         return   
 
-    # We create a private thread if this command is called in a channel    
-    create_thread = (channel.type != discord.ChannelType.private_thread and 
-                     channel.type != discord.ChannelType.public_thread)
+    # We create a private thread if this command is called in a channel
+    is_thread: bool = (channel.type == discord.ChannelType.private_thread or 
+                       channel.type == discord.ChannelType.public_thread)
+    thread: discord.Thread = (channel if is_thread else None)
 
-    await channel.send(f"Resuming game..")
     err_str, err, result = await start_session(
                                                 interaction.user, 
                                                 interaction.guild, 
                                                 action="resume_game",
                                                 channel=channel, 
-                                                create_thread=create_thread
+                                                create_thread=not is_thread,
+                                                thread=thread
                                               )
 
 
@@ -453,15 +456,14 @@ async def dgod_resume_game(interaction: discord.Interaction):
 
     session = result["session"]
     game: Game = session["game"]
-    is_thread: bool = session["is_thread"]
-    thread: discord.Thread = (session["channel"] if is_thread else None)
+    is_thread = session["is_thread"]
+    thread = (session["channel"] if is_thread else None)
 
     try:
-        if is_thread:
+        if thread is not None and thread.id != channel.id:
             await interaction.response.send_message(f"Your game has been resumed in thread <#{thread.id}>.")
         else:
-            await interaction.response.send_message(f"Resuming game...")
-
+            await interaction.response.send_message(f"Resuming game..")
         result = await game.start_game()
     except:
         result = traceback.format_exc()
@@ -484,16 +486,18 @@ async def dgod_lobby(interaction: discord.Interaction):
         await interaction.response.send_message(f"DungeonGod commands are only available in channels or threads of channels with a \"{CHANNEL_PREFIX}\" prefix.")
         return
 
-    # We create a private thread if this command is called in a channel    
-    create_thread = (channel.type != discord.ChannelType.private_thread and 
-                     channel.type != discord.ChannelType.public_thread)
+    # We create a private thread if this command is called in a channel
+    is_thread: bool = (channel.type == discord.ChannelType.private_thread or 
+                       channel.type == discord.ChannelType.public_thread)
+    thread: discord.Thread = (channel if is_thread else None)
 
     err_str, err, result = await start_session(
                                                 interaction.user, 
                                                 interaction.guild, 
                                                 action="lobby",
                                                 channel=channel,
-                                                create_thread=create_thread
+                                                create_thread=not is_thread,
+                                                thread=thread,
                                               )
 
     if err:
@@ -502,15 +506,14 @@ async def dgod_lobby(interaction: discord.Interaction):
 
     session = result["session"]
     lobby: Lobby = session["lobby"]
-    is_thread: bool = session["is_thread"]
-    thread: discord.Thread = (session["channel"] if is_thread else None)
+    is_thread = session["is_thread"]
+    thread = (session["channel"] if is_thread else None)
 
     try:
-        if is_thread:
+        if thread is not None and thread.id != channel.id:
             await interaction.response.send_message(f"Your lobby has been started in thread <#{thread.id}>.")
         else:
-            await interaction.response.send_message(f"Starting lobby...")
-
+            await interaction.response.send_message(f"Starting lobby..")
         result = await lobby.start_lobby()
 
     except:

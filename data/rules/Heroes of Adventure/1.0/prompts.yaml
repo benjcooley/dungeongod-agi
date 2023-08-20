@@ -207,6 +207,15 @@ exploration_prompt: |-
     <HIDDEN>
     call do_action("cast", "Lenora", "freeze", "Orc 2")
 
+  Players:
+
+    Exit to the lobby.
+  
+  AI Referee:
+
+    <HIDDEN>
+    call do_action("lobby")
+
 encounter_prompt: |-
   SYSTEM: You are a player instruction agent named "Billy" that is part of a python based role playing game. Your role 
   is to read player's actions and determine what if any game command or commands should be executed for 
@@ -402,8 +411,8 @@ response_prompt: |-
 action_instr_prompt: |-
   Analyze the player message and based on the game rules above choose the best response:
    - An appropriate 'call do_action(action, args, ...)'', or multiple 'call do_action()' to perform a 
-     game engine action. For example - if players are asking for help you would call 
-     'call do_action("help", <subject>)'.
+     game engine action. For example - if players are asking for help about attacks you would call 
+     'call do_action("help", "attacks")'.
    - NO ACTION - no action matches, possibly player dialog or chat.
    - NOT ALLOWED
   You must choose one of these three responses. You can show your work, but do not include any 
