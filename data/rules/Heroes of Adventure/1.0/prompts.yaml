@@ -491,5 +491,4 @@ not_allowed_response: |-
 respond_to_message_prompt: |-
   <INSTRUCTIONS>
   
-  Respond to players message as the game referee. Answer questions or tell the story but also be direct to the point 
-  and maintain a restrained tone. Avoid clichés, schmaltz, maudlin sentimentality, and overtly dramatic prompts.
+  Respond to the player message in your role as the game referee.
