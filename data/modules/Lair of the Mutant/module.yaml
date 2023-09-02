@@ -426,7 +426,7 @@ locations:
     script:
       "introductions":
         description: |-
-          Grun says “Enough about me, tell me about yourselves, young adventurers?”
+          Grun says “Engitough about me, tell me about yourselves, young adventurers?”
         instructions: |-
           - Grun's "topic" action subjects (do not mention to players): "Skenrith Keep", "who is Grun", "Reece", "Grun's wagon"
         image: "images/GrunsWagon.jpg"
@@ -729,13 +729,13 @@ locations:
   "Moathouse Courtyard": 
     area: "Moathouse"
     image: "images/Moathouse Courtyard 2"    
-    decription: |-
+    description: |-
       - A large courtyard area covered in rubble, rock, dust and
           debris. A dead carcass lies next to the well in the centre of
           the courtyard beyond which stands a stone statue of a man.
           Steps situated to the NE, SW & SW lead to the Towers.
 
-      - Mention that from here players can move to: main keep, great hall, stables  
+      - Mention that from here players can move to: armoury, guard quarters, stables  
     instructions: |-          
       - The  well contains a broken bucket and frayed rope, is 50%
           deep and leads to (D4). The re is a small pool of water below.
@@ -747,8 +747,8 @@ locations:
           with a faint magic aura (See Blessing of Suunos artefact pg.
           14).
     exits:
-      "main keep": { to: "Moathouse Main Keep" }
-      "great hall": { to: "Moathouse Great Hall" }
+      "armoury": { to: "Moathouse Armory" }
+      "guard quarters": { to: "Moathouse Guard Quarters" }
       "stables": { to: "Moathouse Stables" }
 
   "Moathouse Stables":
@@ -924,8 +924,9 @@ locations:
     exits:
       "courtyard": { to: "Moathouse Courtyard" }
 
-  "Moathouse Guards Quarters":
+  "Moathouse Guard Quarters":
     area: "Moathouse"
+    image: "images/Moathouse Guard Quarters"
     description: |-
       - (door is closed, not locked)
       - The  rooms are dirty and dusty and contain bare furnishing
