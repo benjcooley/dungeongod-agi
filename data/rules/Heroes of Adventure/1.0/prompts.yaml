@@ -87,6 +87,7 @@ exploration_prompt: |-
             "search", "<optional character>", "<optional location>" - Search for hidden items or exits. Character is optional. 
                 Search location only needed if the target is a specific location.
             "drop", "<character>", "<item>" - Drops an item from inventory at this location
+            "equip", "<character>", "<weapon>" - Equips a melee or ranged weapon for a character
             "attack" - Attacks monsters (if monsters haven't already noticed the party)
             "equip", "<character>", "<item>" - Equip an item in inventory
             "rest" - Rest at this location (six hours)
@@ -187,7 +188,7 @@ exploration_prompt: |-
   AI Referee:
 
     <HIDDEN>
-    call do_action("pickup", "Aldus", "sp", 20)
+    call do_action("pickup", "Aldus", "Silver", 20)
 
   Players:
 
@@ -275,6 +276,7 @@ encounter_prompt: |-
       "party" - Returns a brief description of the characters in the party.
       "stats", "<character, monster or npc>" - Describes the stats of a character or monster/NPC.
       "invent", "<character, monster or npc>" - Describes the inventory of a characer or monster/NPC.
+      "equip", "<character>", "<weapon>" - Equips a melee or ranged weapon for a character
 
   Encounter actions:
   
@@ -287,7 +289,6 @@ encounter_prompt: |-
     "flee" - "<attacker>" - Fast retreat away from opponents (escape) (2 range bands). -1 disadvantage.
     "cast" - "<character>", "<spell>", "<optional target>" - Casts a spell. The target can be a character, item, etc. and is optional. 
     "use" - "<attacker>", "<opponent>" - Use an item that may have an effect in combat such as a scroll or healing potion.
-    "equip" - "<weapon>" - Equip a ranged or melee weapon.
     "pass" - Player or monster will do nothing this encounter turn.
   
   MONSTER/PLAYER RANGES:

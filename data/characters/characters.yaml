@@ -18,7 +18,7 @@ characters:
       Dagger: { damage: d4 }
       Robes:
         defense: 1
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -63,7 +63,7 @@ characters:
       Longsword: {}
       Magic Lodestone: {}
       Sleep Potion: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -113,7 +113,7 @@ characters:
       Shortbow: { damage: d6 }
       Shortsword: { damage: d4 }
       Snare: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -195,7 +195,7 @@ characters:
       Hide Armour: { defense: 2 }
       Shortbow: { damage: d6 }
       Spear: { damage: d6 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -244,7 +244,7 @@ characters:
       Leather Armour: { defense: 2 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -290,7 +290,7 @@ characters:
       Lance: {}
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -334,7 +334,7 @@ characters:
       Leather Armour: { defense: 2 }
       Longsword: {}
       Shortbow: { damage: d6 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -405,7 +405,7 @@ characters:
       Leather Armour: { defense: 2 }
       Shortsword: { damage: d4 }
       Silver Dagger: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -451,7 +451,7 @@ characters:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
       Longsword: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -530,7 +530,7 @@ characters:
       Chainmail Armour: { defense: 4 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -612,7 +612,7 @@ characters:
       Robes:
         defense: 1
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -657,7 +657,7 @@ characters:
       Leather Armour: { defense: 2 }
       Musical Instrument: {}
       Thieves Tools: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -706,7 +706,7 @@ characters:
       Holy Symbol: {}
       Robes:
         defense: 1
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -781,7 +781,7 @@ characters:
       Lance: {}
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -827,7 +827,7 @@ characters:
     items:
       Battle Axe: {}
       Hide Armour: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -870,7 +870,7 @@ characters:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
       Shortbow: { damage: d6 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -911,7 +911,7 @@ characters:
       Robes:
         defense: 1
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -954,7 +954,7 @@ characters:
       Hand Axe: { damage: d4 }
       Holy Symbol: {}
       Leather Armour: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -1048,7 +1048,7 @@ characters:
         defense: 1
       Squirrel familiar: {}
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -1133,7 +1133,7 @@ characters:
       Holy Symbol of Kadmos: {}
       Leather Armour: { defense: 2 }
       Longsword: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -1182,7 +1182,7 @@ characters:
       Crossbow: {}
       Leather Armour: { defense: 2 }
       Longsword: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -1229,7 +1229,7 @@ characters:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
       Shortsword: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -1270,7 +1270,7 @@ characters:
       Robes:
         defense: 1
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -1320,7 +1320,7 @@ characters:
       Dagger: { damage: d4 }
       Robes:
         defense: 1
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -1361,7 +1361,7 @@ characters:
       Leather Armour: { defense: 2 }
       Scimitar: {}
       Trident: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -1413,7 +1413,7 @@ characters:
       Longsword: {}
       Shield: { defense: 2 }
       Shortbow: { damage: d6 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -1501,7 +1501,7 @@ characters:
       Leather Armour: { defense: 2 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -1548,7 +1548,7 @@ characters:
       Chainmail Armour: { defense: 4 }
       Dagger: { damage: d4 }
       Longsword: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -1629,7 +1629,7 @@ characters:
       Robes:
         defense: 1
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -1674,7 +1674,7 @@ characters:
       Shield: { defense: 2 }
       Shortbow: { damage: d6 }
       Shortsword: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -1721,7 +1721,7 @@ characters:
       Leather Armour: { defense: 2 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -1762,7 +1762,7 @@ characters:
       Hand Axe: { damage: d6 }
       Hide Armour: { defense: 2 }
       Spear: { damage: d6 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -1806,7 +1806,7 @@ characters:
       Disguise Kit: {}
       Leather Armour: { defense: 2 }
       Shortsword: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -1893,7 +1893,7 @@ characters:
       Rope: {}
       Shortsword: { damage: d4 }
       Thieves Tools: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -1972,7 +1972,7 @@ characters:
       Shortbow: { damage: d6 }
       Shortsword: { damage: d4 }
       Wrist Sheath: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -2021,7 +2021,7 @@ characters:
       Robes:
         defense: 1
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -2062,7 +2062,7 @@ characters:
       Horse: {}
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -2117,7 +2117,7 @@ characters:
       Longsword: {}
       Spear: { damage: d6 }
       "Troll's Blood ointment": {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -2166,7 +2166,7 @@ characters:
       Shield: { defense: 2 }
       Shortbow: { damage: d6 }
       Shortsword: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -2209,7 +2209,7 @@ characters:
       Battle Axe: {}
       Hide Armour: { defense: 2 }
       Spear: { damage: d6 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       Abilities:
@@ -2258,7 +2258,7 @@ characters:
       Leather Armour: { defense: 2 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -2298,7 +2298,7 @@ characters:
       Greatsword: { damage: d12 }
       Hand-Axe: {}
       Hercanium Dust: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -2352,7 +2352,7 @@ characters:
       Longsword: {}
       Shield: { defense: 2 }
       Shortbow: { damage: d6 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -2405,7 +2405,7 @@ characters:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
       Longsword: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -2451,7 +2451,7 @@ characters:
       Robes:
         defense: 1
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -2493,7 +2493,7 @@ characters:
       Robes:
         defense: 1
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -2537,7 +2537,7 @@ characters:
       Great Sword: {}
       Leather:
         defense: 2
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -2581,7 +2581,7 @@ characters:
       Chainmail Armour: { defense: 4 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -2654,7 +2654,7 @@ characters:
       Leather Armour: { defense: 2 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -2701,7 +2701,7 @@ characters:
       Longsword: { damage: d8 }
       Shield: { defense: 2 }
       Shortbow: { damage: d6 }
-      sp: { qty: 150 }
+      Silver: { qty: 150 }
     spells: []
     stats:
       abilities:
@@ -2813,7 +2813,7 @@ characters:
       Longsword: { damage: d6 }
       Rope: {}
       Thieves Tools: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -2924,7 +2924,7 @@ characters:
     items:
       Leather Armour: { defense: 2 }
       2x Daggers: { damage: d4 }
-      sp: { qty: 200 }
+      Silver: { qty: 200 }
     spells: []
     stats:
       Abilities:
@@ -3009,7 +3009,7 @@ characters:
       Dagger: { damage: d4 }
       Robes: { defense: 1 }
       Shortsword: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -3089,7 +3089,7 @@ characters:
       Robes:
         defense: 1
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -3129,7 +3129,7 @@ characters:
       Holy Symbol: {}
       Mace: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -3179,7 +3179,7 @@ characters:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
       Longsword: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -3231,7 +3231,7 @@ characters:
       Longsword: {}
       Shield: { defense: 2 }
       Shortsword: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -3277,7 +3277,7 @@ characters:
       Robes:
         defense: 1
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -3323,7 +3323,7 @@ characters:
       Rope: {}
       Shortsword: { damage: d4 }
       Thieves Tools: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -3368,7 +3368,7 @@ characters:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
       Shortbow: { damage: d6 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -3441,7 +3441,7 @@ characters:
       Dagger: { damage: d4 }
       Robes:
         defense: 1
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -3490,7 +3490,7 @@ characters:
       Leather Armour: { defense: 2 }
       Mace: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -3536,7 +3536,7 @@ characters:
       Crossbow: {}
       Dagger: { damage: d4 }
       Longsword: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -3581,7 +3581,7 @@ characters:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
       Musical Instrument: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -3700,7 +3700,7 @@ characters:
       Shield: { defense: 2 }
       Shortbow: { damage: d6 }
       Snare: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -3746,7 +3746,7 @@ characters:
       Dagger: { damage: d4 }
       Robes:
         defense: 1
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -3822,7 +3822,7 @@ characters:
       Leather Armour: { defense: 2 }
       Longsword: {}
       Musical Instrument: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -3869,7 +3869,7 @@ characters:
     items:
       2x Daggers: { damage: d6 }
       Leather Armour: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -3914,7 +3914,7 @@ characters:
       Shield: { defense: 2 }
       Shortbow: { damage: d6 }
       Shortsword: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -3960,7 +3960,7 @@ characters:
       Leather Armour: { defense: 2 }
       Shortsword: { damage: d4 }
       Thieves Tools: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -4005,7 +4005,7 @@ characters:
       Leather Armour: { defense: 2 }
       Longsword: {}
       Moondust: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -4049,7 +4049,7 @@ characters:
       Leather Armour: { defense: 2 }
       Longsword: { damage: d8 }
       Shortbow: { damage: d6 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -4097,7 +4097,7 @@ characters:
       Leather Armour: { defense: 2 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -4138,7 +4138,7 @@ characters:
       Crossbow: {}
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -4177,7 +4177,7 @@ characters:
           arrangement for these quality goods."'
     items:
       Dagger: { damage: d4 }
-      sp: { qty: 100 }
+      Silver: { qty: 100 }
     spells: []
     stats:
       abilities: []
@@ -4239,7 +4239,7 @@ characters:
       Chainmail Armour: { defense: 4 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -4292,7 +4292,7 @@ characters:
       Leather Armour: { defense: 2 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -4339,7 +4339,7 @@ characters:
       Horse: {}
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -4382,7 +4382,7 @@ characters:
       Dagger: { damage: d4 }
       Robes:
         defense: 1
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -4431,7 +4431,7 @@ characters:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
       Musical Instrument: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -4472,7 +4472,7 @@ characters:
       Robes:
         defense: 1
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -4515,7 +4515,7 @@ characters:
       Leather Armour: { defense: 2 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -4560,7 +4560,7 @@ characters:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
       Shortsword: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -4601,7 +4601,7 @@ characters:
       Dagger: { damage: d4 }
       Robes:
         defense: 1
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -4648,7 +4648,7 @@ characters:
       Shortsword: { damage: d4 }
       Thick Cloak: {}
       Wolfsbane: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -4693,7 +4693,7 @@ characters:
       Robes:
         defense: 1
       Thieves Tools: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -4743,7 +4743,7 @@ characters:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
       Shortsword: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -4787,7 +4787,7 @@ characters:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
       Musical Instrument: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -4833,7 +4833,7 @@ characters:
       Longsword: {}
       Shortbow: { damage: d6 }
       Silver Dagger: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -4881,7 +4881,7 @@ characters:
       Chainmail Armour: { defense: 4 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -4951,7 +4951,7 @@ characters:
     items:
       2x Daggers: { damage: d6 }
       Leather Armour: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -4992,7 +4992,7 @@ characters:
     items:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -5033,7 +5033,7 @@ characters:
       Dagger: { damage: d4 }
       Hide Armour: { defense: 2 }
       Spear: { damage: d6 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -5102,7 +5102,7 @@ characters:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
       Musical Instrument: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -5146,7 +5146,7 @@ characters:
       Crossbow: {}
       Dagger: { damage: d4 }
       Longsword: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -5194,7 +5194,7 @@ characters:
       Dagger: { damage: d4 }
       Robes:
         defense: 1
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -5239,7 +5239,7 @@ characters:
       Leather Armour: { defense: 2 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -5317,7 +5317,7 @@ characters:
       Leather Armour: { defense: 2 }
       Longsword: {}
       Shortbow: { damage: d6 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -5365,7 +5365,7 @@ characters:
       Leather Armour: { defense: 2 }
       Musical Instrument: {}
       Rapier: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -5419,7 +5419,7 @@ characters:
       Holy Symbol: {}
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -5465,7 +5465,7 @@ characters:
       Robes:
         defense: 1
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -5504,7 +5504,7 @@ characters:
       Robes:
         defense: 1
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -5582,7 +5582,7 @@ characters:
       Robes:
         defense: 1
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -5630,7 +5630,7 @@ characters:
         defense: 1
       Shortsword: { damage: d4 }
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -5679,7 +5679,7 @@ characters:
       Longsword: {}
       Shield: { defense: 2 }
       Spear: { damage: d6 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -5724,7 +5724,7 @@ characters:
       Dagger: { damage: d4 }
       Robes:
         defense: 1
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -5766,7 +5766,7 @@ characters:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
       Longsword: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -5845,7 +5845,7 @@ characters:
       Shortbow: { damage: d6 }
       Arrows: { qty: 20 }
       Dagger: { damage: d4 }
-      sp: { qty: 200 }
+      Silver: { qty: 200 }
     spells: []
     stats:
       Abilities:
@@ -5895,7 +5895,7 @@ characters:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
       Longsword: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -5940,7 +5940,7 @@ characters:
     items:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -5991,7 +5991,7 @@ characters:
       Leather Armour: { defense: 2 }
       Shortsword: { damage: d4 }
       Weak Poison: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -6041,7 +6041,7 @@ characters:
       Leather Armour: { defense: 2 }
       Longsword: {}
       Shortbow: { damage: d6 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -6086,7 +6086,7 @@ characters:
       Dagger: { damage: d4 }
       Robes:
         defense: 1
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -6130,7 +6130,7 @@ characters:
       Lance: {}
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -6177,7 +6177,7 @@ characters:
       Leather Armour: { defense: 2 }
       Longsword: {}
       Shortbow: { damage: d6 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -6219,7 +6219,7 @@ characters:
         defense: 1
       Shortsword: { damage: d4 }
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -6303,7 +6303,7 @@ characters:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
       Shortbow: { damage: d6 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -6373,7 +6373,7 @@ characters:
     items:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -6428,7 +6428,7 @@ characters:
       Leather Armour: { defense: 2 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -6471,7 +6471,7 @@ characters:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
       Shortsword: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -6546,7 +6546,7 @@ characters:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
       Longsword: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -6631,7 +6631,7 @@ characters:
       Shield: { defense: 2 }
       Shortsword: { damage: d4 }
       Spear: { damage: d6 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -6681,7 +6681,7 @@ characters:
       Battle Axe: { damage: d6 }
       ChainmailArmour: { defense: 4 }
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -6785,7 +6785,7 @@ characters:
       Chainmail Armour: { defense: 4 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -6829,7 +6829,7 @@ characters:
       Net: {}
       Shortsword: { damage: d4 }
       Smoke Stick: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -6876,7 +6876,7 @@ characters:
       Leather Armour: { defense: 2 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -6918,7 +6918,7 @@ characters:
     items:
       Dagger: { damage: d4 }
       Shortsword: { damage: d4 }
-      sp: { qty: 2 }
+      Silver: { qty: 2 }
     spells: []
     stats:
       abilities: []
@@ -6955,7 +6955,7 @@ characters:
       Leather Armour: { defense: 2 }
       Musical Instrument: {}
       Wrist Sheath: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -7002,7 +7002,7 @@ characters:
       Hand Axe: { damage: d6 }
       Leather Armour: { defense: 2 }
       Shortsword: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -7048,7 +7048,7 @@ characters:
       Longsword: {}
       Shield: { defense: 2 }
       Spear: { damage: d6 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -7093,7 +7093,7 @@ characters:
       Robes:
         defense: 1
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -7142,7 +7142,7 @@ characters:
         defense: 1
       Smoke Stick: {}
       Thieves Tools: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -7189,7 +7189,7 @@ characters:
     items:
       Leather Armour: { defense: 2 }
       Longsword: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -7235,7 +7235,7 @@ characters:
       Chainmail Armour: { defense: 4 }
       Dagger: { damage: d4 }
       Longsword: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -7285,7 +7285,7 @@ characters:
       Longsword: {}
       Mace: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -7330,7 +7330,7 @@ characters:
       Chainmail Armour: { defense: 4 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -7373,7 +7373,7 @@ characters:
       Horse: {}
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -7418,7 +7418,7 @@ characters:
       Formal Robes: {}
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -7537,7 +7537,7 @@ characters:
       Longsword: { damage: d8 }
       Crossbow: { damage: d6 }
       Bolts: { qty: 20 }
-      sp: { qty: 200 }
+      Silver: { qty: 200 }
     spells: []
     stats:
       abilities:
@@ -7591,7 +7591,7 @@ characters:
       Shortsword: { damage: d4 }
       Spear: { damage: d6 }
       Spyglass: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -7634,7 +7634,7 @@ characters:
       Robes:
         defense: 1
       Thieves Tools: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -7676,7 +7676,7 @@ characters:
       Rapier: {}
       Robes:
         defense: 1
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -7719,7 +7719,7 @@ characters:
       Dagger: { damage: d4 }
       Robes:
         defense: 1
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -7794,7 +7794,7 @@ characters:
       Crossbow: {}
       Leather Armour: { defense: 2 }
       Strong Poison: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -7843,7 +7843,7 @@ characters:
         defense: 1
       Shortbow: { damage: d6 }
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -7893,7 +7893,7 @@ characters:
       Robes:
         defense: 1
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -7942,7 +7942,7 @@ characters:
       Robes:
         defense: 1
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -8018,7 +8018,7 @@ characters:
       Leather Armour: { defense: 2 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -8069,7 +8069,7 @@ characters:
       Leather Armour: { defense: 2 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -8118,7 +8118,7 @@ characters:
       Dagger: { damage: d4 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -8166,7 +8166,7 @@ characters:
       Longsword: {}
       Shield: { defense: 2 }
       Thieves Tools: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -8211,7 +8211,7 @@ characters:
       Dagger: { damage: d4 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -8258,7 +8258,7 @@ characters:
       Longsword: {}
       Shield: { defense: 2 }
       Shortbow: { damage: d6 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -8309,7 +8309,7 @@ characters:
       Longsword: {}
       Shield: { defense: 2 }
       Tattoo Kit: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -8360,7 +8360,7 @@ characters:
       Leather Armour: { defense: 2 }
       Musical Instrument: {}
       Shortsword: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -8470,7 +8470,7 @@ characters:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
       Shortsword: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -8519,7 +8519,7 @@ characters:
       Longsword: {}
       Pick Axe: {}
       Shortbow: { damage: d6 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -8563,7 +8563,7 @@ characters:
       Dagger: { damage: d4 }
       Robes:
         defense: 1
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -8608,7 +8608,7 @@ characters:
       Robes:
         defense: 1
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -8687,7 +8687,7 @@ characters:
       Shield: { defense: 2 }
       Shortbow: { damage: d6 }
       Battle Axe: { damage: d8 }
-      sp: { qty: 200 }
+      Silver: { qty: 200 }
       Arrows: { qty: 20 }
     spells: []
     stats:
@@ -8742,7 +8742,7 @@ characters:
       Crossbow: {}
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -8786,7 +8786,7 @@ characters:
       Leather Armour: { defense: 2 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -8831,7 +8831,7 @@ characters:
       Leather Armour: { defense: 2 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -8877,7 +8877,7 @@ characters:
       Dagger: { damage: d4 }
       Disguise Kit: {}
       Leather Armour: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -8919,7 +8919,7 @@ characters:
       Dagger: { damage: d4 }
       Robes:
         defense: 1
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -8962,7 +8962,7 @@ characters:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
       Shortsword: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -9012,7 +9012,7 @@ characters:
       Paralysing Compound: {}
       Poison: {}
       Shortsword: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -9060,7 +9060,7 @@ characters:
       Leather Armour: { defense: 2 }
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -9101,7 +9101,7 @@ characters:
       Robes:
         defense: 1
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -9154,7 +9154,7 @@ characters:
       Holy Water: {}
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -9204,7 +9204,7 @@ characters:
       Honey Sap: {}
       Leather Armour: { defense: 2 }
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -9249,7 +9249,7 @@ characters:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
       Shortsword: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -9298,7 +9298,7 @@ characters:
       Crossbow: {}
       Longsword: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -9347,7 +9347,7 @@ characters:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
       Shortbow: { damage: d6 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -9391,7 +9391,7 @@ characters:
       Dagger: { damage: d4 }
       HideArmour: { defense: 2 }
       Spear: { damage: d6 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -9434,7 +9434,7 @@ characters:
       Shortsword: { damage: d4 }
       Smoke Stick: {}
       Thieves Tools: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -9480,7 +9480,7 @@ characters:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
       Longsword: {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -9524,7 +9524,7 @@ characters:
       Longsword: {}
       Shield: { defense: 2 }
       "Troll's Blood Ointment": {}
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -9602,7 +9602,7 @@ characters:
       Leather Armour: { defense: 2 }
       Musical Instrument: {}
       Shortbow: { damage: d6 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       Abilities:
@@ -9652,7 +9652,7 @@ characters:
       Longsword: {}
       Shield: { defense: 2 }
       Spear: { damage: d6 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -9694,7 +9694,7 @@ characters:
     items:
       Dagger: { damage: d4 }
       Leather Armour: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -9831,7 +9831,7 @@ characters:
       Robes:
         defense: 1
       Staff: { damage: d4 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -9901,7 +9901,7 @@ characters:
       Chainmail Armour: { defense: 4 }
       Healing Potion: {}
       Shield: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:
@@ -9946,7 +9946,7 @@ characters:
     items:
       Battle Axe: { damage: d8 }
       Hide Armour: { defense: 2 }
-      sp: { qty: 50 }
+      Silver: { qty: 50 }
     spells: []
     stats:
       abilities:

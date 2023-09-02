@@ -60,7 +60,7 @@ characters:
       Alchemy Kit:
         qty: 10
       Alchemist Fire: {}
-      sp:
+      Silver:
         qty: 200
   Lenora:
     info:
@@ -123,5 +123,5 @@ characters:
         damage: d6
       Staff:
         damage: d4
-      sp:
+      Silver:
         qty: 200

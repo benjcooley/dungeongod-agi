@@ -16,7 +16,7 @@ info:
   copyright: "Lair of the Mutant text © 2023 by The Nameless Designer"
   license: "Creative Commons 4.0"
 
-starting_location_name: "Dusty Road"
+starting_location_name: "Moathouse Gate"
 starting_game_state: "exploration"
 starting_time: 'Sep 10 3050 19:00'
 
@@ -493,7 +493,7 @@ locations:
       - description: "Under the shelves behind the flour you find a bag of silver coins."
         image: "images/Silver Coins 1"
         items:
-          "sp": { "qty": 100 }
+          "Silver": { "qty": 100 }
 
   "Farmhouse Storage Room":
     area: "Farmhouse"

@@ -29,6 +29,12 @@ def make_arg_str(cmd: str, args: list[str]) -> str:
             arg_str += str(arg)
     return arg_str
 
+def strip_unique_id(name: str) -> str:
+    if "#" in name:
+        return name.split("#")[0]
+    else:
+        return name
+
 class Game():
 
     def __init__(self, 
@@ -1219,6 +1225,16 @@ class Game():
         weapon_name = attacker["equipped"].get(attack_type + "_weapon")
         return weapon_name is not None
 
+    def get_merged_item(self, org_item: dict[str, any]) -> dict[str, any]:
+        item_name = strip_unique_id(org_item["name"])
+        if "rules_item" in org_item:
+            rules_item_name = org_item["rules_item"]
+        else:
+            rules_item_name = item_name
+        item = copy.deepcopy(self.rules["equipment"][rules_item_name])
+        item.update(org_item)
+        return item      
+
     def get_merged_equipped_weapon(self, attacker: dict[str, any], attack_type: str) -> None:
         # attack_type is "melee" or "ranged"
         if Game.is_monster(attacker):
@@ -1232,13 +1248,7 @@ class Game():
         if weapon_name is None:
             return None
         _, orig_weapon = find_case_insensitive(attacker["items"], weapon_name)
-        weapon = copy.deepcopy(orig_weapon)
-        if "rules_item" in weapon:
-            rules_weapon_name = weapon["rules_item"]
-        else:
-            rules_weapon_name = weapon_name
-        rules_weapon = self.rules["equipment"][rules_weapon_name]
-        weapon.update(rules_weapon)
+        weapon = self.get_merged_item(orig_weapon)
         return weapon
     
     def get_merged_exits(self) -> dict[str, any]:
@@ -1697,10 +1707,7 @@ class Game():
             resp += "  skills - " + json.dumps(being["stats"]["skills"]).strip("{}").replace("\"", "") + "\n"
         if "abilities" in being["stats"]:
             resp += "  abilities - " + json.dumps(being["stats"]["abilities"]).strip("[]").replace("\"", "") + "\n"
-        if "items" in being:
-            item_descs = Game.get_item_list_desc(being["items"])
-            resp += "  inventory - " + json.dumps(item_descs).strip("[]").replace("\"", "") + "\n\n"
-        return (resp, False)
+        return (resp + "\n<INSTRUCTIONS>\nDescribe to player in a list the details of his character. Ignore the current storyline. Do not leave anything out.\n", False)
 
     def describe_party(self) -> tuple[str, bool]:
         resp = ""
@@ -1720,6 +1727,27 @@ class Game():
             return (f"no topic '{topic}' for npc '{npc}' - npc topics are {topics}\n" +\
                     "you can try again using one of these, or creatively improvise a response consistent with the story and rules\n", False)
         return (topic_resp, False)
+
+    def equip(self, char_name: str, weapon_name: str) -> tuple[str, bool]:
+        if not isinstance(char_name, str) or not isinstance(weapon_name, str):
+            return ("Unable to equip weapon", True)
+        if not self.has_item(char_name, weapon_name):
+            return (f"{char_name} does not have a {weapon_name} to equip", True)
+        char = self.get_object(char_name)
+        if char is None:
+            return (f"{char_name} is not found", True)
+        if not self.can_do_actions(char):
+            return (f"{char_name} is unable to equip weapons right now", True)
+        orig_weapon = self.find_item(char_name, weapon_name)
+        weapon = self.get_merged_item(orig_weapon)
+        weapon_type = weapon["type"]
+        if weapon_type != "Melee Weapon" and weapon_type != "Ranged Weapon":
+            return (f"You can't equip {weapon_name}", True)
+        if weapon_type == "Melee Weapon":
+            char["eqipped"]["melee_weapon"] = weapon_name
+        else:
+            char["eqipped"]["ranged_weapon"] = weapon_name
+        return ("ok", False)
 
     def give(self, from_name: str, to_name: str, item_name: any, extra: any) -> tuple[str, bool]:
         if not isinstance(from_name, str) or not isinstance(to_name, str) or not isinstance(item_name, str):
@@ -1852,7 +1880,7 @@ class Game():
                     invent_items[item_name] = {}
             else:
                 invent_items[item_name] = { "qty": invent_items[item_name].get("qty", 1) + item.get("qty", 1) }
-        return (json.dumps(invent_items) + "\n", False)
+        return (f"{char_name}'s inventory:\n\n" + json.dumps(invent_items) + "\n\n<INSTRUCTIONS>\nList and describe the inventory items for this character.\n", False)
 
     def pickup(self, being_name: str, item_name: str, extra: any) -> tuple[str, bool]:
         if not isinstance(being_name, str) or not isinstance(item_name, str):
@@ -3044,6 +3072,8 @@ class Game():
                 resp, error = self.cast(args)
             case "describe":
                 resp, error = self.look(subject, object)
+            case "equip":
+                resp, error = self.equip(subject, object)
             case "help":
                 resp, error = self.help(subject)
             case "lobby":
