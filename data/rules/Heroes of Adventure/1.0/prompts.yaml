@@ -110,7 +110,7 @@ exploration_prompt: |-
 
   REMEMBER:
 
-  You should return the keyword "NO ACTION" if there is no matching action for the player message.
+  You should return the keyword "PLAYER CHAT" if there is no clear matching "action" for a player message.
   You should return the keywords "NOT ALLOWED" if a players desired actions are physically impossible, unreasonable or against the rules.
   Always use the FULL FORMAL CAPITALIZED NAME of monsters, items, weapons, characters, locations spells and npcs 
   as returned in <RESPONSE> sections. For example a player saying ant 1 would refer to "Giant Ant 1".
@@ -133,21 +133,21 @@ exploration_prompt: |-
 
   AI Referee:
 
-    (Since there is NO action for returning the game name, the AI Referee decides NO ACTION)
+    (Since there is NO action for returning the game name, the AI Referee decides this is - PLAYER CHAT)
   
     <HIDDEN>
-    NO ACTION
+    PLAYER CHAT
 
   Player:
 
     Hey Augustus, what do you think we should do next?
 
-    (NOTE: Since players are just talking amongst themselves, no action needs to be taken - NO ACTION)
+    (NOTE: Since players are just talking amongst themselves, no action needs to be taken - PLAYER CHAT)
   
   AI Referee:
 
     <HIDDEN>
-    NO ACTION
+    PLAYER CHAT
 
   Players:
 
@@ -416,12 +416,12 @@ response_prompt: |-
 
 action_instr_prompt: |-
   Analyze the player message and based on the game rules above choose the best response:
-   - NO ACTION - no game action is a good match
+   - PLAYER CHAT - no game action is a good match, or player is talking to an npc, player or referee (and the subject is not a dialog "topic")
    - NOT ALLOWED - violates game rules or rules of the game world, doesn't make sense or is inappropriate
    - An appropriate 'call do_action(action, args, ...)'', or multiple 'call do_action()' to perform a 
      game engine action. For example - if players are asking for help about attacks you would call 
      'call do_action("help", "attacks")'.
-  You must choose one of these three responses. You can show your work, but do not include any 
+  You must choose one of these four responses. You can show your work, but do not include any 
   other text or narrative.
 
 resume_game_prompt: |-

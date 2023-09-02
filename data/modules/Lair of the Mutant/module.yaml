@@ -222,22 +222,6 @@ areas:
         while on their way to Skenrith Keep.
       - Main door is swinging in the wind. No sign of the occupants. Some sheep
         have escaped the pen situated behind the house.
-    random_events:
-    - min_freq_time: 60
-      max_freq_time: 400
-      event: 
-        type: "say"
-        text: "<INSTRUCTIONS>In an evocotive sentence of no more than 10 words tell the players about a distant myterious animal noise, howl grunt etc."
-    - min_freq_time: 60
-      max_freq_time: 400
-      event: 
-        type: "say"
-        text: "<INSTRUCTIONS>In a simple sentence of no more than 10 words, tell the players they hear a mysterious distant 'clicking' noise."
-    - min_freq_time: 60
-      max_freq_time: 400
-      event: 
-        type: "say"
-        text: "<INSTRUCTIONS>In a simple sentence no more than 10 words, tell players about a sudden sickly sweet odor they smell that then goes away."
 
   "Moathouse":
     story_summary: |-
@@ -278,25 +262,6 @@ areas:
           discovered.
       - **Help:** Random encounter table includes **Meryn the**
           **Pathfinder** , potential ally.
-    random_encounters:
-    - min_freq_time: 120
-      max_freq_time: 600
-      encounter:
-        description: "You are attacked by three giant fire ants!"
-        image: "images/GiantAnts.jpg"
-        monsters:
-          "Giant Ant 1": { monster_type: "Giant Ant" }
-          "Giant Ant 2": { monster_type: "Giant Ant" }
-          "Giant Ant 3": { monster_type: "Giant Ant" } 
-    - min_freq_time: 120
-      max_freq_time: 600
-      encounter:
-        description: "You are attacked by five giant fire ants!"
-        image: "images/GiantAnts.jpg"
-        monsters:
-          "Giant Ant 1": { monster_type: "Giant Ant" }
-          "Giant Ant 2": { monster_type: "Giant Ant" }
-          "Giant Ant 3": { monster_type: "Giant Ant" }             
 
   "Upper Dungeon":
     story_summary: |-
@@ -656,7 +621,7 @@ locations:
       "well": { to: "Farmhouse Well" }
     state:
       hidden:
-      - terms: [ "ground", "dirt", "tracks" ]
+      - terms: [ "ground", "dirt", "tracks", "fence", "sheep" ]
         description: |-
           Some prints are evidence in the mud leading north towards and old unused
           path. The path seems to be leading to an old abandoned moathouse.
@@ -691,8 +656,10 @@ locations:
         leading underneath. But both impassible with rocks/debris now.
     exits:
       "courtyard": { to: "Moathouse Courtyard" }
+      "gate": { to: "Moathouse Courtyard" }
+      "castle": { to: "Moathouse Courtyard" }
       "farmhouse": { to: "Farmhouse Sheep Pen" }
-      "sheeps pen": { to: "Farmhouse Sheep Pen" }
+      "sheep pen": { to: "Farmhouse Sheep Pen" }
       "man": { to: "Moathouse Barus" }
       "injured man": { to: "Moathouse Barus" }
       "barus": { to: "Moathouse Barus" }
@@ -710,6 +677,7 @@ locations:
       - Tell players from here players they can move to: gatehouse
     instructions: |-
       - Players can aid or heal Barus.
+      - Barus's dialog topics (do NOT reveal to players): "Jacob", "Moathouse", "Ants", "Grun", "injuries", "help"
     image: "images/Barus Injured 3"
     topics:
       "Barus":
@@ -725,17 +693,22 @@ locations:
     npcs: [ "Barus" ]      
     exits:
       "gatehouse": { to: "Moathouse Gate" }
+      "gate": { to: "Moathouse Gate" }
+      "courtyard": { to: "Moathouse Courtyard" }
 
   "Moathouse Courtyard": 
     area: "Moathouse"
     image: "images/Moathouse Courtyard 2"    
     description: |-
       - A large courtyard area covered in rubble, rock, dust and
-          debris. A dead carcass lies next to the well in the centre of
-          the courtyard beyond which stands a stone statue of a man.
-          Steps situated to the NE, SW & SW lead to the Towers.
+          debris.
 
-      - Mention that from here players can move to: armoury, guard quarters, stables  
+      - There is a large door into what looks like the great hall, a side
+        door which might ne the apartments and quarters, and on the 
+        other side is a broken gate, perhaps leading to the workshops or 
+        stables.
+
+      - Mention that from here players can move to: gatehouse, large door, side door, broken door
     instructions: |-          
       - The  well contains a broken bucket and frayed rope, is 50%
           deep and leads to (D4). The re is a small pool of water below.
@@ -746,10 +719,44 @@ locations:
           statue about 10% away and a small gem built into the stone
           with a faint magic aura (See Blessing of Suunos artefact pg.
           14).
+    state:
+      encounter:
+        description: "You are attacked by (say number) enormous giant fire ants!"
+        image: "images/Moathouse Courtyard Ants 1.jpg"
+        monsters:
+          "Giant Ant 1": { monster_type: "Giant Ant", health: 14 }
+          "Giant Ant 2": { monster_type: "Giant Ant", health: 14 }
     exits:
-      "armoury": { to: "Moathouse Armory" }
-      "guard quarters": { to: "Moathouse Guard Quarters" }
+      "gatehouse": { to: "Moathouse Gate" }
+      "gate": { to: "Moathouse Gate" }
+      "large door": { to: "Moathouse Main Hall" }
+      "main hall": { to: "Moathouse Main Hall" }
+      "hall": { to: "Moathouse Main Hall" }
+      "side door": { to: "Moathouse Guard Quarters" }
+      "apartments": { to: "Moathouse Guard Quarters" }
+      "quarters": { to: "Moathouse Guard Quarters" }
+      "broken gate": { to: "Moathouse Stables" }
+      "workshop": { to: "Moathouse Stables" }
       "stables": { to: "Moathouse Stables" }
+
+  "Moathouse Main Hall":
+    area: "Moathouse"
+    image: "images/Moathouse Stables 1"    
+    description: |-
+      - The  stable doors are broken and swing with the breeze.
+          Inside are some old "lthy horse stalls and a working area
+          with some rotten barrels and a large chest.
+    instructions: |-          
+      - Searching the area reveals the rotten remain of old horse
+          feed and various old tools (brushes, rake, shovel, wheel-
+          barrow, pick-axe, buckets, hand-axe, all in poor condition)
+          scattered about.
+      - A large wooden box is closed but not locked (contains; pick,
+          hammer, knife, nails, horseshoes, first aid kit all average
+          quality).
+    exits:
+      "courtyard": { to: "Moathouse Courtyard" }
+
 
   "Moathouse Stables":
     area: "Moathouse"

@@ -333,7 +333,7 @@ class Game():
         num_calls = 0
         for line in lines:
             line = line.strip()
-            if (line == "NO ACTION" or line == "PLAYER CHAT") and query != "":
+            if line == "PLAYER CHAT" and query != "":
                 self.skip_turn = True
                 results = ""
                 break
@@ -1442,19 +1442,26 @@ class Game():
         return prev_value
 
     def apply_simple_effect(self, effect_id: str, effect_def: dict[str, any], target: dict[str, any]) -> tuple[str, bool]:
+        target_name = target.get("name", "target")
         match effect_id:
             case "heal":
                 die = effect_def["heal"]["die"]
                 value = Game.die_roll(die)
                 new_health = self.set_cur_health(target, self.get_cur_health(target) + value)
                 max_health = target["stats"]["basic"]["health"]
-                return (f" - heal {die} {value} - new health is: {new_health} (of max: {max_health})\n", False)
+                if new_health == max_health:
+                    return (f" - heal {die} {value} - new health is: {new_health} - {target_name} fully restored!\n", False)
+                else:
+                    return (f" - heal {die} {value} - new health is: {new_health} (of max: {max_health})\n", False)
             case "damage":
                 die = effect_def["damage"]["die"]
                 value = Game.die_roll(die)
                 new_health = self.set_cur_health(target, self.get_cur_health(target) - value)
                 max_health = target["stats"]["basic"]["health"]
-                return (f" - damage {die} {value} - new health is: {new_health} (of max: {max_health})\n", False)
+                if new_health == 0:
+                    return (f" - damage {die} {value} - new health is: {new_health} - {target_name} DIES!\n", False)
+                else:
+                    return (f" - damage {die} {value} - new health is: {new_health} (of max: {max_health})\n", False)
             case _:
                 raise RuntimeError(f"unknown simple effect {effect_id}")
 
@@ -1620,7 +1627,7 @@ class Game():
 
     # GENERAL ACTIONS ----------------------------------------------------------
 
-    def describe_location(self) -> tuple[str, bool]:
+    def describe_location(self, image_if_first_time: bool = False) -> tuple[str, bool]:
         desc = "description: " + self.cur_location["description"].strip(" \n\t") + "\n\n"
         if self.cur_location_script is not None:
             desc += "\n" + self.cur_location_script["description"].strip(" \t\n") + "\n"
@@ -1643,7 +1650,7 @@ class Game():
         if topics != "":
             topics = "dialog topics: " + topics + "\n"
         # Set the current location image as the image the action will return
-        self.action_image_path = self.location_image_path(if_first_time=True)
+        self.action_image_path = self.location_image_path(if_first_time=image_if_first_time)
         all_npcs = self.cur_location.get("npcs", []) + \
             (self.cur_location_script.get("npcs", []) if self.cur_location_script is not None else [])
         npcs = ""
@@ -1775,7 +1782,8 @@ class Game():
         return "HELP RESPONSE:\n\n" + resp, err
             
     def look(self, subject, object) -> tuple[str, bool]:
-        if subject is None or subject == self.cur_location_name or subject == "location":
+        if subject is None or subject == self.cur_location_name or \
+                subject == "location" or subject == "around":
             return self.describe_location()
         elif subject == "party":
             return self.describe_party()
@@ -1825,7 +1833,7 @@ class Game():
             return (f"can't go '{subject}'. You're location is '{self.cur_location_name}' and exits are {exit_names} - try again", True)
         new_loc_name = exits[to]["to"]
         self.set_location(new_loc_name)
-        return self.describe_location()
+        return self.describe_location(image_if_first_time=True)
 
     def change(self, changes: str) -> tuple[str, bool]:
         self.cur_location_state["changes"] = changes
@@ -2389,7 +2397,7 @@ class Game():
         resp += turn_desc
         return resp
 
-    async def end_encounter(self) -> tuple[str, bool]:
+    def end_encounter(self) -> tuple[str, bool]:
         players_left, monsters_left = self.get_players_monsters_left()
         if self.cur_game_state_name != "encounter":
             return ("not in encounter", True)
@@ -2402,7 +2410,7 @@ class Game():
             del monster["encounter"]
         for monster in self.game_state["monsters"].values():
             monster.pop("encounter", None)
-            if monster["dead"]:
+            if Game.is_dead(monster):
                 monster.pop("stats", None)
                 monster.pop("info", None)
                 monster.pop("melee_attack", None)
@@ -2416,13 +2424,14 @@ class Game():
         self.cur_game_state_name = "exploration"
         self.remove_cur_location_encounter()
         if players_left > 0:
-            return ("Player were victorious!", False)
+            resp, _ = self.describe_location()
+            return ("Player were victorious!\n\n" + resp, False)
         players_alive = self.get_players_alive()
         if players_alive == 0:
             self.game_over = True
             return ("All players were killed - game over", False)
         self.set_location(self.prev_location_name)
-        resp, _ = await self.describe_location()
+        resp, _ = self.describe_location()
         return ("Your party has escaped!\n\n" + resp, False)
     
     def get_encounter_being(self, attacker_name) -> dict[str, any]:
@@ -2723,7 +2732,7 @@ class Game():
                 cur_health = max(0, Game.get_cur_health(target) - damage)
                 resp += f" HIT! - dealing damage -{damage} leaving health {cur_health}"
                 if cur_health == 0:
-                    resp += " DEAD"
+                    resp += f" {target_name} DIES!"
                 self.set_cur_health(target, cur_health)
             else:
                 resp += " MISS!"
@@ -2859,8 +2868,8 @@ class Game():
                     return ("", False)
                 state["subject"] = choice
                 state["char"] = char
-                actions = [ ("attack", "Attack", "attacks ", "monster_targets"), 
-                            ("shoot", "Shoot", "shoots ", "monster_targets"), 
+                actions = [ ("attack", "Attack", "attack ", "monster_targets"), 
+                            ("shoot", "Shoot", "shoot ", "monster_targets"), 
                             ("cast", "Cast", "casts ", "spells"), 
                             ("@move", "Move", "casts ", "move_actions") ]
                 for action, action_name, phrase, next_state in actions:
@@ -2871,10 +2880,15 @@ class Game():
                         continue
                     if action == "spells" and len(char["equipped"].get("spells", [])) == 0:
                         continue
-                    button["text"] = action_name
+                    weapon_name = ""
+                    if action == "attack":
+                        weapon_name = char["equipped"]["melee_weapon"]
+                    if action == "shoot":
+                        weapon_name = char["equipped"]["ranged_weapon"]
+                    button["text"] = (action_name if weapon_name == "" else f"{action_name} {weapon_name}")
                     button["choice"] = action
                     button["choice_type"] = "action"
-                    button["phrase"] = phrase
+                    button["phrase"] = (phrase if weapon_name == "" else f"uses {weapon_name} to {phrase}")
                     button["next_state"] = next_state
                     state["buttons"].append(button)
                 return ("", True)
@@ -2882,12 +2896,7 @@ class Game():
                 actions = [ ("advance", "Advance", "advances", "done"), ("retreat", "Retreat", "retreats", "done"), 
                             ("charge", "Charge", "charges", "done"), ("flee", "Flee", "flees", "done") ]
                 for action, action_name, phrase, next_state in actions:
-                    button = {}
-                    button["text"] = action_name
-                    button["choice"] = action
-                    button["choice_type"] = "action"
-                    button["phrase"] = phrase
-                    button["next_state"] = next_state
+                    button = { "text": action_name, "choice": action, "choice_type": "action", "phrase": phrase, "next_state": next_state }
                     state["buttons"].append(button)
                 return ("", True)
             case "spells":
@@ -2895,11 +2904,7 @@ class Game():
                 char = state["char"]
                 for spell_name in char["equipped"].get("spells", []):
                     spell = self.rules["spells"][spell_name]
-                    button = {}
-                    button["text"] = spell_name
-                    button["choice"] = spell_name
-                    button["choice_type"] = "object"
-                    button["phrase"] = spell_name + " on "
+                    button = { "text": spell_name, "choice": spell_name, "choice_type": "object", "phrase": spell_name + " on " }
                     if spell["type"] == "offensive":
                         button["next_state"] = "monster_targets"
                     elif spell["type"] == "defensive":
