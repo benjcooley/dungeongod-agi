@@ -73,9 +73,11 @@ spells:
   # Air Magic
   "Fly":
     category: "Air"
+    type: "ability"
     range: "medium"
     targets: 1
-    target_type: "being"        
+    target_type: "being"
+    target_group: "players"
     size: "medium"
     duration: "encounter"
     require:
@@ -85,6 +87,7 @@ spells:
     description: "Allows the caster or a target to fly."
   "Fog":
     category: "Air"
+    type: "offensive"
     range: "medium"
     area: "short"
     target_type: "being"
@@ -97,6 +100,7 @@ spells:
     description: "A supernatural fog obscures people's vision, all actions at disadvantage."
   "Gust":
     category: "Air"
+    type: "offsensive"
     range: "medium"
     targets: 1
     target_type: [ "being", "item" ]
@@ -108,6 +112,7 @@ spells:
     description: "A blast of wind pushes a person or inanimate object back one range band."
   "Invisibility":
     category: "Air"
+    type: "defensive"
     range: "medium"
     target_type: "being"
     targets: 1
@@ -120,6 +125,7 @@ spells:
     description: "Target becomes invisible. Spell ends when target engages someone."
   "Lightning":
     category: "Air"
+    type: "offensive"
     range: "far"
     target_type: "being"
     targets: 1
@@ -130,6 +136,7 @@ spells:
     description: "Summons a bolt of lightning on an opponent causing damage."
   "Shield of Wind":
     category: "Air"
+    type: "defensive"
     range: "medium"
     target_type: "being"
     targets: 1
@@ -142,6 +149,7 @@ spells:
     description: "Creates a wind vortex around target, disadvantage on all ranged attacks against."
   "Silence":
     category: "Air"
+    type: "defensive"
     target_type: "location"
     range: "medium"
     area: "short"
@@ -153,6 +161,7 @@ spells:
     description: "Creates a quiet, still space where sound is dampened."
   "Speed":
     category: "Air"
+    type: "ability"
     range: "medium"
     target_type: "being"
     targets: 1
@@ -162,6 +171,7 @@ spells:
     description: "Boosts the speed of the target who moves twice their distance with any action."
   "Thunderclap":
     category: "Air"
+    type: "offensive"
     range: Long
     area: "short"
     turns: 1
@@ -173,6 +183,7 @@ spells:
     description: "Creates a sudden, explosive clap of thunder that can stun people for a turn."
   "Wall":
     category: "Air"
+    type: "defensive"
     range: "medium"
     area: "short"
     duration: "encounter"
@@ -183,13 +194,14 @@ spells:
     description: "Creates a barrier of strong wind that causes all ranged attacks to be at disadvantage."
   "Tornado":
     category: "Air"
-    miracle: true
+    type: "miracle"
     cost: { health: 2 }
     description: "Creates a violent rotating column of air capable of damaging a settlement, destroying buildings and structures."
 
   # Arcane Magic
   "Activate":
     category: "Arcane"
+    type: "ability"
     range: "medium"
     target_type: thing
     targets: 1
@@ -200,6 +212,7 @@ spells:
     description: "Activates a magical item or effect."
   "Armour":
     category: "Arcane"
+    type: "defensive"
     range: "medium"
     target_type: being
     targets: 1
@@ -211,6 +224,7 @@ spells:
     description: "Enhances the targets defence by +4 with magic energy."
   "Charm":
     category: "Arcane"
+    type: "offensive"
     range: "medium"
     target_type: being
     targets: 1
@@ -223,14 +237,16 @@ spells:
     description: "Charms a target to do their bidding as long as it does not cause itself harm. Target can try to resist as a free action each turn."
   "Dispel":
     category: "Arcane"
+    type: "ability"
     range: "medium"
-    target_type: any
+    target_type: [ "item", "usable", "being" ]
     targets: 1
     require:
     - check: { ability: "Magic", roll: "magic_power" }
     description: "Dispels a magical item or effect."
   "Illusion":
     category: "Arcane"
+    type: "ability"
     range: "medium"
     target_type: being
     targets: 1
@@ -244,6 +260,7 @@ spells:
     description: "Creates an illusion from something they have seen. Target can try to resist as a free action each turn."
   "Levitate":
     category: "Arcane"
+    type: "ability"
     range: "medium"
     target_type: any
     targets: 1
@@ -256,8 +273,9 @@ spells:
     description: "Allows the target to float in the air up or down."
   "Lock":
     category: "Arcane"
+    type: "ability"
     range: "medium"
-    target_type: thing
+    target_type: [ "item", "usable" ]
     targets: 1
     duration: "encounter"
     size: "medium"
@@ -269,6 +287,7 @@ spells:
     description: "Magically seals a door, chest or other container."
   "Missile":
     category: "Arcane"
+    type: "offensive"
     range: "far"
     targets: 1
     require:
@@ -278,6 +297,7 @@ spells:
     description: "Creates a bolt of arcane energy which causes damage."
   "Read":
     category: "Arcane"
+    type: "ability"
     range: "medium"
     target_type: thing
     targets: 1
@@ -289,13 +309,14 @@ spells:
     description: "Identifies a spell written in a grimoire or spell scroll."
   "Enchant":
     category: "Arcane"
-    miracle: true
+    type: "miracle"
     cost: { health: 2 }
     description: "Creates a magic item (weapon, armour or object) by sacrificing some of the casters personal magic essence."
 
   # Chaos Magic
   "Blackfire":
     category: "Chaos"
+    type: "offensive"
     range: "far"
     targets: 1
     require:
@@ -305,8 +326,10 @@ spells:
     description: "Swirling black fire engulfs (target) causes {damage} Chaos damage."
   "Corrode":
     category: "Chaos"
+    type: "ability"
     range: "medium"
     targets: 1
+    target_type: [ "item", "usable" ]
     duration: "encounter"
     require:
     - check: { ability: "Magic", roll: 10 }
@@ -315,6 +338,7 @@ spells:
     description: "{target} is corroded and will be unusable for {duration}."
   "Corruption":
     category: "Chaos"
+    type: "offensive"
     target_type: "being"
     range: "medium"
     area: "short"
@@ -327,6 +351,7 @@ spells:
     description: "A cloud of pestilence causes {targets} to be diseased and impaired."
   "Discord":
     category: "Chaos"
+    type: "offensive"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -338,13 +363,16 @@ spells:
     description: "{Target} is confused and turns to attack is own. Target can try to resist as a free action each turn."
   "Inversion":
     category: "Chaos"
+    type: "ability"
     range: "medium"
     targets: 1
+    target_type: [ "being", "item", "usable" ]
     require:
     - check: { ability1: "Magic", ability2: "Magic" }
     description: "Reverses the effects of another spell cast by someone else. Check is made against the person who cast the spell."
   "Mask":
     category: "Chaos"
+    type: "ability"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -353,6 +381,7 @@ spells:
     description: "Target changes form by way of an illusion into something they have seen."
   "Portal":
     category: "Chaos"
+    type: "ability"
     range: "far"
     targets: 1
     require:
@@ -362,8 +391,8 @@ spells:
     description: "Target slips between dimensions and appears up to far distance away."
   "Summon":
     category: "Chaos"
+    type: "ability"
     range: "medium"
-    targets: 1
     level: 3
     duration: "encounter"
     require:
@@ -373,6 +402,7 @@ spells:
     description: "Summons 1 randomly determined level 1-3 creature of chaos which attacks nearest person."
   "Venom":
     category: "Chaos"
+    type: "offensive"
     range: "medium"
     targets: 1
     size: "medium"
@@ -385,6 +415,7 @@ spells:
     description: "Target infused with bubbling chaotic blood, if damaged, target explodes injuring all creatures in close range."
   "Vortex":
     category: "Chaos"
+    type: "offensive"
     range: "medium"
     targets: 1
     size: "medium"
@@ -393,16 +424,17 @@ spells:
     - check: { ability1: "Magic", ability2: "Strength" }
     effects:
     - damage: { die: "d6" }        
-    description: "Caster drags victim 1 range band towards a selected point. Spell effect causes damage."
+    description: "Caster drags victim 1 range band towards attacker. Spell effect causes damage."
   "Convoke":
     category: "Chaos"
-    miracle: true        
+    type: "miracle"
     cost: { health: 2 }
     description: "Summons Level 10 creature of chaos to fulfil a stated purpose upon which it is released onto the mortal plane until destroyed."
 
 # Dark Magic
   "Bloodsucker":
     category: "Dark"
+    type: "offensive"
     range: "close"
     target_type: "being"
     targets: 1
@@ -413,6 +445,7 @@ spells:
     description: "Touch an opponent to cause damage, restore your heath by the same amount."
   "Commune":
     category: "Dark"
+    type: "ability"
     range: "medium"
     target_type: "corpse"
     targets: 1
@@ -423,6 +456,7 @@ spells:
     description: "Caster may ask a question of a skeleton or corpse."
   "Darkness":
     category: "Dark"
+    type: "ability"
     target_type: "location"
     duration: 60
     require:
@@ -432,6 +466,7 @@ spells:
     description: "Create an area of magical darkness for 1 hour, normal light sources ineffective within darkness."
   "Fear":
     category: "Dark"
+    type: "offensive"
     range: "medium"
     target_type: "being"
     targets: 1
@@ -443,6 +478,7 @@ spells:
     description: "Target suffers fear causing them to act at disadvantage against the caster. Target can try to resist as a free action each turn."
   "Hold":
     category: "Dark"
+    type: "offensive"
     range: "medium"
     target_type: "being"        
     targets: 1
@@ -454,6 +490,7 @@ spells:
     description: "Magic freezes target who can take no actions until resisted. Target can attempt to resist each turn."
   "Leech":
     category: "Dark"
+    type: "offensive"
     range: "close"
     targets: 1
     size: "medium"
@@ -464,6 +501,7 @@ spells:
     description: "Temporarily drain a random ability of the target."
   "Necromancy":
     category: "Dark"
+    type: "ability"
     range: "medium"
     targets: 1
     size: "medium"
@@ -473,6 +511,7 @@ spells:
     description: "Animates a corpse or skeleton which acts under casters command."
   "Night Vision":
     category: "Dark"
+    type: "ability"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -481,6 +520,7 @@ spells:
     description: "Grants target ability to see in the dark up to 60ft."
   "Wail":
     category: "Dark"
+    type: "offensive"
     range: "medium"
     area: "short"
     size: "medium"
@@ -490,6 +530,7 @@ spells:
     description: "Creates a thunderous sonic discharge causing disadvantage to magic, mind and senses checks."
   "Wither":
     category: "Dark"
+    type: "offensive"
     range: "medium"
     targets: 1
     size: "medium"
@@ -500,21 +541,24 @@ spells:
     description: "Make a magic attack against an opponent causing impairment through disease. Target can try to resist as a free action each turn."
   "Nightfall":
     category: "Dark"
-    miracle: true
+    type: "miracle"
     cost: { health: 2 }
     description: "Shrouds an area the size of a settlement into a permanent state of darkness which cannot be dispelled."
 
   # Divine Magic
   "Bless":
     category: "Divine"
+    type: "defensive"
     range: "medium"
     targets: 1
+    target_type: [ "item" ]
     turns: 2
     require:
     - check: { ability: "Magic", roll: 10 }
     description: "Blesses an object with a divine power to give it advantage in combat."
   "Divine Light":
     category: "Divine"
+    type: "ability"
     range: "medium"
     area: "short"
     duration: "encounter"
@@ -523,12 +567,14 @@ spells:
     description: "Illuminates the dark, piercing both magical darkness and magically hidden objects or creatures."
   "Guidance":
     category: "Divine"
+    type: "ability"
     targets: 1
     require:
     - check: { ability: "Magic", roll: 10 }
     description: "Provides the caster with insights and knowledge to aid them in their quest by asking 1 question."
   "Divine Healing":
     category: "Divine"
+    type: "defensive"
     range: "medium"
     targets: 1
     require:
@@ -538,6 +584,7 @@ spells:
     description: "Heals the target of wounds."
   "Inspiration":
     category: "Divine"
+    type: "defensive"
     range: "medium"
     targets: 1
     turns: 2
@@ -546,6 +593,7 @@ spells:
     description: "Grants the target increased inspiration, advantage on all actions."
   "Intervention":
     category: "Divine"
+    type: "ability"
     range: "medium"
     targets: 1
     level: 3
@@ -555,6 +603,7 @@ spells:
     description: "Calls upon the aid of 1 randomly determined level 1-3 being to aid the caster and allies."
   "Purify":
     category: "Divine"
+    type: "defensive"
     range: "medium"
     area: "short"
     require:
@@ -562,6 +611,7 @@ spells:
     description: "Cleanses an area or substance of evil or corruption, restoring it to a pure state."
   "Sanctuary":
     category: "Divine"
+    type: "defensive"
     range: "medium"
     area: "short"
     require:
@@ -569,6 +619,7 @@ spells:
     description: "Creates a protective bubble of healing. Anyone within the circle gains 1 health."
   "Celestial Shield":
     category: "Divine"
+    type: "defensive"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -577,6 +628,7 @@ spells:
     description: "Creates a shield of divine energy increasing targets defence by +4."
   "Smite":
     category: "Divine"
+    type: "defensive"
     range: "medium"
     targets: 1
     Damage: "d6"
@@ -585,13 +637,14 @@ spells:
     description: "Empowers the target's next melee attack. If the attack is successful and on the unholy (chaos, dark, demon monsters), add smite damage."
   "Oath":
     category: "Divine"
-    miracle: true
+    type: "miracle"
     cost: { health: 2 }
     description: "Caster makes a sacred oath or vow, they gain advantage on direct actions to achieve the oath until it is complete."
 
   # Earth Magic
   "Gravity":
     category: "Earth"
+    type: "offensive"
     range: "medium"
     targets: 1
     size: "medium"
@@ -604,6 +657,7 @@ spells:
     description: "Create a force of gravity on a target so they cannot move. Target can try to resist as a free action each turn."
   "Petrify":
     category: "Earth"
+    type: "offensive"
     range: "medium"
     target_type: "being"
     targets: 1
@@ -619,6 +673,7 @@ spells:
     description: "Target slowly turns to stone, suffer disadvantage on actions. Target can resist each turn. Failure to resist after 5 turns results in permanent petrification."
   "Pollen":
     category: "Earth"
+    type: "offensive"
     range: "medium"
     area: "short"
     duration: "encounter"
@@ -627,12 +682,14 @@ spells:
     description: "Creates a cloud of pollen, those in range suffer disadvantage on magic, mind, senses checks by sneezing."
   "Sense":
     category: "Earth"
+    type: "ability"
     range: Long
     require:
     - check: { ability: "Magic", roll: 10 }
     description: "Detects vibrations of living creatures within range."
   "Speak with Plants":
     category: "Earth"
+    type: "ability"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -641,6 +698,7 @@ spells:
     description: "Caster may ask one question of a plant."
   "Earth Spike":
     category: "Earth"
+    type: "offensive"
     range: "far"
     targets: 1
     require:
@@ -650,6 +708,7 @@ spells:
     description: "A sharp spike of rock impales an opponent causing injury."
   "Terraform":
     category: "Earth"
+    type: "ability"
     range: "medium"
     area: "short"
     require:
@@ -657,6 +716,7 @@ spells:
     description: "A tunnel or hole is created where there was earth. Tunnel can be any variation within spell area size."
   "Tremor":
     category: "Earth"
+    type: "offensive"
     range: "medium"
     area: "short"
     size: "medium"
@@ -666,6 +726,7 @@ spells:
     description: "Creates a powerful tremor throwing targets into the air causing them disadvantage on their next turn."
   "Wall of Earth":
     category: "Earth"
+    type: "ability"
     range: "medium"
     area: "short"
     require:
@@ -673,13 +734,14 @@ spells:
     description: "An earth wall is created. Wall can be any variation of within spell area size. Wall has 20 health."
   "Earthquake":
     category: "Earth"
-    miracle: true
+    type: "miracle"
     cost: { health: 2 }
     description: "Creates an intense seismic disturbance which affects an entire settlement,destroys buildings and creates cracks and fissures."
 
   # Fire Magic
   "Bind":
     category: "Fire"
+    type: "offensive"
     range: "medium"
     targets: 1
     size: "medium"
@@ -691,6 +753,7 @@ spells:
     description: "Force your will upon a demon, it will follow your simple commands that do not put it in peril."
   "Bolt":
     category: "Fire"
+    type: "offensive"
     range: "far"
     targets: 1
     require:
@@ -700,6 +763,7 @@ spells:
     description: "Creates a ball of flame to injure a target."
   "Blast":
     category: "Fire"
+    type: "offensive"
     range: "medium"
     area: "short"
     require:
@@ -709,8 +773,10 @@ spells:
     description: "Summons a destructive blast of fire that shakes and injures anyone in its area."
   "Flame":
     category: "Fire"
+    type: "offensive"
     range: "medium"
     targets: 1
+    target_type: [ "item" ]
     turns: 2
     require:
     - check: { ability: "Magic", roll: 10 }
@@ -720,6 +786,7 @@ spells:
     description: "Creates a magical fire on a melee or ranged weapon which adds fire damage to the weapon."
   "Heat":
     category: "Fire"
+    type: "ability"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -728,6 +795,7 @@ spells:
     description: "Heats an inanimate object making it hard to touch, combustible items start to burn."
   "Hellfire":
     category: "Fire"
+    type: "defensive"
     range: "close"
     turns: 2
     require:
@@ -737,6 +805,7 @@ spells:
     description: "Creates a circle of fire around the caster. Anyone in close range suffers damage."
   "Protection":
     category: "Fire"
+    type: "defensive"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -745,6 +814,7 @@ spells:
     description: "Grants protection from fire. All fire based attacks against the target are at disadvantage."
   "Trap":
     category: "Fire"
+    type: "ability"
     range: "medium"
     targets: 1
     Damage: "d6"
@@ -753,29 +823,34 @@ spells:
     description: "Creates a trap made of fire on an object. Trap is triggered when touched."
   "Enthral Demon":
     category: "Fire"
-    miracle: true
+    type: "miracle"
     cost: { health: 2 }
     description: "Summons Level 10 demon ( Behemoth) to fulfil a stated purpose upon which it is released onto the mortal plane until destroyed."
 
   # Form Magic
   "Elasticity":
     category: "Form"
+    type: "ability"
     range: "medium"
     targets: 1
+    target_type: "being"
     duration: "encounter"
     require:
     - check: { ability: "Magic", roll: 10 }
     description: "Targets body becomes stretchy and you can extend your reach with short range."
   "Ethereal Form":
     category: "Form"
+    type: "ability"
     range: "medium"
     targets: 1
+    target_type: "being"
     duration: "encounter"
     require:
     - check: { ability: "Magic", roll: 10 }
     description: "Target becomes ethereal passing through solid objects. Ethereal form ends when the target chooses to interact with something."
   "Grow":
     category: "Form"
+    type: "ability"
     range: "medium"
     targets: 1
     size: "medium"
@@ -786,6 +861,7 @@ spells:
     description: "Enlarges a person, animal, plant or object one size up. Target can try to resist as a free action each turn."
   "Harden":
     category: "Form"
+    type: "defensive"
     range: "medium"
     targets: 1
     size: "medium"
@@ -796,6 +872,7 @@ spells:
     description: "Targets skin hardens giving them +4 defence for the duration of the spell."
   "Haste":
     category: "Form"
+    type: "defensive"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -804,6 +881,7 @@ spells:
     description: "Target can take two actions per combat turn."
   "Regenerate":
     category: "Form"
+    type: "defensive"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -812,6 +890,7 @@ spells:
     description: "Target possesses superhuman healing and regenerates 1 health per combat turn."
   "Shape Change":
     category: "Form"
+    type: "offensive"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -822,6 +901,7 @@ spells:
     description: "Target shape-changes into a creature of the same or one size smaller. Target can try to resist as a free action each turn."
   "Shrink":
     category: "Form"
+    type: "offensive"
     range: "medium"
     targets: 1
     size: "medium"
@@ -832,6 +912,7 @@ spells:
     description: "Shrinks a person, animal, plant or object one size down. Target can try to resist as a free action each turn."
   "Strength":
     category: "Form"
+    type: "defensive"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -840,6 +921,7 @@ spells:
     description: "Target gains advantage on strength and damage checks."
   "Telekineses":
     category: "Form"
+    type: "ability"
     range: "medium"
     targets: 1
     size: "medium"
@@ -848,13 +930,14 @@ spells:
     description: "Target can move objects with their mind."
   "Alter Form":
     category: "Form"
-    miracle: true
+    type: "miracle"
     cost: { health: 2 }
     description: "You may permanently alter your form to another creature of a similar size."
 
   # Ice Magic
   "Ice Armour":
     category: "Ice"
+    type: "defensive"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -863,6 +946,7 @@ spells:
     description: "Covers the target in a layer of ice enhancing their defence by +4."
   "Blizzard":
     category: "Ice"
+    type: "offensive"
     range: "medium"
     area: "short"
     require:
@@ -870,6 +954,7 @@ spells:
     description: "Creates a swirling storm of ice and snow that obscures vision, all creatures within the area act with disadvantage."
   "Freeze":
     category: "Ice"
+    type: "offensive"    
     range: "medium"
     targets: 1
     size: "medium"
@@ -880,13 +965,17 @@ spells:
     description: "Wave of icy energy freezes target who can take no actions until resisted. Target can try to resist as a free action each turn."
   "Frostbite":
     category: "Ice"
-    Target Range Close: null
+    type: "defensive"
+    target_type: "being"
+    target_range: "close"
+    targets: 1
     turns: 2
     require:
     - check: { ability1: "Magic", ability2: "Defence" }
     description: "Infuses the casters next two melee attacks with cold energy causing damage to be doubled."
   "Ice":
     category: "Ice"
+    type: "offensive"
     range: "medium"
     area: "short"
     duration: "encounter"
@@ -895,6 +984,7 @@ spells:
     description: "Creates a slippery path of ice. Those in target range slip and miss a turn."
   "Sculpture":
     category: "Ice"
+    type: "ability"
     range: "medium"
     targets: 1
     size: "medium"
@@ -904,6 +994,7 @@ spells:
     description: "Creates a realistic detailed sculpture out of ice."
   "Shards":
     category: "Ice"
+    type: "offensive"
     range: "medium"
     targets: 1
     area: "short"
@@ -913,6 +1004,7 @@ spells:
     description: "Creates a storm of sharp ice shards and injures anyone in its area."
   "Spear":
     category: "Ice"
+    type: "offensive"
     Far range: null
     targets: 1
     Damage: "d6"
@@ -921,6 +1013,7 @@ spells:
     description: "Conjures a sharp spear of ice that impales enemies."
   "Suspended Animation":
     category: "Ice"
+    type: "defensive"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -929,6 +1022,7 @@ spells:
     description: "Puts a willing target into suspended animation temporarily halting any illness/diseases/poisons."
   "Wall of Ice":
     category: "Ice"
+    type: "ability"
     range: "medium"
     area: "short"
     require:
@@ -936,13 +1030,14 @@ spells:
     description: "An ice wall is created. Wall can be any variation of within spell area size. ( Wall 20 H L T | D E F 5 | S K L N/ A)."
   "Permafrost":
     category: "Ice"
-    miracle: true        
+    type: "miracle"
     cost: { "health": 2 }
     description: "You will permanently cover a settlement sized object in permafrost, forever freezing the contents."
 
   # Light Magic
   "Enoble":
     category: "Light"
+    type: "defensive"
     range: "medium"
     targets: 1
     turns: 2
@@ -951,6 +1046,7 @@ spells:
     description: "Blesses a weapon with a holy power to give it advantage in combat. Double damage against undead, chaos or demons."
   "Beam":
     category: "Light"
+    type: "offensive"
     range: "far"
     targets: 1
     Damage: "d6"
@@ -959,6 +1055,7 @@ spells:
     description: "Casts a bolt of holy light. Undead and Chaos creatures suffer double damage."
   "Courage":
     category: "Light"
+    type: "defensive"
     range: "medium"
     targets: 1
     turns: 2
@@ -967,6 +1064,7 @@ spells:
     description: "Inspires a companion giving them advantage to actions."
   "Cure":
     category: "Light"
+    type: "defensive"
     range: "medium"
     targets: 1
     level: 3
@@ -976,6 +1074,7 @@ spells:
     description: "Cures the target of a poison or disease."
   "Heal":
     category: "Light"
+    type: "defensive"
     range: "medium"
     targets: 1
     require:
@@ -985,7 +1084,8 @@ spells:
     description: "Heals the target of wounds."
   "Light":
     category: "Light"
-    range: "medium"
+    type: "ability"
+    range: "medium"    
     targets: 1
     area: "short"
     duration: 1 hour
@@ -994,6 +1094,7 @@ spells:
     description: "Cast on an inanimate object which acts as a light source."
   "Light Shield":
     category: "Light"
+    type: "defensive"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -1002,6 +1103,7 @@ spells:
     description: "Creates a shield of light causing all ranged attacks to be at disadvantage."
   "Turn Undead":
     category: "Light"
+    type: "offensive"
     range: "medium"
     targets: 2
     duration: "encounter"
@@ -1012,13 +1114,14 @@ spells:
     description: "Undead flee from caster."
   "Resurrection":
     category: "Light"
-    miracle: true
+    type: "miracle"
     cost: { health: 2 }
     description: "Bring a dead creature back to life."
 
   # Matter Magic
   "Light Beam":
     category: "Matter"
+    type: "offensive"
     range: "far"
     targets: 1
     Damage: "d6"
@@ -1027,6 +1130,7 @@ spells:
     description: "Creates a beam of a magical hard light to injure an opponent."
   "Choke":
     category: "Matter"
+    type: "offensive"
     range: "medium"
     targets: 1
     size: "medium"
@@ -1037,6 +1141,7 @@ spells:
     description: "Chokes an enemy with a powerful force grip inflicting damage."
   "Deflect":
     category: "Matter"
+    type: "defensive"
     range: "medium"
     area: "short"
     duration: "encounter"
@@ -1045,6 +1150,7 @@ spells:
     description: "Creates a shield of light causing all ranged attacks to be at disadvantage."
   "Force":
     category: "Matter"
+    type: "ability"
     range: "medium"
     targets: 1
     size: "medium"
@@ -1054,6 +1160,7 @@ spells:
     description: "Magical force moves a medium sized object one range band."
   "Great Weight":
     category: "Matter"
+    type: "offensive"
     range: "medium"
     targets: 1
     size: "medium"
@@ -1064,6 +1171,7 @@ spells:
     description: "Create a force of gravity on a target so they cannot move. Target can try to resist as a free action each turn."
   "Meld":
     category: "Matter"
+    type: "ability"
     range: "medium"
     targets: 2
     require:
@@ -1071,6 +1179,7 @@ spells:
     description: "Caster melds two objects next to each other into one."
   "Shatter":
     category: "Matter"
+    type: "ability"
     range: "medium"
     targets: 1
     require:
@@ -1078,13 +1187,14 @@ spells:
     description: "Caster cracks and shatters an inanimate object.."
   "Greater Telekinesis":
     category: "Matter"
+    type: "miracle"
     cost: { health: 2 }
-    miracle: true
     description: "Caster can lift and move an object the size of a settlement a short distance."
 
   # Nature Magic
   "Animal Form":
     category: "Nature"
+    type: "offensive"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -1095,6 +1205,7 @@ spells:
     description: "Target changes into an animal of the same or one size smaller."
   "Forest Lights":
     category: "Nature"
+    type: "offensive"
     range: "medium"
     area: "short"
     size: "medium"
@@ -1105,6 +1216,7 @@ spells:
     description: "Summons small faerie lights which transfixes the target losing an action. Target can try to resist as a free action each turn."
   "GoodBerries":
     category: "Nature"
+    type: "ability"
     require:
     - check: { ability: "Magic", roll: 10 }
     effects:
@@ -1112,6 +1224,7 @@ spells:
     description: "Creates d6 berries which heal 1 health each, must be consumed within the hour."
   "Pass without Trace":
     category: "Nature"
+    type: "ability"
     range: "medium"
     targets: 1
     require:
@@ -1119,6 +1232,7 @@ spells:
     description: "Allows the target to move quietly and unseen through natural environment. Double move, cannot be targeted."
   "Plant Growth":
     category: "Nature"
+    type: "ability"
     range: "medium"
     targets: 1
     size: "medium"
@@ -1128,6 +1242,7 @@ spells:
     description: "Causes plants to grow rapidly and healthily."
   "Plague":
     category: "Nature"
+    type: "offensive"
     range: "medium"
     area: "short"
     size: "medium"
@@ -1138,6 +1253,7 @@ spells:
     description: "Plague of insects swarm an area, actions taken at disadvantage. Swarm ( H L T 10 | D E F 10)."
   "Speak with Animals":
     category: "Nature"
+    type: "ability"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -1146,6 +1262,7 @@ spells:
     description: "Caster speaks with animals and can ask 3 yes or no questions."
   "Summon Animal":
     category: "Nature"
+    type: "ability"
     range: "medium"
     targets: 1
     size: "medium"
@@ -1156,13 +1273,14 @@ spells:
     description: "Caster can sense and summon an animal to their location to follow simple commands."
   "Monument":
     category: "Nature"
-    miracle: true
+    type: "miracle"
     cost: { "health": 2 }
     description: "Creates or grows a plant or rock based object the size of a settlement to the casters desired form or shape."
 
   # Rune Magic
   "Runes of Animation":
     category: "Rune"
+    type: "offensive"
     range: "medium"
     targets: 1
     size: "medium"
@@ -1172,6 +1290,7 @@ spells:
     description: "Animates a non-living object, such as a statue or suit of armour, to fight for the caster."
   "Runes of Concealment":
     category: "Rune"
+    type: "defensive"  
     range: "medium"
     targets: 1
     size: "medium"
@@ -1180,6 +1299,7 @@ spells:
     description: "Hides the target or an object from view, making them difficult to detect. Dispels when target interacts."
   "Runes of Fortune":
     category: "Rune"
+    type: "defensive"
     range: "medium"
     targets: 1
     duration: 1 hour
@@ -1188,6 +1308,7 @@ spells:
     description: "Target gains a free re-roll."
   "Runes of Illusion":
     category: "Rune"
+    type: "offensive"
     range: "medium"
     targets: 1
     size: "medium"
@@ -1198,6 +1319,7 @@ spells:
     description: "Creates an illusion of something the caster has seen. Target can try to resist as a free action each turn."
   "Runes of Lightness":
     category: "Rune"
+    type: "ability"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -1207,6 +1329,7 @@ spells:
     description: "Allows the target to float in the air up or down."
   "Runes of Defense":
     category: "Rune"
+    type: "defensive"
     range: "medium"
     targets: 1
     size: "medium"
@@ -1216,6 +1339,7 @@ spells:
     description: "Grants the target +4 defence for the encounter."
   "Runes of Repulsion":
     category: "Rune"
+    type: "defensive"
     range: "medium"
     targets: 1
     size: "medium"
@@ -1226,6 +1350,7 @@ spells:
     description: "Repels creatures or objects within a certain radius of the caster."
   "Runes of Summoning":
     category: "Rune"
+    type: "ability"
     range: "medium"
     targets: 1
     size: "medium"
@@ -1236,6 +1361,7 @@ spells:
     description: "Caster can sense and summon an animal to their location to follow simple commands."
   "Runes of Teleportation":
     category: "Rune"
+    type: "ability"
     range: "medium"
     targets: 1
     size: "medium"
@@ -1245,13 +1371,14 @@ spells:
     description: "Target can be teleported once to a location within range."
   "Rune of Enchant":
     category: "Rune"
-    miracle: true
+    type: "miracle"
     cost: { health: 2 }
     description: "Creates a magic item (weapon, armour or object) by using the casters personal magic essence"
 
   # Shadow Magic
   "Shadow Bolt":
     category: "Shadow"
+    type: "offensive"
     range: "far"
     targets: 1
     Damage: "d6"
@@ -1260,6 +1387,7 @@ spells:
     description: "Powerful mental blast against target, ignores any damage resistance."
   "Disguise":
     category: "Shadow"
+    type: "defensive"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -1268,6 +1396,7 @@ spells:
     description: "Target assumes the form of another person they have seen and can describe quite well."
   "Duplicate":
     category: "Shadow"
+    type: "defensive"
     range: "medium"
     targets: 1
     turns: 2
@@ -1276,6 +1405,7 @@ spells:
     description: "Create a mirror image of the target which mimics its actions making it harder to fight them, all actions against the target at disadvantage."
   "Hypnosis":
     category: "Shadow"
+    type: "offensive"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -1286,6 +1416,7 @@ spells:
     description: "Hypnotic gaze which causes target to be transfixed. Magic vs. Will to resist. Target can try to resist as a free action each turn."
   "Fade":
     category: "Shadow"
+    type: "defensive"
     range: "medium"
     targets: 1
     size: "medium"
@@ -1296,6 +1427,7 @@ spells:
     description: "Target becomes invisible. Spell ends when target engages someone."
   "Shadow Gate":
     category: "Shadow"
+    type: "ability"
     range: "medium"
     targets: 1
     size: "medium"
@@ -1303,9 +1435,10 @@ spells:
     Spell Far range: null
     require:
     - check: { ability1: "Magic", ability2: "Will" }
-    description: "Target can be telepor ted once to a location within range."
+    description: "Target can be teleported once to a location within range."
   "Shadows":
     category: "Shadow"
+    type: "defensive"
     range: "medium"
     area: "short"
     duration: "encounter"
@@ -1314,6 +1447,7 @@ spells:
     description: "A spell that allows the caster to manipulate and control shadows, potentially using them to hide."
   "Shadow Form":
     category: "Shadow"
+    type: "ability"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -1322,6 +1456,7 @@ spells:
     description: "A spell that turns the caster into a shadowy form, allowing them to slip in small gaps."
   "Suggestion":
     category: "Shadow"
+    type: "ability"
     range: "medium"
     targets: 1
     size: "medium"
@@ -1332,6 +1467,7 @@ spells:
     description: "Plants a suggestion for the target to follow a simple no risk order. Target can try to resist as a free action each turn."
   "Vision":
     category: "Shadow"
+    type: "ability"
     range: "medium"
     targets: 1
     Spell Medium range: null
@@ -1341,13 +1477,14 @@ spells:
     description: "Target gains the ability to see in the dark and spot invisible creatures."
   "Permanent Illusion":
     category: "Shadow"
-    miracle: true
+    type: "miracle"
     cost: { health: 2 }
     description: "Caster creates a permanent illusion."
 
   # Psionic Magic
   "Domination":
     category: "Psionic"
+    type: "offensive"
     range: "medium"
     targets: 1
     size: "medium"
@@ -1358,6 +1495,7 @@ spells:
     description: "Control the thoughts and actions of others. Target can try to resist as a free action each turn."
   "Manipulation":
     category: "Psionic"
+    type: "ability"
     range: "medium"
     targets: 1
     size: "medium"
@@ -1368,6 +1506,7 @@ spells:
     description: "Hides the target or an object from view, making them difficult to detect. Dispels when target interacts."
   "Mind Reading":
     category: "Psionic"
+    type: "ability"
     range: "medium"
     targets: 1
     size: "medium"
@@ -1375,9 +1514,10 @@ spells:
     duration: "encounter"
     require:
     - check: { ability1: "Magic", ability2: "Will" }
-    description: "Learn the thoughts of others and can ask 3 yes or no questions which are answered truthfully."
+    description: "Learn the thoughts of others and can ask as yes or no questions which are answered truthfully."
   "Projection":
     category: "Psionic"
+    type: "ability"
     range: "medium"
     targets: 1
     size: "medium"
@@ -1388,6 +1528,7 @@ spells:
     description: "Creates an illusion of something the caster has seen. Target can try to resist as a free action each turn."
   "Precognition":
     category: "Psionic"
+    type: "ability"
     range: "medium"
     targets: 1
     require:
@@ -1395,6 +1536,7 @@ spells:
     description: "See the future or sense impending danger, gain advantage on rolls when the situation first occurs."
   "Psychometry":
     category: "Psionic"
+    type: "ability"
     range: "medium"
     targets: 1
     size: "medium"
@@ -1403,6 +1545,7 @@ spells:
     description: "Learn information about an object by touching it and can ask 3 yes or no questions which are answered truthfully."
   "Telekinesis":
     category: "Psionic"
+    type: "ability"
     range: "medium"
     targets: 1
     size: "medium"
@@ -1411,6 +1554,7 @@ spells:
     description: "Target can move objects with their mind."
   "Telepathy":
     category: "Psionic"
+    type: "ability"
     range: "far"
     targets: 1
     duration: "encounter"
@@ -1419,6 +1563,7 @@ spells:
     description: "Communicate mentally with another creature."
   "Spirit":
     category: "Psionic"
+    type: "ability"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -1427,6 +1572,7 @@ spells:
     description: "Project your consciousness outside of your physical body. Your physical form is static. Spell is broken is form distracted."
   "Will":
     category: "Psionic"
+    type: "defensive"    
     range: "medium"
     targets: 1
     size: "medium"
@@ -1437,13 +1583,14 @@ spells:
     description: "Withstand pain or resist illness using the power of your mind. Damage resistance 1 and advantage against external effects."
   "Indoctrinate":
     category: "Psionic"
-    miracle: true
+    type: "miracle"
     cost: { health: 2 }
     description: "Bend the will of an entire settlements population to your philosophy."
 
   # Time Magic  
   "Anchor":
     category: "Time"
+    type: "ability"
     range: "medium"
     area: "short"
     duration: "encounter"
@@ -1452,6 +1599,7 @@ spells:
     description: "Anchors a specific point in time, preventing it from being altered or affected by time magic."
   "Forget":
     category: "Time"
+    type: "ability"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -1462,6 +1610,7 @@ spells:
     description: "Target forgets the circumstances of their last encounter."
   "Accellerate Time":
     category: "Time"
+    type: "defensive"
     range: "medium"
     targets: 1
     turns: 2
@@ -1470,6 +1619,7 @@ spells:
     description: "Speeds up the passage of time, target gains an extra action each turn."
   "Object":
     category: "Time"
+    type: "ability"
     range: "medium"
     targets: 1
     require:
@@ -1477,6 +1627,7 @@ spells:
     description: "Ages/de-ages an inanimate object (i.e. rusts a weapon)."
   "Prophecy":
     category: "Time"
+    type: "ability"
     range: "medium"
     targets: 1
     require:
@@ -1484,6 +1635,7 @@ spells:
     description: "Caster did something in the past to give an advantage in current situation."
   "Reverse":
     category: "Time"
+    type: "ability"
     range: "medium"
     targets: 1
     require:
@@ -1491,6 +1643,7 @@ spells:
     description: "Until your next turn the target can reverse one action against them."
   "Slow":
     category: "Time"
+    type: "ability"
     range: "medium"
     targets: 1
     size: "medium"
@@ -1501,12 +1654,14 @@ spells:
     description: "Slows the passage of time around 1 person who acts once every 2 turns. Target can try to resist as a free action each turn."
   "Stop":
     category: "Time"
+    type: "ability"
     range: "medium"
     require:
     - check: { ability: "Magic", roll: 10 }
     description: "Stops time so only target can act. Upon successful check, target gains two additional actions this turn."
   "Time Bomb":
     category: "Time"
+    type: "offensive"
     range: "medium"
     area: "short"
     duration: "encounter"
@@ -1517,6 +1672,7 @@ spells:
     description: "Sets a brief delay before an explosive burst of temporal energy is released, injuring nearby creatures or objects."
   "Witness":
     category: "Time"
+    type: "ability"
     range: "medium"
     duration: 1 Day
     require:
@@ -1524,13 +1680,14 @@ spells:
     description: "Target can witness events at the location within the last day. Amplifying allows; Charged (1 week) Empowered (1 month) view fur ther back."
   "Time Travel":
     category: "Time"
-    miracle: true
+    type: "miracle"
     cost: { health: 2 }
     description: "Can send one person back in time up to 100 years, there may be consequences."
 
   # Totem Magic
   "Totem of Agility":
     category: "Totem"
+    type: "defensive"
     targets: 1
     turns: 2
     require:
@@ -1543,6 +1700,7 @@ spells:
     description: "Gives the totem user advantage on athletics checks."
   "Totem of Combat":
     category: "Totem"
+    type: "defensive"
     targets: 1
     turns: 2
     require:
@@ -1551,6 +1709,7 @@ spells:
     description: "Gives the totem use advantage on attacks."
   "Totem of Endurance":
     category: "Totem"
+    type: "defensive"
     targets: 1
     turns: 2
     require:
@@ -1559,6 +1718,7 @@ spells:
     description: "Gives the totem user advantage on fortitude checks."
   "Totem of Flight":
     category: "Totem"
+    type: "ability"
     targets: 1
     turns: 2
     require:
@@ -1567,6 +1727,7 @@ spells:
     description: "Gives the totem user the ability to fly."
   "Totem of Restoration":
     category: "Totem"
+    type: "defensive"
     targets: 1
     require:
     - ingredients: [ "Snake Part", "Dog Part" ] 
@@ -1576,6 +1737,7 @@ spells:
     description: "Allows the totem user to recover d6 health."
   "Totem of Strength":
     category: "Totem"
+    type: "defensive"
     targets: 1
     turns: 2
     require:
@@ -1584,6 +1746,7 @@ spells:
     description: "Gives the totem user advantage on strength and damage checks."
   "Totem of Speed":
     category: "Totem"
+    type: "defensive"
     targets: 1
     turns: 2
     require:
@@ -1592,6 +1755,7 @@ spells:
     description: "'Gives the totem user advantage on speed and agility checks."
   "Totem of Senses":
     category: "Totem"
+    type: "defensive"
     targets: 1
     turns: 2
     require:
@@ -1600,6 +1764,7 @@ spells:
     description: "Gives the totem user advantage on magic checks."
   "Totem of Shadow":
     category: "Totem"
+    type: "offensive"
     targets: 1
     size: "medium"
     level: 3
@@ -1610,6 +1775,7 @@ spells:
     description: "Creates a totem that strikes fear into the hearts of enemies forcing them to retreat for a turn."
   "Totem of Travel":
     category: "Totem"
+    type: "ability"
     targets: 1
     require:
     - inventory: [ "Deer Part", "Hound Part" ]
@@ -1617,13 +1783,14 @@ spells:
     description: "Gives the totem user the ability to increase wilderness movement speed x2 for the day."
   "Totem of Power":
     category: "Totem"
-    miracle:
+    type: "miracle"
     cost: { health: 2 }
     description: "Grants a permanent power or ability."
 
   # Water Magic
   "Breathe":
     category: "Water"
+    type: "ability"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -1632,6 +1799,7 @@ spells:
     description: "Target may breathe underwater."
   "Cloud Fog":
     category: "Water"
+    type: "defensive"
     range: "medium"
     area: "short"
     duration: "encounter"
@@ -1640,6 +1808,7 @@ spells:
     description: "Creates a fog cloud which obscures visions, actions at disadvantage within fog cloud."
   "Create Water":
     category: "Water"
+    type: "ability"
     range: "medium"
     targets: 1
     require:
@@ -1647,6 +1816,7 @@ spells:
     description: "Creates a flask sized body of water."
   "Form":
     category: "Water"
+    type: "defensive"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -1655,6 +1825,7 @@ spells:
     description: "Target merges with a water element. Gain damage resistance of 2 and move double speed through water."
   "Healing Waters":
     category: "Water"
+    type: "defensive"
     range: "medium"
     targets: 1
     require:
@@ -1664,6 +1835,7 @@ spells:
     description: "Turns a small water source into healing waters which can be used to heal d6."
   "Cleanse":
     category: "Water"
+    type: "ability"
     range: "medium"
     area: "short"
     require:
@@ -1671,6 +1843,7 @@ spells:
     description: "Purifies a nearby water source while this is used."
   "Walk":
     category: "Water"
+    type: "ability"
     range: "medium"
     targets: 1
     duration: "encounter"
@@ -1679,6 +1852,7 @@ spells:
     description: "Target may walk on water."
   "Water Wall":
     category: "Water"
+    type: "ability"
     range: "medium"
     area: "short"
     duration: "encounter"
@@ -1687,7 +1861,7 @@ spells:
     description: "Creates a powerful wall of water to slow/stop opponents ( H L T 20 | D E F 8 | S K L N/ A)."
   "Tidal Wave":
     category: "Water"
-    miracle: true
+    type: "miracle"
     cost: { health: 2 }
     description: "Creates a tidal wave from a nearby body of water which causes destruction across a settlement sized area."
 

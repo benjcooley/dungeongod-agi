@@ -1,0 +1,14 @@
+layers:
+- name: portrait
+  type: image
+  location: [ -454, -116, 494, 452 ]
+  image: 'char'
+- name: frame
+  type: image
+  location: [ -500, -179, 588, 829 ]
+  image: ''
+- name: char_name
+  type: text
+  location: [ -480, 284, 540, 76 ]
+  text: "Sample"
+  

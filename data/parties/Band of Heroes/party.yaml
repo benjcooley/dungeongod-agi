@@ -17,6 +17,7 @@ characters:
       ranged_weapon: "Crossbow"
       melee_weapon: "Short Sword"
       armor: [ "Leather Armor" ]
+      spells: [ "Missile" ]
     stats:
       basic:
         level: 2
@@ -80,6 +81,7 @@ characters:
       ranged_weapon: None
       melee_weapon: "Short Sword"
       armor: [ "Robes" ]
+      spells: [ "Earth Spike", "Healing Waters" ]
     stats:
       basic:
         level: 3

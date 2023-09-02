@@ -17,6 +17,18 @@ from utils import find_case_insensitive, any_to_int, parse_date_time, \
 def cur_value(obj: dict[str, any], path: str, value: str) -> any:
     return pydash.get(obj, path + ".cur_" + value) or pydash.get(obj, path + "." + value)
 
+def make_arg_str(cmd: str, args: list[str]) -> str:
+    arg_str = f"\"{cmd}\""
+    for arg in args:
+        if arg is None:
+            break
+        arg_str += ", "
+        if isinstance(arg, str):
+            arg_str += f"\"{arg}\""
+        else:
+            arg_str += str(arg)
+    return arg_str
+
 class Game():
 
     def __init__(self, 
@@ -39,14 +51,24 @@ class Game():
         self.cur_location_state: dict[str, any] = {}
         self.cur_location_script: dict[str, any] | None = None
         self.cur_encounter: dict[str, any] | None = None
+        self.cur_location_enter_time = datetime.now()
         self.object_map: dict[str, any] = {}
         self.save_game_name = save_game_name
         self.game_state: dict[str, any] = {}
         self.action_image_path: str | None = None
+        self.button_tag: str | None = None
         self.response_id = 1
         self.skip_turn = False
-        self.exit_to_lobby = False
+        self.exit_to_lobby = False        
         self.messages = [ Agent.make_message("assistant", "I'm Ready!", "referee", True) ]
+        # Random encounter vars
+        self.random_encounter_last_time: datetime = datetime.now()
+        self.random_encounter_rand_sel_val: float = random.random()
+        self.random_encounter_rand_time_val: float = random.random()
+        # Random event vars
+        self.random_event_last_time: datetime = datetime.now()
+        self.random_event_rand_sel_val: float = random.random()
+        self.random_event_rand_time_val: float = random.random()
 
     @property
     def is_started(self) -> bool:
@@ -216,25 +238,8 @@ class Game():
                 pass
         if cmd is None:
             return ""
-        arg_str = f"\"{cmd}\""
-        for arg in args:
-            arg_str += ", "
-            if isinstance(arg, str):
-                arg_str += f"\"{arg}\""
-            else:
-                arg_str += str(arg)
-        args += [None] * (4 - len(args))                
-        resp, err = await self.do_action(cmd, args[0], args[1], args[2], args[3])
-        if not err:
-            resp_msg = Agent.make_message("user", resp, "player", keep=False)
-            self.messages.append(resp_msg)
-            if self.agent.logging:
-                print(resp_msg["content"])
-            cmd_msg = Agent.make_message("assistant", f"<HIDDEN>\ncall do_action({arg_str})\n", "engine", keep=False)
-            self.messages.append(cmd_msg)
-            if self.agent.logging:
-                print(cmd_msg["content"])
-        return (resp if not err else "")
+        resp = await self.call_action(cmd, args)
+        return resp
  
     async def system_action(self, query: str, 
                             expected_action: str = None, retry_msg: str = None, 
@@ -245,7 +250,17 @@ class Game():
 
     async def player_action(self, query: str, chunk_handler: any = None) -> str:
         return await self.process_action("player", query, chunk_handler=chunk_handler)
-            
+
+    async def call_action(self, action: str, args: list[any]) -> str:
+        arg_str = make_arg_str(action, args)
+        response = f"<HIDDEN>\ncall do_action({arg_str})\n"
+        cmd_msg = Agent.make_message("assistant", response, "actioner", keep=False)
+        self.messages.append(cmd_msg)
+        if self.agent.logging:
+            print(cmd_msg["content"])
+        resp = await self.process_response(arg_str.replace(",", ""), response, level=1)
+        return self.post_action_update(resp)
+
     async def process_action(self, source: str, query: str, 
                              expected_action: str = None, retry_msg: str = None, 
                              chunk_handler: any = None) -> str:
@@ -255,8 +270,6 @@ class Game():
         # Try the simple parser (local and way faster for simple responses)
         if not is_system:
             resp = await self.parse_simple_action(query)
-            if resp:
-                processed_resp = await self.referee_response(query, resp, level=1, chunk_handler=chunk_handler)
         # Send to the AI
         if not resp:
             if is_system:
@@ -275,15 +288,21 @@ class Game():
                 while expected_action not in resp:
                     resp = await self.generate("", retry_msg, action_mode, "system", primary=True, keep=False)
             processed_resp = await self.process_response(query, resp, level=1, chunk_handler=chunk_handler)
+            resp = self.post_action_update(processed_resp, is_system=is_system)
+        return resp
+
+    def post_action_update(self, resp: str, is_system: bool = False) -> str:
         # Process the final response
         if not is_system and not self.skip_turn:
             self.inc_cur_time(self.turn_period)
         if self.action_image_path is not None:
-            processed_resp = processed_resp + "\n" + "@image: " + self.action_image_path
+            resp = resp + "\n" + "@image: " + self.action_image_path
             self.action_image_path = None
         # Turn off turn skip flag
         self.skip_turn = False
-        return processed_resp
+        # Check for any buttons to show
+        self.button_tag = self.check_for_buttons()
+        return resp
 
     async def process_response(self, query: str, response: str, level: int, chunk_handler: any = None) -> str:
         if level == 4:
@@ -314,15 +333,14 @@ class Game():
         num_calls = 0
         for line in lines:
             line = line.strip()
-            if line == "NO ACTION" and query != "":
+            if (line == "NO ACTION" or line == "PLAYER CHAT") and query != "":
                 self.skip_turn = True
                 results = ""
                 break
             elif line == "NOT ALLOWED":
                 # Action AI says this is an invalid player action. Ignore it.
                 self.skip_turn = True
-                results = ""
-                query = "This player action is not allowed."
+                results = self.prompts["not_allowed_response"]
                 break
             if "do_action(\"" in line:
                 args = extract_arguments(line, 5)
@@ -333,7 +351,9 @@ class Game():
             results = prefix + results + self.after_process_actions()
         return (query, results, num_calls)
 
-    async def referee_response(self, query: str, results: str, level: int, chunk_handler: any = None) -> str:     
+    async def referee_response(self, query: str, results: str, level: int, chunk_handler: any = None) -> str: 
+        if results.startswith("<RESULTS>\n"):
+            return results[10:]
         if results != "":
             instr_query = "<RESPONSE>\n" + \
                         (self.get_current_game_state_str() + "\n\n" if not self.skip_turn else "") + \
@@ -344,17 +364,16 @@ class Game():
             # If there are any instructions we use the action prefix for the game state so we get the state
             # specific rules. Otherwise we just let the AI create a narrative response (no rules needed).
             has_instr = len(resp_list) > 1
-            mode = (self.cur_game_state_name + "_action" if has_instr else "engine_response")
             query = resp_list[0] # Instructions will be at the end
-            ai_result = await self.generate(instr_query, query, mode, "engine", primary=False, keep=False,
-                                           chunk_handler=(chunk_handler if mode != "engine_response" else None))
+            ai_result = await self.generate(instr_query, query, "engine_response", "engine", primary=False, keep=False,
+                                           chunk_handler=chunk_handler)
             self.response_id += 1
             if "call do_action(" in ai_result:
                 ai_result = await self.process_response("", ai_result, level + 1)                
         else:
             # Action AI says this is a user query, so pass query through, referee handles it.
             player_query = "<PLAYER>\n" + query
-            plqyer_query_instr = player_query + "\n\n<INSTRUCTIONS>\nRespond to players message.\n"
+            plqyer_query_instr = player_query + "\n\n" + self.prompts["respond_to_message_prompt"]
             ai_result = await self.generate(plqyer_query_instr, player_query, "referee_response", "referee", primary=False, keep=False,
                                            chunk_handler=chunk_handler)
         ai_result.strip(" \t\n")
@@ -536,6 +555,17 @@ class Game():
     @property
     def locations(self) -> dict[str, dict[str, any]]:
         return self.module["locations"]
+
+    @property
+    def cur_area_name(self) -> str:
+        if "areas" not in self.module:
+            return ""
+        return self.cur_location.get("area", "")
+
+    @property
+    def cur_area(self) -> dict[str, dict[str, any]]:
+        area_name = self.cur_area_name
+        return self.module["areas"].get(area_name, {})
 
     @property
     def location_states(self) -> dict[str, dict[str, any]]:
@@ -759,22 +789,24 @@ class Game():
                 new_loc_state["items"] = {}
             self.game_state["location_states"][new_loc_name] = new_loc_state
         self.prev_location_name = self.cur_location_name
+        self.prev_area_name = self.cur_area_name
         self.cur_location_name = new_loc_name
         self.cur_location = new_loc
         self.cur_location_state = new_loc_state
         self.location_since = self.cur_time
-        if self.cur_script_state != "":
+        self.time_entered_location = datetime.now()
+        if self.cur_script_state != "" and "script" in self.cur_location:
             self.cur_location_script = self.cur_location["script"][self.cur_script_state]
         else:
             self.cur_location_script = None
         self.script_state_since = self.cur_time
+        # Reset timers
+        if self.cur_area_name != self.prev_area_name:
+            self.random_encounter_last_time = datetime.now()
+            self.random_event_last_time = datetime.now()
         # Check for encounter at the new location
         if self.get_cur_location_encounter() is not None:
             self.start_encounter()
-        else:
-            random_encounter = self.check_random_encounter()
-            if random_encounter is not None:
-                self.start_encounter(random_encounter)
 
     def get_current_game_state_str(self) -> str:
         return f"state: {self.cur_game_state_name}, location: {self.cur_location_name}, time: {self.cur_date_time_12hr}" 
@@ -835,13 +867,15 @@ class Game():
         return ", ".join(exit_names)
 
     def get_random_character(self) -> dict:
-        num_chars = len(self.characters)
-        char_idx = random.randint(0, num_chars - 1)
+        chars = []
         for char in self.characters.values():
-            if char_idx == 0:
-                return char
-            char_idx -= 1
-        return None
+            _, can_do = Game.can_do_actions(char)
+            if can_do:
+                chars.append(char)
+        if len(chars) == 0:
+            return None
+        rand_idx = random.randint(0, len(chars) - 1)
+        return chars[rand_idx]
 
     def get_monster_type(self, monster_type_name: str) -> dict[str, any]:
         return self.module_monster_types.get(monster_type_name) or \
@@ -874,13 +908,13 @@ class Game():
     def location_image_path(self, if_first_time: bool = False) -> str:
         image_path = None
         if self.cur_location_script is not None and "image" in self.cur_location_script:
-            image_path = self.module_path + "/" + self.cur_location_script["image"]
+            image_path = check_for_image(self.module_path, self.cur_location_script["image"])
         elif "image" in self.cur_location:
             session_loc = self.session_state["locations"][self.cur_location_name] = self.session_state["locations"].get(self.cur_location_name, {})
             if if_first_time and session_loc.get("players_have_seen", False):
                 return None
             session_loc["players_have_seen"] = True
-            image_path = self.module_path + "/" + self.cur_location["image"]
+            image_path = check_for_image(self.module_path, self.cur_location.get("image", ""))
         return image_path
 
     def other_image(self, name, type_name) -> str:
@@ -1075,10 +1109,34 @@ class Game():
         return being["encounter"].get("escaped", False)
 
     @staticmethod
-    def set_has_escaped(being_name: str, being: dict[str, any], escaped: bool) -> None:
+    def set_has_escaped(being: dict[str, any], escaped: bool) -> None:
         if Game.has_escaped(being) == escaped:
             return
         being["encounter"]["escaped"] = escaped
+
+    @staticmethod
+    def is_asleep(being: dict[str, any]):
+        return "asleep" in being.get("cur_state", [])
+    
+    @staticmethod
+    def is_paralyzed(being: dict[str, any]):
+        return "paralyzed" in being.get("cur_state", [])
+
+    @staticmethod
+    def is_frozen(being: dict[str, any]):
+        return "frozen" in being.get("cur_state", [])
+
+    @staticmethod
+    def is_unconscious(being: dict[str, any]):
+        return "unconscious" in being.get("cur_state", [])
+
+    @staticmethod
+    def is_stunned(being: dict[str, any]):
+        return "stunned" in being.get("cur_state", [])
+
+    @staticmethod
+    def is_immobilized(being: dict[str, any]):
+        return "immobilized" in being.get("cur_state", [])
 
     @staticmethod
     def get_cur_health(being: dict[str, any]) -> int:
@@ -1086,7 +1144,28 @@ class Game():
         if "cur_health" not in basic_stats:
             basic_stats["cur_health"] = basic_stats["health"]
         return basic_stats["cur_health"]
-    
+
+    @staticmethod
+    def can_do_actions(being: dict[str, any]) -> tuple[str, bool]:
+        if Game.is_dead(being):
+            return ("is dead", False)
+        if "cur_state" in being and len(being["cur_state"]) > 0:
+            states = []
+            if Game.is_paralyzed(being):
+                states.append("paralyzed")
+            if Game.is_frozen(being):
+                states.append("frozen")
+            # Can be only one of these at a time (stunned, unconscious, asleep)
+            if Game.is_stunned(being):
+                states.append("stunned")
+            elif Game.is_unconscious(being):
+                states.append("unconscious")
+            elif Game.is_asleep(being):
+                states.append("asleep")
+            if len(states) > 0:
+                return ("is " + ", ".join(states), False)
+        return ("", True)
+
     @staticmethod
     def get_cur_defense(being: dict[str, any]) -> str:
         basic_stats = being["stats"]["basic"]
@@ -1126,10 +1205,6 @@ class Game():
             monster_merged["unique_name"] = monster_name_no_number
         monster_merged["type"] = "monster"
         return monster_merged
-
-    @staticmethod
-    def can_do_actions(being: dict[str, any]) -> None:
-        return not Game.is_dead(being)
 
     @staticmethod
     def can_attack(attacker: dict[str, any], attack_type: str) -> None:
@@ -1706,11 +1781,13 @@ class Game():
             return self.describe_party()
         desc = None
         if subject in self.cur_location.get("poi", {}):
-            desc = self.cur_location["poi"]["description"]
-            self.action_image_path = self.other_image(subject, "poi")
+            poi = self.cur_location["poi"][subject]
+            desc = poi["description"]
+            self.action_image_path = check_for_image(poi.get("image", f"images/{subject}"))
         elif self.cur_location_script is not None and subject in self.cur_location_script.get("poi", {}):
-            desc = self.cur_location_script["poi"]["description"]
-            self.action_image_path = self.other_image(subject, "poi")
+            poi = self.cur_location_script["poi"][subject]
+            desc = poi["description"]
+            self.action_image_path = check_for_image(poi.get("image", f"images/{subject}"))
         elif subject in self.game_state["characters"]:
             desc = self.game_state["characters"][subject]["info"]["other"]["description"]
             self.action_image_path = self.other_image(subject, "characters")
@@ -1775,8 +1852,11 @@ class Game():
         if not self.is_nearby_being_name(being_name):
             return (f"'{being_name}' is not here", True)
         being = self.get_nearby_being(being_name)
-        if not Game.can_do_actions(being):
-            return (f"'{being_name}' is not here", True)        
+        if not being:
+            return (f"'no {being_name}' here", True)
+        reason_cant_do, can_do = Game.can_do_actions(being)
+        if not can_do:
+            return (f"'{being_name}' {reason_cant_do}", True)      
         _, item = find_case_insensitive(self.cur_location_state.get("items", {}), item_name)
         if item is None:
             return (f"no item '{item_name}", True)
@@ -1794,8 +1874,11 @@ class Game():
         if not self.is_nearby_being_name(being_name):
             return (f"'{being_name}' is not here", True)
         being = self.get_nearby_being(being_name)
-        if not Game.can_do_actions(being):
-            return (f"'{being_name}' is not here", True)  
+        if not being:
+            return (f"'no {being_name}' here", True)
+        reason_cant_do, can_do = Game.can_do_actions(being)
+        if not can_do:
+            return (f"'{being_name}' {reason_cant_do}", True)      
         _, item = find_case_insensitive(being["items"], item_name)
         if item is None:
             return (f"no item '{item_name}", True)
@@ -1812,13 +1895,18 @@ class Game():
 
     def resume(self) -> tuple[str, bool]:
         resp = ""
-        if "overview" in self.module and len(self.module["overview"]) > 0:
-            overview = self.module["overview"]
-            if "description" in overview:
-                mod_overview = self.module["overview"]["description"]
-                resp += "MODULE OVERVIEW (for AI do NOT show to player!):\n" + mod_overview + "\n\n"
-            self.action_image_path = self.module_path + "/" + overview["image"] \
-                if "image" in overview else None
+        if False and self.cur_location_name == self.module["starting_location_name"]:
+            if "overview" in self.module and len(self.module["overview"]) > 0:
+                overview = self.module["overview"]
+                if "description" in overview:
+                    mod_overview = self.module["overview"]["description"]
+                    resp += "MODULE OVERVIEW (for AI Referee only - DO NOT reveal to player!):\n" + mod_overview + "\n\n"
+                self.action_image_path = self.module_path + "/" + overview["image"] \
+                    if "image" in overview else None
+        else:
+            if "story_summary" in self.cur_area:
+                resp = "THE STORY SO FAR:\n\n" + \
+                    self.cur_area["story_summary"] + "\n\n"
         resp_party, error = self.describe_party()
         if error:
             return (resp_party, error)
@@ -1859,14 +1947,20 @@ class Game():
         return (resp, False)
 
     def next_script_state(self, script_state) -> tuple[str, bool]:
-        if self.cur_location_script is None or \
-                "transitions" not in self.cur_location_script or \
-                script_state not in self.cur_location_script["transitions"]:
-            return (f"no script state '{script_state}' - try again with the the script state provided in your instructions", True)
-        self.cur_script_state = script_state
-        self.cur_location_script = self.cur_location["script"][script_state]
-        self.script_state_since = self.cur_time
-        return self.describe_script_state()
+        if script_state == "done" or script_state == "":
+            self.script_state_since = self.cur_time
+            self.cur_script_state = script_state
+            self.cur_location_script = None
+            return self.describe_location()
+        else:
+            if self.cur_location_script is None or \
+                    "transitions" not in self.cur_location_script or \
+                    script_state not in self.cur_location_script["transitions"]:
+                return (f"no script state '{script_state}' - try again with the the script state provided in your instructions", True)
+            self.script_state_since = self.cur_time
+            self.cur_script_state = script_state
+            self.cur_location_script = self.cur_location["script"][script_state]
+            return self.describe_script_state()
 
     def skill_check(self, character: str, skill: str) -> tuple[str, bool]:
         if random.random() > 0.5:
@@ -1919,6 +2013,8 @@ class Game():
             found_exits_list = "found exits " + json.dumps(list(found_exits.keys())).strip("[]") + "\n"
             self.cur_location_state["exits"].update(found_exits)
         del self.cur_location_state["hidden"][found_idx]
+        if "image" in found_state:
+            self.action_image_path = check_for_image(self.module_path, found_state["image"])
         return (f"{desc}{found_items_list}{found_exits_list}", False)
     
     def use(self, args: list[str], use_verb: str) -> tuple[str, bool]:
@@ -2101,6 +2197,32 @@ class Game():
 
         return (resp, failed)
 
+    def check_random_event(self) -> tuple[bool, dict[str, any] | None]:
+        if self.cur_game_state_name != "exploration":
+            return None
+        area = self.cur_area
+        if "random_events" not in area:
+            return None
+        events: list[dict[str, any]] = area["random_events"]
+        index = int(len(events) * self.random_event_rand_sel_val)
+        event = events[index]
+        t = self.random_event_rand_time_val
+        start_time = self.random_event_last_time + \
+            timedelta(seconds=(1 - t) * event["min_freq_time"] + t * event["max_freq_time"])
+        if datetime.now() >= start_time:
+            self.random_event_rand_time_val = random.random()
+            self.random_event_rand_sel_val = random.random()
+            self.random_event_last_time = datetime.now()
+            return event["event"]
+        return None
+
+    def handle_random_event(self, event: dict[str, any]) -> tuple[str, bool]:
+        match event["type"]:
+            case "say":
+                resp = event["text"]
+                return (resp, False)
+        return ("", True)
+
     async def do_explore_action(self, action: any, subject: any, object: any, extra: any, extra2: any) -> tuple[str, bool]:
         resp = ""
         error = False
@@ -2117,8 +2239,8 @@ class Game():
                 resp, error = self.change(subject)
             case "check":
                 resp, error = self.skill_check(subject, object)
-            case "complete":
-                resp, error = self.complete(subject)
+#            case "complete":
+#                resp, error = self.complete(subject)
             case "drop":
                 resp, error = self.drop(subject, object, extra)
             case "give":
@@ -2143,6 +2265,22 @@ class Game():
     # ENCOUNTER ACTIONS ----------------------------------------------------------
 
     def check_random_encounter(self) -> tuple[bool, dict[str, any] | None]:
+        if self.cur_game_state_name != "exploration":
+            return None        
+        area = self.cur_area
+        if "random_encounters" not in area:
+            return None
+        encounters: list[dict[str, any]] = area["random_encounters"]
+        index = int(len(encounters) * self.random_encounter_rand_sel_val)
+        encounter = encounters[index]
+        t = self.random_encounter_rand_time_val
+        start_time = self.random_encounter_last_time + \
+            timedelta(seconds=(1 - t) * encounter["min_freq_time"] + t * encounter["max_freq_time"])
+        if datetime.now() >= start_time:
+            self.random_encounter_rand_time_val = random.random()
+            self.random_encounter_rand_sel_val = random.random()
+            self.random_encounter_last_time = datetime.now()
+            return encounter["encounter"]
         return None
 
     def get_cur_location_encounter(self) -> dict[str, any]:
@@ -2224,7 +2362,7 @@ class Game():
             return ""
         # An image if there is one
         if "image" in self.cur_encounter:
-            self.action_image_path = self.module_path + "/" + self.cur_encounter["image"]
+            self.action_image_path = check_for_image(self.module_path, self.cur_encounter["image"])
         resp = ""
         if "description" in self.cur_encounter:
             resp += "ENCOUNTER DESCRIPTION:\n\n" + self.cur_encounter["description"] + "\n\n"
@@ -2235,8 +2373,9 @@ class Game():
             if monster["type"] == "monster":
                 monster_type = monster["monster_type"]
                 monster_types[monster_type] = self.get_monster_type(monster_type)
-            if Game.is_dead(monster):
-                monsters_desc += f"  '{monster_name}' is DEAD!\n"
+            reason_cant_do, can_do = Game.can_do_actions(monster)
+            if not can_do:
+                monsters_desc += f"  '{monster_name}' {reason_cant_do}!\n"
                 continue
             if Game.has_escaped(monster):
                 monsters_desc += f"  '{monster_name}' has ESCAPED!\m"
@@ -2372,7 +2511,7 @@ class Game():
                 new_range = closest_monster
             escaped = False
             if new_range > max_range:
-                Game.set_has_escaped(being_name, being, True)
+                Game.set_has_escaped(being, True)
                 resp = f"'{being_name}' has escaped!"
                 escaped = True
             else:
@@ -2485,13 +2624,17 @@ class Game():
     def check_encounter_can_move(self, move: str, attacker: dict[str, any]) -> tuple[str, bool]:
         if self.cur_game_state_name == "encounter":
             attacker_name = attacker["name"]
-            if attacker["encounter"]["moved_round"] == self.cur_encounter["round"]:
+            if self.has_attacker_moved(attacker):
                 return (f"'{move}' FAILED - '{attacker_name} already moved this round", True)
-            if Game.is_dead(attacker):
-                return (f"'{move}' FAILED - '{attacker_name}' is dead", True)
+            reason_cant_move, can_move = Game.can_do_actions(attacker)
+            if not can_move:
+                return (f"'{move}' FAILED - '{attacker_name}' {reason_cant_move}", True)
             if Game.has_escaped(attacker):
                 return (f"'{move}' FAILED - '{attacker_name}' has escaped", True)
         return ( "ok", True )
+
+    def has_attacker_moved(self,  attacker: dict[str, any]) -> bool:
+        return attacker["encounter"]["moved_round"] == self.cur_encounter["round"]
 
     def mark_encounter_moved(self, attacker: dict[str, any]) -> None:
         if self.cur_game_state_name == "encounter":
@@ -2663,6 +2806,154 @@ class Game():
                     error = True
         return (resp, error)
 
+    def check_for_buttons_encounter(self) -> str:
+        if self.cur_encounter["turn"] == "players":
+            return "encounter_buttons"
+        return None
+
+    def get_encounter_buttons(self, state: dict[str, any]) -> tuple[str|None, bool]:
+        next_state = "chars"
+        if "action" not in state:
+            state["action"] = None
+            state["subject"] = None
+            state["object"] = None
+            state["extra"] = None
+            state["extra2"] = None
+            state["sentence"] = ""
+        clicked_index = state.get("clicked_index", -1)
+        if clicked_index >= 0:
+            choice: str = state["buttons"][clicked_index]["choice"]
+            next_state = state["buttons"][clicked_index]["next_state"]
+            if choice and not choice.startswith("@"):
+                button: dict[str, any] = state["buttons"][clicked_index]
+                choice_type = button["choice_type"]
+                state[choice_type] = button["choice"]
+                if button["phrase"]:
+                    state["sentence"] += button["phrase"]
+        state["buttons"] = []
+        match next_state:
+            case "chars":
+                for char_name in self.cur_encounter["characters"].keys():
+                    char = self.get_object(char_name)
+                    # Check if paralyzed, dead, etc.
+                    _, can_do = Game.can_do_actions(char)
+                    if not can_do:
+                        continue
+                    if Game.has_escaped(char):
+                        continue
+                    if self.has_attacker_moved(char):
+                        continue
+                    button = {}
+                    button["text"] = char_name
+                    button["choice"] = char_name
+                    button["phrase"] = char_name + " "
+                    button["choice_type"] = "subject"
+                    button["next_state"] = "actions"
+                    state["buttons"].append(button)
+                if len(state["buttons"]) == 0:
+                    return (None, False)
+                return ("", True)
+            case "actions":
+                char = self.get_object(choice)
+                if not char:
+                    return ("", False)
+                state["subject"] = choice
+                state["char"] = char
+                actions = [ ("attack", "Attack", "attacks ", "monster_targets"), 
+                            ("shoot", "Shoot", "shoots ", "monster_targets"), 
+                            ("cast", "Cast", "casts ", "spells"), 
+                            ("@move", "Move", "casts ", "move_actions") ]
+                for action, action_name, phrase, next_state in actions:
+                    button = {}
+                    if action == "attack" and not Game.can_attack(char, "melee"):
+                        continue
+                    if action == "shoot" and not Game.can_attack(char, "ranged"):
+                        continue
+                    if action == "spells" and len(char["equipped"].get("spells", [])) == 0:
+                        continue
+                    button["text"] = action_name
+                    button["choice"] = action
+                    button["choice_type"] = "action"
+                    button["phrase"] = phrase
+                    button["next_state"] = next_state
+                    state["buttons"].append(button)
+                return ("", True)
+            case "move_actions":
+                actions = [ ("advance", "Advance", "advances", "done"), ("retreat", "Retreat", "retreats", "done"), 
+                            ("charge", "Charge", "charges", "done"), ("flee", "Flee", "flees", "done") ]
+                for action, action_name, phrase, next_state in actions:
+                    button = {}
+                    button["text"] = action_name
+                    button["choice"] = action
+                    button["choice_type"] = "action"
+                    button["phrase"] = phrase
+                    button["next_state"] = next_state
+                    state["buttons"].append(button)
+                return ("", True)
+            case "spells":
+                state["action"] = "cast"
+                char = state["char"]
+                for spell_name in char["equipped"].get("spells", []):
+                    spell = self.rules["spells"][spell_name]
+                    button = {}
+                    button["text"] = spell_name
+                    button["choice"] = spell_name
+                    button["choice_type"] = "object"
+                    button["phrase"] = spell_name + " on "
+                    if spell["type"] == "offensive":
+                        button["next_state"] = "monster_targets"
+                    elif spell["type"] == "defensive":
+                        button["next_state"] = "player_targets"
+                    else:
+                        button["next_state"] = "done"
+                    state["buttons"].append(button)
+                return ("", True)
+            case "monster_targets":
+                choice_type = ("object" if state["object"] is None else "extra")
+                for monster_name, monster_unique_name in self.cur_encounter["monsters"].items():
+                    monster = self.get_object(monster_unique_name)
+                    # Check if escaped, dead.
+                    if Game.is_dead(monster) or Game.has_escaped(monster):
+                        continue
+                    button = {}
+                    button["text"] = monster_name
+                    button["choice"] = monster_name
+                    button["choice_type"] = choice_type
+                    button["phrase"] = monster_name
+                    button["next_state"] = "done"
+                    state["buttons"].append(button)
+                return ("", True)
+            case "player_targets":
+                choice_type = ("object" if state["object"] is None else "extra")
+                for char_name in self.cur_encounter["characters"].keys():
+                    char = self.get_object(char_name)
+                    # Check if escaped, dead.
+                    if Game.is_dead(char) or Game.has_escaped(char):
+                        continue
+                    button = {}
+                    button["text"] = char_name
+                    button["choice"] = char_name
+                    button["choice_type"] = choice_type
+                    button["phrase"] = char_name
+                    button["next_state"] = "done"
+                    state["buttons"].append(button)
+                return ("", True)            
+            case "done":
+                state["sentence"] += "."
+                return ("done", False)
+        return (None, False)
+
+    async def update_exploration(self) -> str:
+        random_encounter = self.check_random_encounter()
+        if random_encounter:
+            resp, _ = self.start_encounter(random_encounter)
+            resp = self.describe_encounter()
+            return await self.referee_response("", resp, 1)
+        random_event = self.check_random_event()
+        if random_event is not None:
+            resp, _ = self.handle_random_event(random_event)
+            return await self.referee_response("", resp, 1)
+
     # NEXT TURN ----------------------------------------------------------
 
     def get_response_start(self) -> str:
@@ -2701,6 +2992,19 @@ class Game():
             case _:
                 resp = ""
         return resp
+    
+    def check_for_buttons(self) -> str:
+        match self.cur_game_state_name:
+            case "encounter":
+                resp = self.check_for_buttons_encounter()
+            case _:
+                resp = None
+        return resp
+    
+    async def get_buttons(self, button_tag: str, state: dict[str, any]) -> tuple[str|None, bool]:
+        if button_tag == "encounter_buttons":
+            return self.get_encounter_buttons(state)
+        return ("", False)
 
     async def do_action(self, action: any, 
                   subject: any = None, 
@@ -2776,3 +3080,14 @@ class Game():
 
         return (resp, False)
 
+    async def timer_update(self) -> str:
+        match self.cur_game_state_name:
+            case "exploration":
+                resp = await self.update_exploration()
+            case "encounter":
+                # resp = await self.update_encounter()
+                resp = ""
+            case _:
+                resp = ""
+        return resp
+        

@@ -5,5 +5,5 @@ PyYAML==6.0
 tiktoken==0.4.0
 discord.py==2.3.1
 pydash==7.0.5
-google-cloud-storage==2.10.0
+Pillow==10.0.0
 

@@ -70,7 +70,8 @@ def is_valid_filename(filename):
     return True
 
 def check_for_image(base_path: str, name: str, type_name: str = None) -> str:
-    exts = [ ".jpg", ".png" ]
+    name = os.path.splitext(name)[0]
+    exts = [ ".jpg", ".png", ".gif" ]
     if type_name is not None:
         paths = [ f"/{type_name}", "" ]
     else:

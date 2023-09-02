@@ -8,12 +8,12 @@ dev:
   dev_user: bc1000003
   dev_guild_id: 1123076100738789477
   dev_channels:
-#    "dev-dg-lair-of-the-mutant":
-#      module_name: "Lair of the Mutant"
-#      party_name: "Band of Heroes"
-    "dev-dg-encounter-test":
-      module_name: "Encounter Test"
+    "dev-dg-lair-of-the-mutant":
+      module_name: "Lair of the Mutant"
       party_name: "Band of Heroes"
+#    "dev-dg-encounter-test":
+#      module_name: "Encounter Test"
+#      party_name: "Band of Heroes"
 prod:
   bot_name: billy-bot
   bot_id: 1123077832852115487

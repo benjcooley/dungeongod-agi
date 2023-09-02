@@ -89,6 +89,9 @@ npcs:
               Bandages (heals d4); 4x Blankets
 
         The players can negotiate, buy items from Grun if they'd like.
+      "Reece": |-
+        Reece is grun's boy and is a great help. He's been with grun on his
+        travels ever since his mother died.
 
   "Meryn":
     type: "npc"
@@ -183,7 +186,22 @@ npcs:
 #                                 M O N S T E R S
 # ------------------------------------------------------------------------------
 
-monsters_types: {}
+monster_types:
+  "Giant Ant":
+    info:
+      description: |-
+        A great ant of enormous size with dangerous claws.
+    stats: 
+      basic: 
+        level: 3
+        health: 10
+        defense: 10
+        damage_res: 2
+        skill: "d6"
+    melee_attack:
+      description: "Giant pincers"
+      damage: "d4"
+    ranged_attack: null
 
 monsters: {}
 
@@ -194,23 +212,43 @@ monsters: {}
 areas:
 
   "Farmhouse":
+    story_summary: |-
+      You party has hitched a lift with the caravaneer Grun and his son
+      Reece, following an old track path to Skenrith Keep, the last
+      bastion of civilisation in the borderlands.
     description: |-
       - Small wooden Farm House, strong and sturdy construction. Home of Grun the wagon driver's
         friend Barus and his son Jacob. Grun and adventurers decided to overnight at this cottage 
         while on their way to Skenrith Keep.
       - Main door is swinging in the wind. No sign of the occupants. Some sheep
         have escaped the pen situated behind the house.
-      -
-      - From here players can move to: farmhouse, barn, storage shed, sheep pen, well. 
+    random_events:
+    - min_freq_time: 60
+      max_freq_time: 400
+      event: 
+        type: "say"
+        text: "<INSTRUCTIONS>In an evocotive sentence of no more than 10 words tell the players about a distant myterious animal noise, howl grunt etc."
+    - min_freq_time: 60
+      max_freq_time: 400
+      event: 
+        type: "say"
+        text: "<INSTRUCTIONS>In a simple sentence of no more than 10 words, tell the players they hear a mysterious distant 'clicking' noise."
+    - min_freq_time: 60
+      max_freq_time: 400
+      event: 
+        type: "say"
+        text: "<INSTRUCTIONS>In a simple sentence no more than 10 words, tell players about a sudden sickly sweet odor they smell that then goes away."
 
   "Moathouse":
+    story_summary: |-
+      You party hitched a lift with friendly caravaneer Grun and his son
+      Reece, to Skenrith Keep. Stopping for the night at Grun's
+      friend Barus's small farmstead, you found it mysteriously 
+      abandoned. As a favor to Grun you deceded to investigate, and
+      after some searching found a broken fence in the sheeps pen 
+      with tracks leaading to an abandoned Moathouse keep. It is
+      now late evening.
     description: |-
-      Proceed to the Moat House location (pg. 8).
-      THE FARM HOUSE
-
-      MOAT HOUSE HIGHLIGHTS
-      The me
-
       - **Moat House** is a former residence of a Sentran noble,
           **abandoned for centuries** and is a **ruined, decaying**
           **structure.** Buildings have partially collapsed.
@@ -221,7 +259,6 @@ areas:
           dug from the moat bed underneath the Moat House.
       - Area is quiet, abandoned, nothing of value.
       - Loose debris, rocks and stones cover the floor.
-
 
       Instructions
 
@@ -241,20 +278,40 @@ areas:
           discovered.
       - **Help:** Random encounter table includes **Meryn the**
           **Pathfinder** , potential ally.
-
-
-      RANDOM ENCOUNTER TABLE
-      d6 Description
-      01 Giant Fire Ants d4, hunting a breach into their lair
-      02 Giant Fire Ants d4, patrolling the area
-      03 Giant Ants d4, foraging for the Ant Queen
-      04 Giant Spiders d4, spinning webs, setting traps
-      05 Ralik, looking for treasure or an opportunity
-      06 Meryn the Hunter, investigating ant tracks
-      If a person has been encountered previously then roll again taking a
-      different result.
+    random_encounters:
+    - min_freq_time: 120
+      max_freq_time: 600
+      encounter:
+        description: "You are attacked by three giant fire ants!"
+        image: "images/GiantAnts.jpg"
+        monsters:
+          "Giant Ant 1": { monster_type: "Giant Ant" }
+          "Giant Ant 2": { monster_type: "Giant Ant" }
+          "Giant Ant 3": { monster_type: "Giant Ant" } 
+    - min_freq_time: 120
+      max_freq_time: 600
+      encounter:
+        description: "You are attacked by five giant fire ants!"
+        image: "images/GiantAnts.jpg"
+        monsters:
+          "Giant Ant 1": { monster_type: "Giant Ant" }
+          "Giant Ant 2": { monster_type: "Giant Ant" }
+          "Giant Ant 3": { monster_type: "Giant Ant" }             
 
   "Upper Dungeon":
+    story_summary: |-
+      You party hitched a lift with friendly caravaneer Grun and his son
+      Reece, to Skenrith Keep. Stopping for the night at Grun's
+      friend Barus's small farmstead, you found it mysteriously 
+      abandoned. As a favor to Grun you deceded to investigate, and
+      after some searching found a broken fence in the sheeps pen 
+      with tracks leaading to an abandoned Moathouse keep. You
+      found Grun's friend Barus injured at the gate of the moathouse.
+      He told you that creatures had captured his son and taken him
+      and he begged you to find him. You agreed and searched the
+      abandoned keep, encountering several groups of ants and other
+      creatures until you found your way down the hidden stairs 
+      to the keep's lower dungeons.
     description: |-
       UPPER DUNGEON HIGHLIGHTS
 
@@ -308,6 +365,8 @@ areas:
           mutated its form over decades into the bloated Ant Queen.
 
   "Lower Dungeon":
+    story_summary: |-
+      TBD
     description: |-
       LOWER DUNGEON HIGHLIGHTS
 
@@ -368,8 +427,8 @@ locations:
       "introductions":
         description: |-
           Grun says “Enough about me, tell me about yourselves, young adventurers?”
-        hint: |-
-          - Dialog topics (do not reveal to players): "Skenrith Keep", "farmhouse", "who is Grun", "Grun's wagon"
+        instructions: |-
+          - Grun's "topic" action subjects (do not mention to players): "Skenrith Keep", "who is Grun", "Reece", "Grun's wagon"
         image: "images/GrunsWagon.jpg"
         transitions:
           "nightfall":
@@ -444,7 +503,7 @@ locations:
           been left out.
       - From the lounge players can move to: kitchen, left bedroom, right bedroom,
          outside.
-    image: "images/FarmhouseMap.jpg"
+    image: "images/Farmhouse Lounge 2"
     instructions: |-
       - Make the scene feel eerie and uncomfortable. Evoke the player's senses and 
         create a sense of anxiety.
@@ -460,12 +519,15 @@ locations:
       - Spartan kitchen with basic cupboards and equipment.
       - Searching reveals usual household utensils, cutlery, pots, etc.
       - From the kitchen players can move to: storage room, lounge. Use 'outside' to exit house.
+    image: "images/Farmhouse Kitchen 2.jpg"
     exits:
       "storage room": { to: "Farmhouse Storage Room" }
       "lounge" : { to: "Farmhouse Lounge" }
     state:
       hidden:
-      - items:
+      - description: "Under the shelves behind the flour you find a bag of silver coins."
+        image: "images/Silver Coins 1"
+        items:
           "sp": { "qty": 100 }
 
   "Farmhouse Storage Room":
@@ -474,6 +536,7 @@ locations:
       - Cellar area with neatly organised cupboards, shelves,
           barrels, boxes, containing (foodstuffs and water).
       - From here players can move back to: kitchen. Use 'outside' to exit house.
+    image: "images/Farmhouse Storage Room 2.jpg"
     exits:
       "kitchen": { to: "Farmhouse Kitchen" }
     state:
@@ -482,6 +545,7 @@ locations:
       hidden:
       - terms: [ "boxes", "box" ]
         description: There are several useful items Barus has stashed away in the boxes.
+        image: "images/Wooden Shelves 3"
         items:
           "Lantern" : { "qty": 2 }
           "Oil" : { "qty" : 4 }
@@ -495,6 +559,7 @@ locations:
           cupboards.
       - Wooden "Carved Toy Soldier" qty: 34 scattered on the floor.
       - From here players can move to: lounge. Use 'outside' to exit house.
+    image: "images/Farmhouse Jacob's Bedroom 2.jpg"
     exits:
       "lounge": { to: "Farmhouse Lounge" }
     state:
@@ -503,6 +568,7 @@ locations:
       hidden:
       - terms: [ "any", "toys", "soldiers", "toy soldiers" ]
         description: Hidden among the toy soliders is a Jacob's small knife.
+        image: "images/Knife With Soldiers"
         items:
           "Small Knife": { damage: "d4" }
 
@@ -512,17 +578,24 @@ locations:
       - Bedroom contains a double bed, cupboards, drawers, small
           desk and chair.
       - From here players can move to: lounge. Use 'outside' to exit house.
+    image: "images/Farmhouse Barus's Bedroom"
     state:
       hidden:
-      - terms: [ "cupboard", "cupboards" ]
+      - terms: [ "cupboard", "cupboards", "shelves", "closet" ]
+        description: |-
+          You find some rather old but servicable armor and an old battle axe. It looks as if it may have
+          had some recent use as the edge of the axe has been sharpened..
         items:
           "Chainmail Armor" : { }
           "Helmet" : { }
           "Battle Axe" : { damage: "d8" }
       - terms: [ "desk" ]
+        description: |-
+          You find a small locket, a poingnant memento of Barus's wife. There is no sign of 
+          a woman in this house so you guess that she is no longer among the living.
+        image: "images/Barus's Locket"
         items:
-          "Family Picture" : { description: "This is a hand drawn family picture. It includes Barus, Jacob and what is likely Barus's dead wife." }
-          "Silver Ring" : { description: "A silver ring on a chain", sp: 50 }
+          "Locket" : { description: "A picture of Barus's dead wife in happier days." }
     exits:
       "lounge": { to: "Farmhouse Lounge" }
       "outside": { to: "Farmhouse" }
@@ -599,24 +672,49 @@ locations:
   "Moathouse Gate":
     area: "Moathouse"
     description: |-
+      - The moathouse is an old small borderland keep that has been abandon for what
+        looks like many years.
       - A lowered wooden drawbridge crosses a dried moat, the
-          main double doors are rotten and slowly swing in and out.
-      - exits here: the "courtyard", "sheep pen"
+          main double doors are rotten and slowly swing in and out. Through the doors
+          the players can see the courtyard of the old keep in the twilight.
+      - Near the drawbridge, lying against a broken wall is the figure of
+        an injured man.
+
+      - Mention that from here players can move to: farmhouse, courtyard, man
+    image: "images/Moathouse Gate 3"     
     instructions: |-
-      - **Encounter:** An injured man **Barus** (current health 2,
-          impaired) lies wounded and unconscious (he can reveal they
-          followed the tracks and were attacked and he recalls seeing
-          Jacob dragged down the moat before he was knocked out).
+     (NOTE: Reveal to players only as they look around.)
       - The  moat is a dried riverbed covered in dust and rubble.
           The  ground is covered in large deposits of a white powdery
           substance (Rock Powder, no odour but irritates the skin).
-          Looking in the moat reveals two small tunnels leading
-          underneath the moat.
-    npcs: [ "Barus" ]
+      - If the players looking in the moat they will see two small tunnels 
+        leading underneath. But both impassible with rocks/debris now.
+    exits:
+      "courtyard": { to: "Moathouse Courtyard" }
+      "farmhouse": { to: "Farmhouse Sheep Pen" }
+      "sheeps pen": { to: "Farmhouse Sheep Pen" }
+      "man": { to: "Moathouse Barus" }
+      "injured man": { to: "Moathouse Barus" }
+      "barus": { to: "Moathouse Barus" }
+      "Barus": { to: "Moathouse Barus" }
+
+  "Moathouse Barus":
+    area: "Moathouse"
+    description: |-
+      - An injured man **Barus** (current health 2,
+        impaired) lies wounded and unconscious (he can reveal they
+        followed the tracks and were attacked and he recalls seeing 
+        his young son Jacob dragged down the moat before he was knocked 
+        out).
+
+      - Tell players from here players they can move to: gatehouse
+    instructions: |-
+      - Players can aid or heal Barus.
+    image: "images/Barus Injured 3"
     topics:
       "Barus":
         "Jacob": |-
-          Barus says he went looking for Jacob near the sheeps pen, and he wasn't there. Followed the 
+          Barus says he went looking for his young son Jacob near the sheeps pen, and he wasn't there. Followed the 
           tracks and was knocked out. He hasn't seen him since. Barus pleads with the players to save Jacob.
           Barus mentions his injuries.
         "Moathouse": Barus says the old moathouse has been here since the Hulgons. It's been abandon for more than 80 years.
@@ -624,21 +722,20 @@ locations:
         "Grun": Barus is glad Grun is safely back at the farm. He's comforted knowing the adventurers came with an old friend.
         "injuries": Barus says he'll be okay. Just a very large bruise on the head, small creature."
         "help": Barus says he needs to find Jacob, his son. He also says he has some injuries that he needs to take care of.
-      
+    npcs: [ "Barus" ]      
     exits:
-      "courtyard": { to: "Moathouse Courtyard" }
-      "sheep pen": { to: "Farmhouse Sheep Pen" }
+      "gatehouse": { to: "Moathouse Gate" }
 
   "Moathouse Courtyard": 
     area: "Moathouse"
+    image: "images/Moathouse Courtyard 2"    
     decription: |-
       - A large courtyard area covered in rubble, rock, dust and
           debris. A dead carcass lies next to the well in the centre of
           the courtyard beyond which stands a stone statue of a man.
           Steps situated to the NE, SW & SW lead to the Towers.
-      - exits here: the "west door 1" to "west door 3", "north door 1" to "north door 4",
-        "east door 1" to "east door 3" the "nw tower" "ne tower" "sw tower", "se tower",
-        back to the "gatehouse".        
+
+      - Mention that from here players can move to: main keep, great hall, stables  
     instructions: |-          
       - The  well contains a broken bucket and frayed rope, is 50%
           deep and leads to (D4). The re is a small pool of water below.
@@ -650,24 +747,13 @@ locations:
           with a faint magic aura (See Blessing of Suunos artefact pg.
           14).
     exits:
-      "west door 1": { to: "Moathouse Stables" }
-      "west door 2": { to: "Moathouse Kitchen" }
-      "west door 3": { to: "Moathouse Grand Hall" }
-      "north door 1": { to: "Moathouse Storage" }
-      "north door 2": { to: "Moathouse Guest Rooms" }
-      "north door 3": { to: "Moathouse Armory" }
-      "north door 4": { to: "Moathouse Lounge" }
-      "east door 1": { to: "Moathouse Bedrooms" }
-      "east door 2": { to: "Moathouse Storage" }
-      "east door 3": { to: "Moathouse Library" }
-      "nw tower": { to: "Moathouse Northwest Tower" }
-      "ne tower": { to: "Moathouse Northeast Tower" }
-      "sw tower": { to: "Moathouse Southwest Tower" }
-      "se tower": { to: "Moathouse Southeast Tower" }
-      "gatehouse": { to: "Moathouse Gate" }
+      "main keep": { to: "Moathouse Main Keep" }
+      "great hall": { to: "Moathouse Great Hall" }
+      "stables": { to: "Moathouse Stables" }
 
   "Moathouse Stables":
     area: "Moathouse"
+    image: "images/Moathouse Stables 1"    
     description: |-
       - The  stable doors are broken and swing with the breeze.
           Inside are some old "lthy horse stalls and a working area
@@ -698,7 +784,7 @@ locations:
     exits:
       "courtyard": { to: "Moathouse Courtyard" }
 
-  "Moathouse Grand Hall":
+  "Moathouse Great Hall":
     area: "Moathouse"
     description: |-
       - A large hall that has partially collapsed and contains a
@@ -754,6 +840,7 @@ locations:
 
   "Moathouse Armory":
     area: "Moathouse"
+    image: "images/Moathouse Armoury"    
     description: |-
       - **Armoury** (sturdy door target 15 or bronze key)
       - This dark dusty room appears to have not been disturbed

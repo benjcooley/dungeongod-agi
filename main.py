@@ -1,3 +1,4 @@
+import asyncio
 import os
 import traceback
 from dotenv import load_dotenv
@@ -7,6 +8,7 @@ from agent import Agent
 from engine import Engine
 from lobby import Lobby
 from game import Game
+from timer import Timer
 from filedb import FileDb
 from user import User, get_user
 
@@ -25,6 +27,8 @@ config: dict[str, any] = {}
 
 active_sessions: dict[str, any] = {}
 channel_states: dict[str, any] = {}
+
+timer_updater: Timer = None
 
 with open('config.yaml', 'r') as f:
     config_all = yaml.load(f, Loader=yaml.FullLoader)
@@ -229,6 +233,8 @@ async def start_dev_channels(guild: discord.Guild) -> None:
 # ------------------
 
 async def send_to_channel(channel: any, msg: str) -> None:
+    if not msg:
+        return
     lines = msg.splitlines()
     image_path = None
     out_lines = []
@@ -247,8 +253,47 @@ async def send_to_channel(channel: any, msg: str) -> None:
     else:
         await channel.send(msg)
 
+async def show_button_menu(game: Game, channel: discord.TextChannel, button_tag: str) -> None:
+    state = {}
+    view = discord.ui.View()
+    state["view"] = view
+    state["channel"] = channel
+
+    async def clicked(interaction: discord.Interaction, index: int) -> None:
+        view: discord.ui.View = state["view"]
+        view.clear_items()
+        state["clicked_index"] = index
+        resp, has_buttons = await game.get_buttons(button_tag, state)
+        if not has_buttons:
+            await interaction.response.edit_message(content=state["sentence"], view=view)
+            args = [ state["subject"], state["object"], state["extra"], state["extra2"] ]
+            resp = await game.call_action(state["action"], args)
+            channel: discord.TextChannel = state["channel"]
+            await send_to_channel(channel, resp)
+        else:
+            for index, button_info in enumerate(state["buttons"]):
+                button = discord.ui.Button(label=button_info["text"])
+                callback: callable[discord.Interaction, int] = state["callback"]
+                button.callback = lambda interaction, index=index: callback(interaction, index)
+                view.add_item(button)
+            await interaction.response.edit_message(content=state["sentence"], view=view)
+
+    state["callback"] = clicked
+    resp, has_buttons = await game.get_buttons(button_tag, state)
+    if not has_buttons:
+        return resp
+    for index, button_info in enumerate(state["buttons"]):
+        button = discord.ui.Button(label=button_info["text"])
+        button.callback = lambda interaction, index=index: clicked(interaction, index)
+        view.add_item(button)
+    await channel.send(content="Select an attack..", view=view)
+
 @discord_client.event
 async def on_ready():
+
+    # Start the timer 
+    global timer_updater
+    timer_updater = Timer(1.0, timer_update_func)
 
     # Sync our command tree here
     await discord_tree.sync()
@@ -266,100 +311,112 @@ async def on_ready():
 @discord_client.event
 async def on_message(message: discord.Message):
 
-    # Ignore our own msgs
-    if message.author == discord_client.user:
-        return
-
     user = message.author
     guild = message.guild
     channel = message.channel
+    game: Game = None
 
-    # Check to see if we should respond to this msg
-    session_id = str(channel.id)
-    if session_id in active_sessions:
-        # We have a session for this channel.. go
-        channel_session = active_sessions[session_id]
-    else:
-        # No session, check if we restart a saved session?
-        channel_state = await engine.get_channel_state(guild.id, channel.id)
-        if channel_state is None:
-            # No saved sessions either.. ignore this msg
-            return
+    # Ignore our own msgs
+    if message.author != discord_client.user:
+
+        # Check to see if we should respond to this msg
+        session_id = str(channel.id)
+        if session_id in active_sessions:
+            # We have a session for this channel.. go
+            channel_session = active_sessions[session_id]
         else:
-            # Restart a session if it's in the saved channel state (so we can warm load sessions on
-            # reload and players don't lose their state.)
-            if channel_state["mode"] == "game":
-                err_str, err, info = await start_session(user, guild, action="resume_game", thread=channel)
+            # No session, check if we restart a saved session?
+            channel_state = await engine.get_channel_state(guild.id, channel.id)
+            if channel_state is None:
+                # No saved sessions either.. ignore this msg
+                return
             else:
-                err_str, err, info = await start_session(user, guild, action="lobby", thread=channel)
-            if err:
-                channel.send(err_str)
-                return
-            channel_session = info["session"]
-            try:
-                if channel_session["game"] is not None:
-                    game: Game = channel_session["game"]
-                    _ = await game.start_game()
+                # Restart a session if it's in the saved channel state (so we can warm load sessions on
+                # reload and players don't lose their state.)
+                if channel_state["mode"] == "game":
+                    err_str, err, info = await start_session(user, guild, action="resume_game", thread=channel)
                 else:
-                    lobby: Lobby = channel_session["lobby"]
-                    _ = await lobby.start_lobby()
-            except:
-                channel.send(traceback.format_exc())
-                return
+                    err_str, err, info = await start_session(user, guild, action="lobby", thread=channel)
+                if err:
+                    channel.send(err_str)
+                    return
+                channel_session = info["session"]
+                try:
+                    if channel_session["game"] is not None:
+                        game: Game = channel_session["game"]
+                        _ = await game.start_game()
+                    else:
+                        lobby: Lobby = channel_session["lobby"]
+                        _ = await lobby.start_lobby()
+                except:
+                    channel.send(traceback.format_exc())
+                    return
 
-    channel_state = await engine.get_channel_state(guild.id, channel.id)
+        channel_state = await engine.get_channel_state(guild.id, channel.id)
 
-    lobby: Lobby = channel_session["lobby"]
-    game: Game|None = channel_session["game"]
+        lobby: Lobby = channel_session["lobby"]
+        game: Game|None = channel_session["game"]
 
-    content = message.content
+        content = message.content
 
-    # Ignore users messages among themselves
-    if content.startswith("!"):
-        return
+        # Ignore users messages among themselves
+        if content.startswith("!"):
+            return
 
-    try:
-        # If game is running, call game, otherwise call the lobby
-        if game is not None and game.is_started and not game.game_over:
-            result = await game.player_action(content)
-            # Handle returning to lobby from game
-            if game.exit_to_lobby:
-                game.exit_to_lobby = False
-                channel_session["game"] = None
-                # Save the current state for this channel
-                channel_state["mode"] = "lobby"
-                await engine.set_channel_state(guild.id, channel.id, channel_state)               
-                # Restart the lobby   
-                result = await lobby.start_lobby()
-        else:
-            result = await lobby.player_action(content)
-            # Handle starting a game from lobby
-            if lobby.start_the_game:
-                start_game_action = lobby.start_game_action
-                module_name = lobby.start_game_module_name
-                party_name = lobby.start_game_party_name
-                save_game_name = lobby.start_game_save_game_name
-                lobby.start_the_game = False
-                lobby.start_game_module_name = lobby.start_game_party_name = None
-                game: Game = Game(engine, 
-                                  channel_session["user"], 
-                                  channel_session["agent"], 
-                                  start_game_action=start_game_action,
-                                  module_name=module_name, 
-                                  party_name=party_name,
-                                  save_game_name=save_game_name)
-                channel_session["game"] = game
-                # Save the current state for this channel
-                channel_state["mode"] = "game"
-                await engine.set_channel_state(guild.id, channel.id, channel_state)               
-                result = await game.start_game()
-    except:
-        result = traceback.format_exc()
-        if ERROR_LOGGING:
-            print(result)
+        try:
+            # If game is running, call game, otherwise call the lobby
+            if game is not None and game.is_started and not game.game_over:
+                result = await game.player_action(content)
+                # Handle returning to lobby from game
+                if game.exit_to_lobby:
+                    game.exit_to_lobby = False
+                    channel_session["game"] = None
+                    # Save the current state for this channel
+                    channel_state["mode"] = "lobby"
+                    await engine.set_channel_state(guild.id, channel.id, channel_state)               
+                    # Restart the lobby   
+                    result = await lobby.start_lobby()
+            else:
+                result = await lobby.player_action(content)
+                # Handle starting a game from lobby
+                if lobby.start_the_game:
+                    start_game_action = lobby.start_game_action
+                    module_name = lobby.start_game_module_name
+                    party_name = lobby.start_game_party_name
+                    save_game_name = lobby.start_game_save_game_name
+                    lobby.start_the_game = False
+                    lobby.start_game_module_name = lobby.start_game_party_name = None
+                    game: Game = Game(engine, 
+                                    channel_session["user"], 
+                                    channel_session["agent"], 
+                                    start_game_action=start_game_action,
+                                    module_name=module_name, 
+                                    party_name=party_name,
+                                    save_game_name=save_game_name)
+                    channel_session["game"] = game
+                    # Save the current state for this channel
+                    channel_state["mode"] = "game"
+                    await engine.set_channel_state(guild.id, channel.id, channel_state)               
+                    result = await game.start_game()
+        except:
+            result = traceback.format_exc()
+            if ERROR_LOGGING:
+                print(result)
 
-    if result != "":
-        await send_to_channel(message.channel, result)   
+        if result != "":
+            await send_to_channel(message.channel, result)
+
+    else:
+        session_id = str(channel.id)
+        if session_id in active_sessions:
+            channel_session = active_sessions[session_id]
+            game: Game|None = channel_session["game"]
+
+        # Show button menu?
+        if game and game.button_tag is not None:
+            button_tag = game.button_tag
+            game.button_tag = None
+            await show_button_menu(game, channel, button_tag)
 
 # ----------------------
 # Commands
@@ -524,18 +581,14 @@ async def dgod_lobby(interaction: discord.Interaction):
     if result != "":
         await send_to_channel(thread or channel, result)
 
-if DISCORD_TOKEN:
-    # Run as a bot on discord
-    discord_client.run(DISCORD_TOKEN)
-else:
-    assert False
-    # Run locally using console (Not currently supported)
-#    result = game.start_game()
-#    print(f"\n\033[34mAgent:\033[0m\n{result}")    
-#
-#    while True:
-#        print("\n\033[33mUser:\033[0m")
-#        userInput = input()
-#        result = game.player_action(userInput)
-#        if result != "":
-#            print(f"\n\033[34mAgent:\033[0m\n{result}")
+async def timer_update_func() -> None:
+    for session in active_sessions.values():
+        game: Game = session["game"]
+        channel: discord.TextChannel = session["channel"]
+        if game.game_started and not game.game_over and not game.exit_to_lobby:
+            resp = await game.timer_update()
+            if resp:
+                await send_to_channel(channel, resp)
+
+# Run as a bot on discord
+discord_client.run(DISCORD_TOKEN)
