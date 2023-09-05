@@ -16,16 +16,23 @@ info:
   copyright: "Lair of the Mutant text © 2023 by The Nameless Designer"
   license: "Creative Commons 4.0"
 
-starting_location_name: "Moathouse Gate"
+starting_location_name: "Dusty Road"
 starting_game_state: "exploration"
 starting_time: 'Sep 10 3050 19:00'
 
 overview:
   description: |-
-    In the introductory adventure "Lair of the Mutant" for the Heroes of Adventure RPG system, players, 
-    as 1st-level heroes, embark on a mission in the Farlands, near the border outpost Skenrith 
-    Keep. In this adventure they must solve a mystery and use their wits and their abilities to
-    rescue innocent friends taken by a hideously monsterous mutant force.
+    Information for players:
+
+    In this adventure the players have been travelling to Skenrith Keep in the Farlands for many
+    days with a caravaneer and his young son. They have been on several prior adventures and 
+    have built a reputation and some small coin and they are now looking for some simpler work
+    in the wild boderlands.
+
+    The following is for the Referee only and should NOT be revealed to the players:
+
+    - Before players reach the keep they will go off the road.
+    - The adventure takes place in the forests before the keep.
   image: "images/Introduction.jpg"
 
 quests: {}
@@ -211,11 +218,24 @@ monsters: {}
 
 areas:
 
+  "Dusty Road":
+    story_summary: |-
+      You party has hitched a lift with the caravaneer Grun and his son Reece, following an old 
+      track path to Skenrith Keep, the last bastion of civilisation in the borderlands. 
+    description: |-
+      - Small wooden Farm House, strong and sturdy construction. Home of Grun the wagon driver's
+        friend Barus and his son Jacob. Grun and adventurers decided to overnight at this cottage 
+        while on their way to Skenrith Keep.
+      - Main door is swinging in the wind. No sign of the occupants. Some sheep
+        have escaped the pen situated behind the house.
+
   "Farmhouse":
     story_summary: |-
-      You party has hitched a lift with the caravaneer Grun and his son
-      Reece, following an old track path to Skenrith Keep, the last
-      bastion of civilisation in the borderlands.
+      You party has hitched a lift with the caravaneer Grun and his young son Reece, following an 
+      old track path to Skenrith Keep, the last bastion of civilisation in the borderlands. After 
+      a full day hard travel Grun decided to stop for the night at Grun's Barun's farms who lives
+      with his son Jacob. However both Barun and Jacob are mysteriously missing and the farm it's
+      silent.
     description: |-
       - Small wooden Farm House, strong and sturdy construction. Home of Grun the wagon driver's
         friend Barus and his son Jacob. Grun and adventurers decided to overnight at this cottage 
@@ -377,6 +397,7 @@ locations:
   # ---------- DUSTY ROAD ------------------------------------------------------
 
   "Dusty Road":
+    area: "Dusty Road"
     description: |-
       You party has hitched a lift with the caravaneer Grun and his son
       Reece, following an old track path to Skenrith Keep, the last
@@ -384,6 +405,14 @@ locations:
       with tales of his time as a soldier, of minor skirmishes with
       bandits and an affray with a Beastman which led to his leg
       injury and subsequent retirement.
+    instructions: |-
+      (Private information for the Referee - do not share with players!)
+      - Skenrith Keep is the player's destination but this adventure will take place on the road 
+        before players reach the keep.
+      - Grun the caravaneer and his son have general information about the keep, and the area
+        but they don't know of any other adventures or mysteries.
+      - Grun the caravaneer will not want to stop the wagon or change course, at least not until the
+        story proceeds to the next phase.  
     npcs: [ "Grun", "Reece" ]
     poi:
       "wagon": "Grun's wagon is sturdy but heavily used. Boxes and wares are loaded on back."
@@ -391,7 +420,7 @@ locations:
     script:
       "introductions":
         description: |-
-          Grun says “Engitough about me, tell me about yourselves, young adventurers?”
+          Grun says “But enough about me, why not tell me a little about yourselves.”
         instructions: |-
           - Grun's "topic" action subjects (do not mention to players): "Skenrith Keep", "who is Grun", "Reece", "Grun's wagon"
         image: "images/GrunsWagon.jpg"
@@ -645,7 +674,7 @@ locations:
       - Near the drawbridge, lying against a broken wall is the figure of
         an injured man.
 
-      - Mention that from here players can move to: farmhouse, courtyard, man
+      - Mention that from here players can move to: farmhouse, courtyard, injured man
     image: "images/Moathouse Gate 3"     
     instructions: |-
      (NOTE: Reveal to players only as they look around.)
@@ -655,15 +684,9 @@ locations:
       - If the players looking in the moat they will see two small tunnels 
         leading underneath. But both impassible with rocks/debris now.
     exits:
-      "courtyard": { to: "Moathouse Courtyard" }
-      "gate": { to: "Moathouse Courtyard" }
-      "castle": { to: "Moathouse Courtyard" }
-      "farmhouse": { to: "Farmhouse Sheep Pen" }
-      "sheep pen": { to: "Farmhouse Sheep Pen" }
-      "man": { to: "Moathouse Barus" }
-      "injured man": { to: "Moathouse Barus" }
-      "barus": { to: "Moathouse Barus" }
-      "Barus": { to: "Moathouse Barus" }
+      "courtyard": { to: "Moathouse Courtyard", terms: [ "gate", "castle" ] }
+      "farmhouse": { to: "Farmhouse Sheep Pen", terms: [ "sheep pen" ] }
+      "injured man": { to: "Moathouse Barus", terms: [ "man", "Barus" ] }
 
   "Moathouse Barus":
     area: "Moathouse"
@@ -692,8 +715,7 @@ locations:
         "help": Barus says he needs to find Jacob, his son. He also says he has some injuries that he needs to take care of.
     npcs: [ "Barus" ]      
     exits:
-      "gatehouse": { to: "Moathouse Gate" }
-      "gate": { to: "Moathouse Gate" }
+      "gatehouse": { to: "Moathouse Gate", "terms": [ "gate" ] }
       "courtyard": { to: "Moathouse Courtyard" }
 
   "Moathouse Courtyard": 

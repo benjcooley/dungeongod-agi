@@ -3,11 +3,10 @@ characters:
     info:
       basic:
         name: Augustus
-        full_name: Agustus Bol
+        full_name: Augustus Bol
         race: Human
         class: Adventurer
       other:
-        full_name: Augustus Bol
         age: 32
         description: >-
           A smartly outfitted figure, possessing a sharp wit and a fierce
@@ -70,7 +69,6 @@ characters:
         race: Northmen
         class: Witch
       other:
-        full_name: Lenora Brimstone
         age: 45
         description: |-
           Wilderness wanderer of the mountains and underworld. Orin

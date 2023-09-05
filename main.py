@@ -1,4 +1,5 @@
 import asyncio
+import io
 import os
 import traceback
 from dotenv import load_dotenv
@@ -226,13 +227,13 @@ async def start_dev_channels(guild: discord.Guild) -> None:
                 except:
                     result = traceback.format_exc()
             
-                await send_to_channel(channel, result)
+                await send_to_channel(channel, result, game)
 
 # ------------------
 # Message Sender
 # ------------------
 
-async def send_to_channel(channel: any, msg: str) -> None:
+async def send_to_channel_msg(channel: discord.TextChannel, msg: str) -> discord.Message:
     if not msg:
         return
     lines = msg.splitlines()
@@ -249,9 +250,38 @@ async def send_to_channel(channel: any, msg: str) -> None:
     if len(msg) > 2000:
         msg = msg[:2000]
     if image_path is not None:
-        await channel.send(msg, file=discord.File(image_path))
+        return await channel.send(msg, file=discord.File(image_path))
     else:
-        await channel.send(msg)
+        return await channel.send(msg)
+
+async def send_to_channel(channel: discord.TextChannel, msg: str, game: Game = None, split_lines: bool = True) -> None:
+    if not msg:
+        return
+    sent_message: bool = False
+
+    # Should we split this message into multiple messages with dialog portraits?
+    if game and split_lines:
+        split_msgs = game.split_dialog(msg)
+        if len(split_msgs) > 1:
+            for index, split_msg in enumerate(split_msgs):
+                last_para = index == len(split_msgs) - 1
+                if isinstance(split_msg, bytes):
+                    await channel.send(file=discord.File(io.BytesIO(split_msg), filename="dialog.png"))
+                else:
+                    await send_to_channel_msg(channel, split_msg)
+                if not last_para:
+                    await asyncio.sleep(1)
+            sent_message = True
+
+    # Send message if we haven't split above
+    if not sent_message:
+        await send_to_channel_msg(channel, msg)
+    
+    # Show button menu?
+    if game and game.button_tag is not None:
+        button_tag = game.button_tag
+        game.button_tag = None
+        await show_button_menu(game, channel, button_tag)
 
 async def show_button_menu(game: Game, channel: discord.TextChannel, button_tag: str) -> None:
     state = {}
@@ -260,23 +290,30 @@ async def show_button_menu(game: Game, channel: discord.TextChannel, button_tag:
     state["channel"] = channel
 
     async def clicked(interaction: discord.Interaction, index: int) -> None:
+        state["clicked_index"] = index
+        await interaction.response.defer()
+        message: discord.Message = state["message"]
+        channel: discord.TextChannel = state["channel"]
         view: discord.ui.View = state["view"]
         view.clear_items()
-        state["clicked_index"] = index
         resp, has_buttons = await game.get_buttons(button_tag, state)
         if not has_buttons:
-            await interaction.response.edit_message(content=state["sentence"], view=view)
-            args = [ state["subject"], state["object"], state["extra"], state["extra2"] ]
-            resp = await game.call_action(state["action"], args)
+            await message.edit(content=state["sentence"], view=view)
+            if state["action"] == "say" or state["action"] == "ask":
+                await send_to_channel(channel, state["sentence"], game)
+                resp = await game.player_action(state["sentence"])
+            else:
+                args = [ state["subject"], state["object"], state["extra"], state["extra2"] ]
+                resp = await game.call_action(state["action"], args)
             channel: discord.TextChannel = state["channel"]
-            await send_to_channel(channel, resp)
+            await send_to_channel(channel, resp, game)
         else:
             for index, button_info in enumerate(state["buttons"]):
                 button = discord.ui.Button(label=button_info["text"])
                 callback: callable[discord.Interaction, int] = state["callback"]
                 button.callback = lambda interaction, index=index: callback(interaction, index)
                 view.add_item(button)
-            await interaction.response.edit_message(content=state["sentence"], view=view)
+            await message.edit(content=state["choices"] + state["sentence"], view=view)
 
     state["callback"] = clicked
     resp, has_buttons = await game.get_buttons(button_tag, state)
@@ -286,7 +323,7 @@ async def show_button_menu(game: Game, channel: discord.TextChannel, button_tag:
         button = discord.ui.Button(label=button_info["text"])
         button.callback = lambda interaction, index=index: clicked(interaction, index)
         view.add_item(button)
-    await channel.send(content="Select an attack..", view=view)
+    state["message"] = await channel.send(content=state["choices"] + state["sentence"], view=view)
 
 @discord_client.event
 async def on_ready():
@@ -404,19 +441,7 @@ async def on_message(message: discord.Message):
                 print(result)
 
         if result != "":
-            await send_to_channel(message.channel, result)
-
-    else:
-        session_id = str(channel.id)
-        if session_id in active_sessions:
-            channel_session = active_sessions[session_id]
-            game: Game|None = channel_session["game"]
-
-        # Show button menu?
-        if game and game.button_tag is not None:
-            button_tag = game.button_tag
-            game.button_tag = None
-            await show_button_menu(game, channel, button_tag)
+            await send_to_channel(message.channel, result, game)
 
 # ----------------------
 # Commands

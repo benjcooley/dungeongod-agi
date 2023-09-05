@@ -6,11 +6,12 @@ import asyncio
 import copy
 from datetime import datetime, timedelta
 import json
-import os
 import os.path as path
 import random
 import yaml
+import re
 import pydash
+from drawing import draw_dialog_image
 from utils import find_case_insensitive, any_to_int, parse_date_time, \
     time_difference_mins, escape_path_key, check_for_image, extract_arguments
 
@@ -116,6 +117,8 @@ class Game():
     async def generate(self, instr_query: str, query: str, mode: str, source: str, 
                        primary: bool = True, keep: bool = False, chunk_handler: any = None) -> str:
         query_msg = Agent.make_message("user", query, source, keep=keep)
+        if not instr_query:
+            instr_query = query
         if instr_query != query:
             instr_msg = Agent.make_message("user", instr_query, source, keep=keep)
         else:
@@ -139,6 +142,14 @@ class Game():
                     primary = True
                 resp = await self.agent.generate(msgs, primary, keep, chunk_handler=chunk_handler)
                 resp_msg = Agent.make_message("assistant", resp, "referee", keep=False)
+            case "dialog_choices":
+                prefix = self.response_prefix
+                # For dialog choices we only need player/referee messages.
+                msgs = prefix + \
+                    self.filter_messages(["player", "referee"]) + \
+                    [ instr_msg ]
+                resp = await self.agent.generate(msgs, primary, keep, chunk_handler=chunk_handler)
+                resp_msg = Agent.make_message("assistant", resp, "dialogee", keep=False)
         self.messages.append(query_msg)
         self.messages.append(resp_msg)
         return resp_msg["content"]
@@ -339,8 +350,9 @@ class Game():
         num_calls = 0
         for line in lines:
             line = line.strip()
-            if line == "PLAYER CHAT" and query != "":
-                self.skip_turn = True
+            if (line == "NO ACTION" or "do_action(\"talk\"," in line) and query != "":
+                if line == "NO ACTION":
+                    self.skip_turn = True
                 results = ""
                 break
             elif line == "NOT ALLOWED":
@@ -780,6 +792,14 @@ class Game():
                 item_descs.append(item_name)       
         return item_descs 
 
+    def get_usable_items(self, char: dict[str, any]) -> list[dict[str, any]]:
+        usable_items = []
+        for item in char["items"].values():
+            merged_item = self.get_merged_item(item)
+            if "usable" in merged_item:
+                usable_items.append(merged_item)
+        return usable_items
+
     def set_location(self, new_loc_name: str) -> None:
         if self.cur_location_name == new_loc_name:
             return
@@ -823,22 +843,22 @@ class Game():
             target[npc_name] = target.get(npc_name, {})
             target[npc_name].update(npc_topics)
 
-    def get_current_topics(self) -> dict[str, str]:
+    def get_merged_topics(self) -> dict[str, str]:
         all_topics = {}
         npcs = self.cur_location.get("npcs", [])
         npc_topics = {}
         for npc_name in npcs:
             npc = self.module["npcs"][npc_name]
             if "topics" in npc:
-                npc_topics[npc_name] = npc["topics"]
+                npc_topics[npc_name] = copy.deepcopy(npc["topics"])
         Game.merge_topics(all_topics, npc_topics)
-        Game.merge_topics(all_topics, self.cur_location.get("topics", {}))
+        Game.merge_topics(all_topics, copy.deepcopy(self.cur_location.get("topics", {})))
         if self.cur_location_script:
-            Game.merge_topics(all_topics, self.cur_location_script.get("topics", {}))
+            Game.merge_topics(all_topics, copy.deepcopy(self.cur_location_script.get("topics", {})))
         return all_topics
 
     def describe_topics(self) -> str:
-        all_topics = self.get_current_topics()
+        all_topics = self.get_merged_topics()
         if len(all_topics) == 0:
             return ""
         topic_npc_list = []
@@ -1231,7 +1251,7 @@ class Game():
             rules_item_name = org_item["rules_item"]
         else:
             rules_item_name = item_name
-        item = copy.deepcopy(self.rules["equipment"][rules_item_name])
+        item = copy.deepcopy(self.rules["equipment"].get(rules_item_name, {}))
         item.update(org_item)
         return item      
 
@@ -1252,16 +1272,94 @@ class Game():
         return weapon
     
     def get_merged_exits(self) -> dict[str, any]:
-        # add base exits
-        exits = self.cur_location.get("exits", {})
-        # add any additional exits revealed in the current script state
+        exits = copy.deepcopy(self.cur_location.get("exits", {}))
         if self.cur_location_script and "exits" in self.cur_location_script:
             exits.update(self.cur_location_script["exits"])
-        # add any additional exits added to the current location state (say by a search)
         if "exits" in self.cur_location_state:
             exits.update(self.cur_location_state["exits"])
         return exits
+
+    def get_merged_npcs(self) -> list[str]:
+        npcs = copy.deepcopy(self.cur_location.get("npcs", []))
+        if self.cur_location_script and "npcs" in self.cur_location_script:
+            npcs += self.cur_location_script["npcs"]
+        if "npcs" in self.cur_location_state:
+            npcs += self.cur_location_state["npcs"]
+        return npcs
+
+    def get_merged_usables(self) -> dict[str, any]:
+        usables = copy.deepcopy(self.cur_location.get("usables", {}))
+        if self.cur_location_script and "usables" in self.cur_location_script:
+            usables.update(self.cur_location_script["usables"])
+        if "usables" in self.cur_location_state:
+            usables.update(self.cur_location_state["usables"])
+        return usables
     
+    def get_merged_poi(self) -> dict[str, any]:
+        poi = copy.deepcopy(self.cur_location.get("poi", {}))
+        if self.cur_location_script and "poi" in self.cur_location_script:
+            poi.update(self.cur_location_script["poi"])
+        if "poi" in self.cur_location_state:
+            poi.update(self.cur_location_state["poi"])
+        return poi    
+
+    def get_dialog_hints(self) -> dict[str, any]:
+        if self.cur_location_script and "dialog_hints" in self.cur_location_script:
+            return self.cur_location_script["dialog_hints"]
+        if "dialog_hints" in self.cur_location:
+            return self.cur_location["dialog_hints"]
+        if self.cur_area and "dialog_hints" in self.cur_area:
+            return self.cur_area["dialog_hints"]
+        return ""
+    
+    def get_story_summary(self) -> dict[str, any]:
+        if self.cur_location_script and "story_summary" in self.cur_location_script:
+            return self.cur_location_script["story_summary"]
+        if "story_summary" in self.cur_location:
+            return self.cur_location["story_summary"]
+        if self.cur_area and "story_summary" in self.cur_area:
+            return self.cur_area["story_summary"]
+        return ""
+    
+    def get_spells_of_type(self, 
+                           char: dict[str, any], 
+                           magic_ability: str, 
+                           spell_types: list[str]) -> list[str]:
+        if "stats" not in char or "abilities" not in char["stats"]:
+            return []
+        if magic_ability not in char["stats"]["abilities"]:
+            return []
+        assert magic_ability.endswith(" Magic")
+        char_level: int = char["stats"]["basic"].get("level", 1)
+        magic_category = magic_ability[:-6]
+        spells = self.rules["spells"]           
+        found_spells: list[str] = [] 
+        for spell_name, spell in spells.items():
+            if spell["category"] != magic_category:
+                continue
+            if spell["type"] not in spell_types:
+                continue
+            spell_level = spell.get("level", 1)
+            if spell_level > char_level:
+                continue
+            found_spells.append(spell_name)
+        found_spells.sort()
+        return found_spells
+
+    def get_char_magic_abilities(self, char: dict[str, any], spell_types: list[str] = None) -> list[str]:
+        if "stats" not in char or "abilities" not in char["stats"]:
+            return []
+        magic_abilities: list[str] = []
+        for ability in char["stats"]["abilities"]:
+            if ability.endswith(" Magic"):
+                if spell_types is not None:
+                    spells = self.get_spells_of_type(char, ability, spell_types)
+                    if len(spells) == 0:
+                        continue
+                magic_abilities.append(ability)
+        magic_abilities.sort()
+        return magic_abilities
+
     # OBJECT MAP ----------------------------------------------------------
     
     @property
@@ -1717,16 +1815,24 @@ class Game():
         return (resp, False)
 
     def topic(self, npc: str, topic: str) -> tuple[str, bool]:
-        if not isinstance(npc, str) or not isinstance(topic, str):
+        if topic is None:
+            topic = npc
+            npc = "any"
+        if not isinstance(topic, str):
             return ("please create your own response for this topic ", True)
-        all_topics = self.get_current_topics()
+        all_topics = self.get_merged_topics()
+        if npc == "any":
+            for npc_name, topics in all_topics.items():
+                if topic in topics:
+                    npc = npc_name
+                    break
         npc_topics = all_topics.get(npc, {})
         _, topic_resp = find_case_insensitive(npc_topics, topic)
         if topic_resp is None:
             topics = json.dumps(list(npc_topics.keys()))
             return (f"no topic '{topic}' for npc '{npc}' - npc topics are {topics}\n" +\
                     "you can try again using one of these, or creatively improvise a response consistent with the story and rules\n", False)
-        return (topic_resp, False)
+        return ("TOPIC INFO:\n\n" + topic_resp + "\n\n" + self.prompts["topic_prompt"], False)
 
     def equip(self, char_name: str, weapon_name: str) -> tuple[str, bool]:
         if not isinstance(char_name, str) or not isinstance(weapon_name, str):
@@ -1802,9 +1908,8 @@ class Game():
                 case _:
                     raise RuntimeError("Invalid help index type")
         else:
-            resp, err = (f"AI Referee, please attempt to help players with the subject '{subject}' " + \
-                        "but ONLY if you can provide useful and ACCURATE information and rules relevant to the game. " + \
-                        "Otherwise tell players you can't help them with this subject.'", False)
+            no_help_resp = self.prompts["no_help_response"].replace("{subject}", subject)
+            resp, err = (no_help_resp, False)
         if err:
             return resp, err
         return "HELP RESPONSE:\n\n" + resp, err
@@ -1831,9 +1936,16 @@ class Game():
                 self.game_state["npcs"][subject].get("has_player_met", False) == True:
             desc = self.game_state["npcs"][subject]["description"]
             self.action_image_path = self.other_image(subject, "npcs")
+        if desc is None:
+            # Check topics (AI may be confused)
+            npc_topics = self.get_merged_topics()
+            for npc_name, topics in npc_topics.items():
+                if subject in topics:
+                    return self.topic(npc_name, subject)
         if desc is not None:
             return (f"please elaborate upon and creatively describe '{subject} with '{desc}'", False)
         return (f"if players can currently see '{subject}', provide a suitable description", False)      
+
 
     # EXPLORE ACTIONS ----------------------------------------------------------
 
@@ -1931,7 +2043,7 @@ class Game():
 
     def resume(self) -> tuple[str, bool]:
         resp = ""
-        if False and self.cur_location_name == self.module["starting_location_name"]:
+        if self.cur_location_name == self.module["starting_location_name"]:
             if "overview" in self.module and len(self.module["overview"]) > 0:
                 overview = self.module["overview"]
                 if "description" in overview:
@@ -2297,6 +2409,227 @@ class Game():
                 resp = f"can't do action '{action}'"
                 error = True
         return (resp, error)
+
+    async def update_exploration(self) -> str:
+        random_encounter = self.check_random_encounter()
+        if random_encounter:
+            resp, _ = self.start_encounter(random_encounter)
+            resp = self.describe_encounter()
+            return await self.referee_response("", resp, 1)
+        random_event = self.check_random_event()
+        if random_event is not None:
+            resp, _ = self.handle_random_event(random_event)
+            return await self.referee_response("", resp, 1)
+
+    async def get_exploration_buttons(self, state: dict[str, any]) -> tuple[str|None, bool]:
+        next_state = "chars_actions"
+        if "action" not in state:
+            state.update({ "action": None, 
+                           "subject": None, 
+                           "object": None, 
+                           "extra": None, 
+                           "extra2": None,
+                           "choices": "",
+                           "sentence": "" })
+        clicked_index = state.get("clicked_index", -1)
+        if clicked_index >= 0:
+            choice: str = state["buttons"][clicked_index]["choice"]
+            next_state = state["buttons"][clicked_index]["next_state"]
+            if choice and not choice.startswith("@"):
+                button: dict[str, any] = state["buttons"][clicked_index]
+                choice_type = button["choice_type"]
+                state[choice_type] = button["choice"]
+                if button["phrase"]:
+                    state["sentence"] += button["phrase"]
+        state["buttons"] = []
+        state["choices"] = ""
+        match next_state:
+            case "chars_actions":
+                actions = [ ("move", "Go", "Go to ", "exits"), 
+                            ("look", "Look", "Look ", "look_targets") ]
+                for action, action_name, phrase, next_state in actions:
+                    button = { "text": action_name,
+                               "choice": action,
+                               "choice_type": "action",
+                               "phrase": phrase,
+                               "next_state": next_state }
+                    state["buttons"].append(button)
+                for char_name in self.game_state["characters"].keys():
+                    char = self.get_object(char_name)
+                    # Check if paralyzed, dead, etc.
+                    _, can_do = Game.can_do_actions(char)
+                    if not can_do:
+                        continue
+                    button = { "text": char_name,
+                               "choice": char_name, 
+                               "choice_type": "subject",
+                               "phrase": char_name + " ", 
+                               "next_state": "actions" }
+                    state["buttons"].append(button)
+                if len(state["buttons"]) == 0:
+                    return (None, False)
+                return ("", True)
+            case "exits":
+                exits = self.get_merged_exits()
+                for exit in exits.keys():
+                    button = { "text": exit, 
+                               "choice": exit, 
+                               "choice_type": "subject", 
+                               "phrase": exit, 
+                               "next_state": "done" }
+                    state["buttons"].append(button)
+                return ("", True)
+            case "look_targets":
+                targets = []
+                # targets += list(self.game_state["characters"].keys())
+                targets += [ "around" ]
+                targets += self.get_merged_npcs()
+                targets += list(self.get_merged_poi().keys())
+                targets = targets[:7]
+                for target in targets:
+                    button = { "text": target, 
+                               "choice": target, 
+                               "choice_type": "subject", 
+                               "phrase": target,
+                               "next_state": "done" }
+                    state["buttons"].append(button)
+                return ("", True)            
+            case "actions":
+                char = self.get_object(choice)
+                if not char:
+                    return ("", False)
+                state["subject"] = choice
+                state["char"] = char
+                actions = [ ("say", "Say", "says ", "say_choices"), 
+                            ("ask", "Ask", "asks ", "ask_choices"), 
+                            ("use", "Use", "uses ", "usables"),
+                            ("cast", "Cast", "casts ", "spell_abilities"),
+                            ("@items", "Item", "", "item"),
+                            ("@info", "Info", "", "imfo"),
+                            ("@menu", "Menu", "", "menu") ]
+                has_npcs = len(self.cur_location.get("npcs", [])) > 0
+                has_usables = len(self.get_usable_items(char)) > 0 or \
+                            len(self.get_merged_usables()) > 0
+                has_spells = len(self.get_char_magic_abilities(char, spell_types="ability"))
+                for action, action_name, phrase, next_state in actions:
+                    button = {}
+                    if (action == "say" or action == "ask") and not has_npcs:
+                        continue
+                    if action == "use" and not has_usables:
+                        continue
+                    if action == "cast" and not has_spells:
+                        continue
+                    button = { "text": action_name,
+                               "choice": action,
+                               "choice_type": "action",
+                               "phrase": phrase,
+                               "next_state": next_state }
+                    state["buttons"].append(button)
+                return ("", True)
+            case "say_choices":
+                char_name = state["subject"]
+                prompt = self.prompts["say_choices_prompt"].replace("{char_name}", char_name)
+                text = await self.generate("", prompt, "dialog_choices", "dialoger")
+                choices = text.strip("\n").split("\n")[:6]
+                fmt_choices = []
+                for choice in choices:
+                    choice = choice.lstrip("123456. -\"")
+                    choice = choice.rstrip("\n\"")
+                    if not choice:
+                        continue
+                    fmt_choices.append("🔸 " + choice)
+                    first_three = " ".join(choice.split(" ")[:3]) + ".."
+                    button = { "text": first_three, 
+                               "choice": choice, 
+                               "choice_type": "object", 
+                               "phrase": "\"" + choice + "\"",
+                               "next_state": "done" }
+                    state["buttons"].append(button)
+                state["choices"] = "\n".join(fmt_choices) + "\n"            
+                return ("", True)
+            case "ask_choices":
+                char_name = state["subject"]
+                prompt = self.prompts["ask_choices_prompt"].replace("{char_name}", char_name)
+                text = await self.generate("", prompt, "dialog_choices", "dialoger")
+                choices = text.strip("\n").split("\n")[:6]
+                fmt_choices = []
+                for choice in choices:
+                    choice = choice.lstrip("123456. -\"")
+                    choice = choice.rstrip("\n\"")
+                    if not choice:
+                        continue
+                    fmt_choices.append("🔹 " + choice)
+                    first_three = " ".join(choice.split(" ")[:3]) + ".."
+                    button = { "text": first_three, 
+                               "choice": choice, 
+                               "choice_type": "object", 
+                               "phrase": "\"" + choice + "\"",
+                               "next_state": "done" }
+                    state["buttons"].append(button)
+                state["choices"] = "\n".join(fmt_choices) + "\n"            
+                return ("", True)        
+            case "usables":
+                char_name: str = state["subject"]
+                usables: list[str] = []      
+                usables += list(self.get_usable_items(char_name))         
+                usables += list(self.get_merged_usables().keys())
+                usables = usables[:7]
+                for usable in usables:
+                    button = { "text": usable, 
+                               "choice": usable, 
+                               "choice_type": "object", 
+                               "phrase": target,
+                               "next_state": "done" }
+                    state["buttons"].append(button)
+                return ("", True)
+            case "spell_abilities":
+                state["action"] = "cast"
+                char = state["char"]
+                spell_abilities = self.get_char_magic_abilities(char, spell_types=["ability"])
+                for spell_ability in spell_abilities:
+                    button = { "text": spell_ability, 
+                               "choice": spell_ability, 
+                               "choice_type": "", 
+                               "phrase": "",
+                               "next_state": "spells" }
+                    state["buttons"].append(button)
+                return ("", True)             
+            case "spells":
+                state["action"] = "cast"
+                char = state["char"]
+                spells = self.get_spells_of_type(char, choice, spell_types="ability")
+                for spell_name in spells:
+                    spell = self.rules["spells"][spell_name]
+                    next_state = "done"
+                    if "target_type" in spell:
+                        next_state = "spell_targets"
+                    button = { "text": spell_name, 
+                               "choice": spell_name, 
+                               "choice_type": "object", 
+                               "phrase": spell_name + (" on " if next_state == "spell_targets" else " "),
+                               "next_state": next_state }
+                    state["buttons"].append(button)
+                return ("", True)                      
+            case "spell_targets":
+                spell_targets: list[str] = []
+                spell_name = choice
+                spell = self.rules["spells"][spell_name]
+                # TODO: Do spells on usables later
+                spell_targets += list(self.game_state["characters"].keys())
+                spell_targets += self.get_merged_npcs()
+                for spell_target in spell_targets:
+                    button = { "text": spell_target,
+                               "choice": spell_target,
+                               "choice_type": "extra",
+                               "phrase": spell_target,
+                               "next_state": "done" }
+                    state["buttons"].append(button)
+                return ("", True)            
+            case "done":
+                if not state["sentence"].endswith('"'):
+                    state["sentence"] += "."
+                return ("done", False)
+        return (None, False)
 
     # ENCOUNTER ACTIONS ----------------------------------------------------------
 
@@ -2848,15 +3181,16 @@ class Game():
             return "encounter_buttons"
         return None
 
-    def get_encounter_buttons(self, state: dict[str, any]) -> tuple[str|None, bool]:
+    async def get_encounter_buttons(self, state: dict[str, any]) -> tuple[str|None, bool]:
         next_state = "chars"
         if "action" not in state:
-            state["action"] = None
-            state["subject"] = None
-            state["object"] = None
-            state["extra"] = None
-            state["extra2"] = None
-            state["sentence"] = ""
+            state.update({ "action": None, 
+                           "subject": None, 
+                           "object": None, 
+                           "extra": None, 
+                           "extra2": None, 
+                           "choices": "",
+                           "sentence": "" })
         clicked_index = state.get("clicked_index", -1)
         if clicked_index >= 0:
             choice: str = state["buttons"][clicked_index]["choice"]
@@ -2880,12 +3214,11 @@ class Game():
                         continue
                     if self.has_attacker_moved(char):
                         continue
-                    button = {}
-                    button["text"] = char_name
-                    button["choice"] = char_name
-                    button["phrase"] = char_name + " "
-                    button["choice_type"] = "subject"
-                    button["next_state"] = "actions"
+                    button = { "text": char_name,
+                               "choice": char_name, 
+                               "choice_type": "subject",
+                               "phrase": char_name + " ", 
+                               "next_state": "actions" }
                     state["buttons"].append(button)
                 if len(state["buttons"]) == 0:
                     return (None, False)
@@ -2899,32 +3232,40 @@ class Game():
                 actions = [ ("attack", "Attack", "attack ", "monster_targets"), 
                             ("shoot", "Shoot", "shoot ", "monster_targets"), 
                             ("cast", "Cast", "casts ", "spells"), 
-                            ("@move", "Move", "casts ", "move_actions") ]
+                            ("@move", "Move", "", "move_actions") ]
                 for action, action_name, phrase, next_state in actions:
                     button = {}
                     if action == "attack" and not Game.can_attack(char, "melee"):
                         continue
                     if action == "shoot" and not Game.can_attack(char, "ranged"):
                         continue
-                    if action == "spells" and len(char["equipped"].get("spells", [])) == 0:
+                    if action == "cast" and len(char["equipped"].get("spells", [])) == 0:
                         continue
                     weapon_name = ""
                     if action == "attack":
                         weapon_name = char["equipped"]["melee_weapon"]
                     if action == "shoot":
                         weapon_name = char["equipped"]["ranged_weapon"]
-                    button["text"] = (action_name if weapon_name == "" else f"{action_name} {weapon_name}")
-                    button["choice"] = action
-                    button["choice_type"] = "action"
-                    button["phrase"] = (phrase if weapon_name == "" else f"uses {weapon_name} to {phrase}")
-                    button["next_state"] = next_state
+                    button_text = (action_name if weapon_name == "" else f"{action_name} {weapon_name}")
+                    button_phrase = (phrase if weapon_name == "" else f"uses {weapon_name} to {phrase}")
+                    button = { "text": button_text,
+                               "choice": action,
+                               "choice_type": "action",
+                               "phrase": button_phrase,
+                               "next_state": next_state }
                     state["buttons"].append(button)
                 return ("", True)
             case "move_actions":
-                actions = [ ("advance", "Advance", "advances", "done"), ("retreat", "Retreat", "retreats", "done"), 
-                            ("charge", "Charge", "charges", "done"), ("flee", "Flee", "flees", "done") ]
+                actions = [ ("advance", "Advance", "advances", "done"), 
+                            ("retreat", "Retreat", "retreats", "done"), 
+                            ("charge", "Charge", "charges", "done"), 
+                            ("flee", "Flee", "flees", "done") ]
                 for action, action_name, phrase, next_state in actions:
-                    button = { "text": action_name, "choice": action, "choice_type": "action", "phrase": phrase, "next_state": next_state }
+                    button = { "text": action_name, 
+                               "choice": action, 
+                               "choice_type": "action", 
+                               "phrase": phrase, 
+                               "next_state": next_state }
                     state["buttons"].append(button)
                 return ("", True)
             case "spells":
@@ -2932,13 +3273,18 @@ class Game():
                 char = state["char"]
                 for spell_name in char["equipped"].get("spells", []):
                     spell = self.rules["spells"][spell_name]
-                    button = { "text": spell_name, "choice": spell_name, "choice_type": "object", "phrase": spell_name + " on " }
+                    button_next_state = ""
                     if spell["type"] == "offensive":
-                        button["next_state"] = "monster_targets"
+                        button_next_state = "monster_targets"
                     elif spell["type"] == "defensive":
-                        button["next_state"] = "player_targets"
+                        button_next_state = "player_targets"
                     else:
-                        button["next_state"] = "done"
+                        button_next_state = "done"
+                    button = { "text": spell_name, 
+                               "choice": spell_name, 
+                               "choice_type": "object", 
+                               "phrase": spell_name + " on ",
+                               "next_state": button_next_state }
                     state["buttons"].append(button)
                 return ("", True)
             case "monster_targets":
@@ -2948,12 +3294,11 @@ class Game():
                     # Check if escaped, dead.
                     if Game.is_dead(monster) or Game.has_escaped(monster):
                         continue
-                    button = {}
-                    button["text"] = monster_name
-                    button["choice"] = monster_name
-                    button["choice_type"] = choice_type
-                    button["phrase"] = monster_name
-                    button["next_state"] = "done"
+                    button = { "text": monster_name,
+                               "choice": monster_name,
+                               "choice_type": choice_type,
+                               "phrase": monster_name,
+                               "next_state": "done" }
                     state["buttons"].append(button)
                 return ("", True)
             case "player_targets":
@@ -2963,29 +3308,17 @@ class Game():
                     # Check if escaped, dead.
                     if Game.is_dead(char) or Game.has_escaped(char):
                         continue
-                    button = {}
-                    button["text"] = char_name
-                    button["choice"] = char_name
-                    button["choice_type"] = choice_type
-                    button["phrase"] = char_name
-                    button["next_state"] = "done"
+                    button = { "text": char_name,
+                               "choice": char_name,
+                               "choice_type": choice_type,
+                               "phrase": char_name,
+                               "next_state": "done" }
                     state["buttons"].append(button)
                 return ("", True)            
             case "done":
                 state["sentence"] += "."
                 return ("done", False)
         return (None, False)
-
-    async def update_exploration(self) -> str:
-        random_encounter = self.check_random_encounter()
-        if random_encounter:
-            resp, _ = self.start_encounter(random_encounter)
-            resp = self.describe_encounter()
-            return await self.referee_response("", resp, 1)
-        random_event = self.check_random_event()
-        if random_event is not None:
-            resp, _ = self.handle_random_event(random_event)
-            return await self.referee_response("", resp, 1)
 
     # NEXT TURN ----------------------------------------------------------
 
@@ -3031,12 +3364,14 @@ class Game():
             case "encounter":
                 resp = self.check_for_buttons_encounter()
             case _:
-                resp = None
+                resp = "exploration_buttons"
         return resp
     
     async def get_buttons(self, button_tag: str, state: dict[str, any]) -> tuple[str|None, bool]:
         if button_tag == "encounter_buttons":
-            return self.get_encounter_buttons(state)
+            return await self.get_encounter_buttons(state)
+        elif button_tag == "exploration_buttons":
+            return await self.get_exploration_buttons(state)
         return ("", False)
 
     async def do_action(self, action: any, 
@@ -3126,3 +3461,57 @@ class Game():
                 resp = ""
         return resp
         
+    # SPLIT DIALOG ----------------------------------------------------------
+
+    def split_dialog(self, resp) -> list[str]:
+        paras = resp.split("\n\n")
+        prev_para = ""
+        char_names: list[str|bytes] = []
+        char_names += self.get_merged_npcs()
+        char_names += list(self.game_state["characters"].keys())        
+        out_paras: list[str] = []
+        last_char = ""
+        for para in paras:
+            found_image = False
+            if '"' in para:
+                if prev_para:
+                    out_paras.append(prev_para)
+                    prev_para = ""
+                noquote_para = re.sub(r'("[^"]*")', "", para)
+                found_char = ""
+                for char_name in char_names:
+                    if char_name in noquote_para:
+                        found_char = char_name
+                        break
+                if not found_char:
+                    found_char = last_char
+                if found_char:
+                    last_char = found_char
+                    if char_name in self.game_state["characters"]:
+                        char = self.game_state["characters"][char_name]
+                        full_name = char["info"]["basic"]["full_name"]
+                        image_path = check_for_image("data/characters/images", full_name)
+                    else:
+                        image_path = check_for_image(self.module_path + "/images", char_name)
+                    if image_path:
+                        found_image = True
+                        is_quote = para.startswith('"')
+                        parts = para.split('"')
+                        for part in parts:
+                            if not part:
+                                continue
+                            if is_quote:
+                                out_paras.append(draw_dialog_image(image_path, char_name, part))
+                                is_quote = False
+                            else:
+                                out_paras.append(part)
+                                is_quote = True
+            if not found_image:
+                if prev_para:
+                    prev_para += "\n\n" + para
+                else:
+                    prev_para = para
+        if prev_para:
+            out_paras.append(prev_para)
+        return out_paras
+
