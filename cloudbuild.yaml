@@ -1,9 +1,10 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: [ 'build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/dungeongod1/dungeongod1:latest', '.' ]
+  args: [ 'build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/dungeongod1/dungeongod1:$REVISION_ID', '.' ]
 - name: 'gcr.io/cloud-builders/docker'
-  args: [ 'push', 'us-central1-docker.pkg.dev/$PROJECT_ID/dungeongod1/dungeongod1:latest' ]
+  args: [ 'push', 'us-central1-docker.pkg.dev/$PROJECT_ID/dungeongod1/dungeongod1:$REVISION_ID' ]
 - name: 'gcr.io/cloud-builders/gcloud'
-  args: [ "compute", "instances", "update-container", "dungeongod-2", "--zone", "us-central1-a", "--container-image=us-central1-docker.pkg.dev/$PROJECT_ID/dungeongod1/dungeongod1:latest" ]
+  args: [ "compute", "instances", "update-container", "dungeongod-2", "--zone", "us-central1-a", "--container-image=us-central1-docker.pkg.dev/$PROJECT_ID/dungeongod1/dungeongod1:$REVISION_ID" ]
 images:
-- 'us-central1-docker.pkg.dev/$PROJECT_ID/dungeongod1/dungeongod1:latest'
+- 'us-central1-docker.pkg.dev/$PROJECT_ID/dungeongod1/dungeongod1:$REVISION_ID'
+
