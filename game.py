@@ -3479,20 +3479,22 @@ class Game():
                     prev_para = ""
                 noquote_para = re.sub(r'("[^"]*")', "", para)
                 found_char = ""
+                min_pos = 1000
                 for char_name in char_names:
-                    if char_name in noquote_para:
+                    pos = noquote_para.find(char_name)
+                    if pos >= 0 and pos < min_pos:
+                        min_pos = pos
                         found_char = char_name
-                        break
                 if not found_char:
                     found_char = last_char
                 if found_char:
                     last_char = found_char
-                    if char_name in self.game_state["characters"]:
-                        char = self.game_state["characters"][char_name]
+                    if found_char in self.game_state["characters"]:
+                        char = self.game_state["characters"][found_char]
                         full_name = char["info"]["basic"]["full_name"]
                         image_path = check_for_image("data/characters/images", full_name)
                     else:
-                        image_path = check_for_image(self.module_path + "/images", char_name)
+                        image_path = check_for_image(self.module_path + "/images", found_char)
                     if image_path:
                         found_image = True
                         is_quote = para.startswith('"')
