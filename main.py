@@ -492,7 +492,7 @@ async def dgod_new_game(interaction: discord.Interaction, party_name: str = engi
 
     try:
         if thread is not None and thread.id != channel.id:
-            await interaction.response.send_message(f"Your game is started in thread <#{thread.id}>.")
+            await interaction.response.send_message(f"Your game is started in thread <#{thread.id}>.", ephemeral=True, delete_after=30)
         else:
             await interaction.response.send_message(f"Starting game..")
         result = await game.start_game()
@@ -543,7 +543,7 @@ async def dgod_resume_game(interaction: discord.Interaction):
 
     try:
         if thread is not None and thread.id != channel.id:
-            await interaction.response.send_message(f"Your game has been resumed in thread <#{thread.id}>.")
+            await interaction.response.send_message(f"Your game has been resumed in thread <#{thread.id}>.", ephemeral=True, delete_after=30)
         else:
             await interaction.response.send_message(f"Resuming game..")
         result = await game.start_game()
@@ -593,7 +593,7 @@ async def dgod_lobby(interaction: discord.Interaction):
 
     try:
         if thread is not None and thread.id != channel.id:
-            await interaction.response.send_message(f"Your lobby has been started in thread <#{thread.id}>.")
+            await interaction.response.send_message(f"Your lobby has been started in thread <#{thread.id}>.", ephemeral=True, delete_after=30)
         else:
             await interaction.response.send_message(f"Starting lobby..")
         result = await lobby.start_lobby()

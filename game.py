@@ -3500,10 +3500,11 @@ class Game():
                         is_quote = para.startswith('"')
                         parts = para.split('"')
                         for part in parts:
+                            part = part.strip(" ")
                             if not part:
                                 continue
                             if is_quote:
-                                out_paras.append(draw_dialog_image(image_path, char_name, part))
+                                out_paras.append(draw_dialog_image(image_path, found_char, part))
                                 is_quote = False
                             else:
                                 out_paras.append(part)
