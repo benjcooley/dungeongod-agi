@@ -54,7 +54,7 @@ def draw_dialog_image(portrait_file: str, character_name: str, dialog_text: str)
     required_height = max(portrait.height + 2 * margin, text_area_height)
     
     # Create blank black image with computed dimensions
-    img = Image.new("RGB", (width, required_height), (40, 40, 40))
+    img = Image.new("RGB", (width, required_height), (35, 35, 35))
     draw = ImageDraw.Draw(img)
     
     # Paste portrait onto image with rounded corners
