@@ -517,6 +517,7 @@ locations:
     exits:
       "storage room": { to: "Farmhouse Storage Room" }
       "lounge" : { to: "Farmhouse Lounge" }
+      "outside": { to: "Abandoned Farmhouse" }      
     state:
       hidden:
       - description: "Under the shelves behind the flour you find a bag of silver coins."
@@ -533,6 +534,7 @@ locations:
     image: "images/Farmhouse Storage Room 2.jpg"
     exits:
       "kitchen": { to: "Farmhouse Kitchen" }
+      "outside": { to: "Abandoned Farmhouse" }      
     state:
       items:
         "Ants Teeth": { qty: 10 }
@@ -556,6 +558,7 @@ locations:
     image: "images/Farmhouse Jacob's Bedroom 2.jpg"
     exits:
       "lounge": { to: "Farmhouse Lounge" }
+      "outside": { to: "Abandoned Farmhouse" }      
     state:
       items:
         "Carved Toy Soldier": { "qty": 34 }
@@ -641,6 +644,8 @@ locations:
       - Flock of sheep are agitated and roaming outside the pen.
       - An long abandoned Moat House can be seen in the
           distance to the north a mile or so away.
+      - There seems to be something on the ground near the fence. Perhaps players should
+        "search" the area.
       - From here players can move to: farmhouse, barn, storage shed, well.
     image: "images/SheepPen.jpg"
     exits:
