@@ -5,13 +5,13 @@ steps:
   - '-c'
   - |
     gcloud compute config-ssh
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: ['compute', 'ssh', 'dungeongod-2', '--zone', 'us-central1-a', '--command', 'docker image prune -af']  
 - name: 'gcr.io/cloud-builders/docker'
   args: [ 'build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/dungeongod1/dungeongod1:latest', '.' ]
 - name: 'gcr.io/cloud-builders/docker'
   args: [ 'push', 'us-central1-docker.pkg.dev/$PROJECT_ID/dungeongod1/dungeongod1:latest' ]
 - name: 'gcr.io/cloud-builders/gcloud'
   args: [ "compute", "instances", "update-container", "dungeongod-2", "--zone", "us-central1-a", "--container-image=us-central1-docker.pkg.dev/$PROJECT_ID/dungeongod1/dungeongod1:latest" ]
-- name: 'gcr.io/cloud-builders/gcloud'
-  args: ['compute', 'ssh', 'dungeongod-2', '--zone', 'us-central1-a', '--command', 'docker image prune -af']  
 images:
 - 'us-central1-docker.pkg.dev/dungeongod1/dungeongod1/$PROJECT_ID/dungeongod1/dungeongod1:latest'
