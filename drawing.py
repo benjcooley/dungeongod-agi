@@ -2,7 +2,7 @@ from PIL import Image, ImageDraw, ImageFont
 import math
 from io import BytesIO
 
-def get_wrapped_text(text: str, font: ImageFont.ImageFont, line_length: int):
+def get_wrapped_text(text: str, f7nt: ImageFont.ImageFont, line_length: int):
     lines = ['']
     for word in text.split():
         line = f'{lines[-1]} {word}'.strip()
@@ -17,9 +17,9 @@ def get_font_height(font: ImageFont) -> int:
     offset_x, offset_y = font.font.getsize("Sample")[1]
     return int(offset_x + ascent - offset_y + descent)
 
-width=800
-name_pt_size=28
-text_pt_size=20
+width=400
+name_pt_size=16
+text_pt_size=14
 margin=12
 corner_radius=8
 regular_font_path="data/fonts/Merriweather-Regular.ttf"
@@ -28,7 +28,7 @@ font_height = get_font_height(font)
 bold_font_path="data/fonts/LondrinaSolid-Regular.ttf"
 font_bold = ImageFont.truetype(bold_font_path, name_pt_size)
 font_bold_height = get_font_height(font_bold)
-portrait_size=(84, 84)
+portrait_size=(64, 64)
 
 def draw_dialog_image(portrait_file: str, character_name: str, dialog_text: str) -> bytes:
 

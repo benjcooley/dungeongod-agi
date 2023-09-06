@@ -400,10 +400,10 @@ async def on_message(message: discord.Message):
 
     # Check to see if the channel is locked by another user using it
     # We need to avoid having the AI overloaded and have ourselves rate limited
-    if channel_session.get("current_user_lock_id"):
+    if channel_session.get("spam_lock_id"):
         print(f"Message {content} ignored - response in progress.")
         return
-    channel_session["current_user_lock_id"] = discord_client.user.id
+    channel_session["spam_lock_id"] = discord_client.user.id
 
     start_time = datetime.now()
 
@@ -463,7 +463,7 @@ async def on_message(message: discord.Message):
         asyncio.sleep(MESSAGE_RATE_LIMIT - elapsed_secs)
 
     # Unlock the channel
-    channel_session["current_user_lock_id"] = None
+    channel_session["spam_lock_id"] = None
 
 # ----------------------
 # Commands
