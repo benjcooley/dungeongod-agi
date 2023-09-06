@@ -1,8 +1,9 @@
 import asyncio
+from datetime import datetime, timedelta
+from dotenv import load_dotenv
 import io
 import os
 import traceback
-from dotenv import load_dotenv
 import yaml
 
 from agent import Agent
@@ -20,6 +21,7 @@ load_dotenv()
 
 DEVELOPER_MODE = (os.getenv('DEVELOPER_MODE') == "true")
 ERROR_LOGGING = ((os.getenv('ERROR_LOGGING') or "true") == "true")
+MESSAGE_RATE_LIMIT = int(os.getenv('MESSAGE_RATE_LIMIT') or 5)
 CONFIG_TAG = ("dev" if DEVELOPER_MODE else "prod")
 
 DISCORD_TOKEN = os.getenv('DISCORD_TOKEN')
@@ -351,97 +353,117 @@ async def on_message(message: discord.Message):
     user = message.author
     guild = message.guild
     channel = message.channel
+    content = message.content
     game: Game = None
 
     # Ignore our own msgs
-    if message.author != discord_client.user:
+    if message.author == discord_client.user:
+        return
 
-        # Check to see if we should respond to this msg
-        session_id = str(channel.id)
-        if session_id in active_sessions:
-            # We have a session for this channel.. go
-            channel_session = active_sessions[session_id]
+    # Check to see if we should respond to this msg
+    session_id = str(channel.id)
+    if session_id in active_sessions:
+        # We have a session for this channel.. go
+        channel_session = active_sessions[session_id]
+    else:
+        # No session, check if we restart a saved session?
+        channel_state = await engine.get_channel_state(guild.id, channel.id)
+        if channel_state is None:
+            # No saved sessions either.. ignore this msg
+            return
         else:
-            # No session, check if we restart a saved session?
-            channel_state = await engine.get_channel_state(guild.id, channel.id)
-            if channel_state is None:
-                # No saved sessions either.. ignore this msg
-                return
+            # Restart a session if it's in the saved channel state (so we can warm load sessions on
+            # reload and players don't lose their state.)
+            if channel_state["mode"] == "game":
+                err_str, err, info = await start_session(user, guild, action="resume_game", thread=channel)
             else:
-                # Restart a session if it's in the saved channel state (so we can warm load sessions on
-                # reload and players don't lose their state.)
-                if channel_state["mode"] == "game":
-                    err_str, err, info = await start_session(user, guild, action="resume_game", thread=channel)
+                err_str, err, info = await start_session(user, guild, action="lobby", thread=channel)
+            if err:
+                channel.send(err_str)
+                return
+            channel_session = info["session"]
+            try:
+                if channel_session["game"] is not None:
+                    game: Game = channel_session["game"]
+                    _ = await game.start_game()
                 else:
-                    err_str, err, info = await start_session(user, guild, action="lobby", thread=channel)
-                if err:
-                    channel.send(err_str)
-                    return
-                channel_session = info["session"]
-                try:
-                    if channel_session["game"] is not None:
-                        game: Game = channel_session["game"]
-                        _ = await game.start_game()
-                    else:
-                        lobby: Lobby = channel_session["lobby"]
-                        _ = await lobby.start_lobby()
-                except:
-                    channel.send(traceback.format_exc())
-                    return
+                    lobby: Lobby = channel_session["lobby"]
+                    _ = await lobby.start_lobby()
+            except:
+                channel.send(traceback.format_exc())
+                return
 
+
+    # Ignore users messages among themselves
+    if content.startswith("!"):
+        return
+
+    # Check to see if the channel is locked by another user using it
+    # We need to avoid having the AI overloaded and have ourselves rate limited
+    if channel_session.get("current_user_lock_id"):
+        print(f"Message {content} ignored - response in progress.")
+        return
+    channel_session["current_user_lock_id"] = discord_client.user.id
+
+    start_time = datetime.now()
+
+    try:
         channel_state = await engine.get_channel_state(guild.id, channel.id)
 
         lobby: Lobby = channel_session["lobby"]
         game: Game|None = channel_session["game"]
 
-        content = message.content
+        # If game is running, call game, otherwise call the lobby
+        if game is not None and game.is_started and not game.game_over:
+            result = await game.player_action(content)
+            # Handle returning to lobby from game
+            if game.exit_to_lobby:
+                game.exit_to_lobby = False
+                channel_session["game"] = None
+                # Save the current state for this channel
+                channel_state["mode"] = "lobby"
+                await engine.set_channel_state(guild.id, channel.id, channel_state)               
+                # Restart the lobby   
+                result = await lobby.start_lobby()
+        else:
+            result = await lobby.player_action(content)
+            # Handle starting a game from lobby
+            if lobby.start_the_game:
+                start_game_action = lobby.start_game_action
+                module_name = lobby.start_game_module_name
+                party_name = lobby.start_game_party_name
+                save_game_name = lobby.start_game_save_game_name
+                lobby.start_the_game = False
+                lobby.start_game_module_name = lobby.start_game_party_name = None
+                game: Game = Game(engine, 
+                                channel_session["user"], 
+                                channel_session["agent"], 
+                                start_game_action=start_game_action,
+                                module_name=module_name, 
+                                party_name=party_name,
+                                save_game_name=save_game_name)
+                channel_session["game"] = game
+                # Save the current state for this channel
+                channel_state["mode"] = "game"
+                await engine.set_channel_state(guild.id, channel.id, channel_state)               
+                result = await game.start_game()
+    except:
+        result = traceback.format_exc()
+        if ERROR_LOGGING:
+            print(result)
 
-        # Ignore users messages among themselves
-        if content.startswith("!"):
-            return
+    if result != "":
+        await send_to_channel(message.channel, result, game)
 
-        try:
-            # If game is running, call game, otherwise call the lobby
-            if game is not None and game.is_started and not game.game_over:
-                result = await game.player_action(content)
-                # Handle returning to lobby from game
-                if game.exit_to_lobby:
-                    game.exit_to_lobby = False
-                    channel_session["game"] = None
-                    # Save the current state for this channel
-                    channel_state["mode"] = "lobby"
-                    await engine.set_channel_state(guild.id, channel.id, channel_state)               
-                    # Restart the lobby   
-                    result = await lobby.start_lobby()
-            else:
-                result = await lobby.player_action(content)
-                # Handle starting a game from lobby
-                if lobby.start_the_game:
-                    start_game_action = lobby.start_game_action
-                    module_name = lobby.start_game_module_name
-                    party_name = lobby.start_game_party_name
-                    save_game_name = lobby.start_game_save_game_name
-                    lobby.start_the_game = False
-                    lobby.start_game_module_name = lobby.start_game_party_name = None
-                    game: Game = Game(engine, 
-                                    channel_session["user"], 
-                                    channel_session["agent"], 
-                                    start_game_action=start_game_action,
-                                    module_name=module_name, 
-                                    party_name=party_name,
-                                    save_game_name=save_game_name)
-                    channel_session["game"] = game
-                    # Save the current state for this channel
-                    channel_state["mode"] = "game"
-                    await engine.set_channel_state(guild.id, channel.id, channel_state)               
-                    result = await game.start_game()
-        except:
-            result = traceback.format_exc()
-            if ERROR_LOGGING:
-                print(result)
+    # If the total time elapsed is less than the rate limit, sleep the rest of the time
+    end_time = datetime.now()
+    elapsed_secs = (end_time - start_time).total_seconds()
 
-        if result != "":
-            await send_to_channel(message.channel, result, game)
+    if elapsed_secs < MESSAGE_RATE_LIMIT:
+        asyncio.sleep(MESSAGE_RATE_LIMIT - elapsed_secs)
+
+    # Unlock the channel
+    channel_session["current_user_lock_id"] = None
 
 # ----------------------
 # Commands

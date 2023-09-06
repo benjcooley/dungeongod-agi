@@ -197,21 +197,24 @@ class Agent():
         model = OPENAI_MODEL if primary else OPENAI_SECONDARY_MODEL
         temp = OPENAI_TEMPERATURE if primary else OPENAI_SECONDARY_TEMPERATURE
 
-        if not chunk_handler:
-            completion = await openai.ChatCompletion.acreate(
-                model=model,
-                temperature=temp,
-                messages=send_messages
-            )
-            response = completion.choices[0].message["content"]
-        else:
-            completion_pair = await self.chunk_acreate(
-                model=model,
-                temperature=temp,
-                messages=send_messages,
-                chunk_handler=chunk_handler
-            )
-            response = completion_pair["full_reply_content"]
+        try:
+            if not chunk_handler:
+                completion = await openai.ChatCompletion.acreate(
+                    model=model,
+                    temperature=temp,
+                    messages=send_messages
+                )
+                response = completion.choices[0].message["content"]
+            else:
+                completion_pair = await self.chunk_acreate(
+                    model=model,
+                    temperature=temp,
+                    messages=send_messages,
+                    chunk_handler=chunk_handler
+                )
+                response = completion_pair["full_reply_content"]
+        except:
+            response = "I'm sorry, but the AI is currently rate limted."
 
         resp_size = len(token_enc.encode(response))
 
