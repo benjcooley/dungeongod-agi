@@ -502,7 +502,7 @@ async def dgod_new_game(interaction: discord.Interaction, party_name: str = engi
             print(result)
 
     if result != "":
-        await send_to_channel(thread or channel, result)
+        await send_to_channel(thread or channel, result, game)
 
 # make the slash command
 #@discord_tree.command(name="dgod_resume_game", description="Creates a thread and resumes the last game.", 
@@ -553,7 +553,7 @@ async def dgod_resume_game(interaction: discord.Interaction):
             print(result)
 
     if result != "":
-        await send_to_channel(thread or channel, result)
+        await send_to_channel(thread or channel, result, game)
 
 # make the slash command
 #@discord_tree.command(name="dgod_lobby", description="Creates a lobby thread to build a party and start a game.", 
@@ -613,7 +613,7 @@ async def timer_update_func() -> None:
         if game.game_started and not game.game_over and not game.exit_to_lobby:
             resp = await game.timer_update()
             if resp:
-                await send_to_channel(channel, resp)
+                await send_to_channel(channel, resp, game)
 
 # Run as a bot on discord
 discord_client.run(DISCORD_TOKEN)
