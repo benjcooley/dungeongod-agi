@@ -1,11 +1,4 @@
 steps:
-- name: 'gcr.io/cloud-builders/gcloud'
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    gcloud compute config-ssh
-    gcloud compute ssh dungeongod-2 --zone us-central1-a --command "docker image prune -af"
 - name: 'gcr.io/cloud-builders/docker'
   args: [ 'build', '-t', 'us-central1-docker.pkg.dev/$PROJECT_ID/dungeongod1/dungeongod1:latest', '.' ]
 - name: 'gcr.io/cloud-builders/docker'
