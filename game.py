@@ -1973,7 +1973,8 @@ class Game():
             return (f"can't go '{subject}'. You're location is '{self.cur_location_name}' and exits are {exit_names} - try again", True)
         new_loc_name = exits[to]["to"]
         self.set_location(new_loc_name)
-        return self.describe_location(image_if_first_time=True)
+        return self.describe_location()
+        #return self.describe_location(image_if_first_time=True) # More fun to see the pictures!
 
     def change(self, changes: str) -> tuple[str, bool]:
         self.cur_location_state["changes"] = changes
