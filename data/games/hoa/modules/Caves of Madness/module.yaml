@@ -1,0 +1,50 @@
+# yaml-language-server: $schema=../../schemas/module_schema_hoa.yaml
+info:
+  title: "Caves of Madness"
+  game: "Heroes of Adventure"
+  game_version: "1.0"
+
+starting_location_name: "Cave Entrance"
+starting_game_state: "exploration"
+starting_time: 'Jan 1 1000 12:00'
+
+npcs: {}
+monster_types: {}
+monsters: {}
+quests: {}
+
+locations:
+
+  "Cave Entrance":
+    description: |-
+      Entrance to a small cave. Small stream coming out. Nasty smells.
+    image: "images/cave_entrance.jpg"
+    topics:
+      "Bard":
+        "the map": "Bard says it's a map of entire cave, all monster locations, treasure, traps."
+        "why sing a song": "Bard is silly. Come up with any random explanation. the sillier the better."
+        "who is Bard": "Bard says 'I'm Bard'.. won't discuss his background."
+        "why's Bard here": "Bard swatched you leave town, followed you. No other reason really."
+    exits:
+      "N": { to: "Clearing" }
+      "enter": { to: "First Chamber" }
+    state:
+      items:
+        "Old Broken Sword" : {}
+        "Old Bone" : {}
+  
+  "First Chamber":
+    description: "Small room with entrance to cave and door to passage. Broken furniture."
+    exits:
+      "door": { to: "Great Chamber" }
+      "exit": { to: "Cave Entrance" }
+    image: "images/cave_interior.jpg"    
+    state: {}
+
+  "Great Chamber":
+    description: |-
+      This is an expansive chamber with a small skylight open at the top. There a small stream through
+      the center of the chamber with a rickety old bridge.
+    exits:
+      "door": { to: "First Chamber" }
+    state: {}

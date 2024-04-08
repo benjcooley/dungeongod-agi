@@ -1,9 +1,21 @@
 dev:
+
+  # General
+  game: "hoa"
+  app_name: "hoa-dev"
+  default_party_name: "Band of Heroes"
+  default_module_name: "Lair of the Mutant"
+
+  # Chatbot
   bot_name: freddy-bot
   bot_id: 1126209280228479017
   channel_prefix: dev-dgod-
-  default_party_name: "Band of Heroes"
-  default_module_name: "Lair of the Mutant"
+
+  # Web service
+  app_server: "https://dgod.ngrok.app"  
+  app_data_url: "https://storage.googleapis.com/hoa-gpt/"
+
+  # Dev
   dev_guild: bc1000003-1
   dev_user: bc1000003
   dev_guild_id: 1123076100738789477
@@ -14,10 +26,120 @@ dev:
 #    "dev-dg-encounter-test":
 #      module_name: "Encounter Test"
 #      party_name: "Band of Heroes"
+
 prod:
-  bot_name: billy-bot
-  bot_id: 1123077832852115487
-  channel_prefix: dgod-
+
+  # General
+  game: "hoa"
+  app_name: "hoa-prod"
   default_party_name: "Band of Heroes"
   default_module_name: "Lair of the Mutant"
 
+  # Chatbot
+  bot_name: billy-bot
+  bot_id: 1123077832852115487
+  channel_prefix: dgod-
+ 
+  # Web Service
+  app_server: "https://dungeongod1.uc.r.appspot.com/"
+  app_data_url: "https://storage.googleapis.com/hoa-gpt/"
+
+model_info:
+
+  gpt-4-turbo-preview:
+    max_tokens: 32768
+    prompt_cost: 0.03
+    gen_cost: 0.06
+
+  gpt-3.5-turbo:
+    max_tokens: 16384
+    prompt_cost: 0.001
+    gen_cost: 0.002
+
+  dolphin-mistral-7b:
+    max_tokens: 16384
+    prompt_builder: "orca"
+    tokenizer_model: "gpt-4"
+
+  mixtral-8x7b-instruct:
+    max_tokens: 4096
+    prompt_cost: 0.00007
+    gen_cost: 0.00028
+
+  pplx-70b-online:
+    max_tokens: 4096
+    prompt_cost: 0.0007
+    gen_cost: 0.0028
+
+  nous-hermes-2-mixtral-8x7b:
+    max_tokens: 32768
+    prompt_builder: "orca"
+
+  NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO:
+    max_tokens: 32768
+    prompt_cost: 0.0006
+    gen_cost: 0.0006
+
+  NousResearch/Nous-Hermes-2-Mixtral-8x7B-SFT:
+    max_tokens: 32768
+    prompt_cost: 0.0006
+    gen_cost: 0.0006
+
+  mixtral-8x7b-32768:
+    max_tokens: 32768
+    prompt_cost: 0.0006
+    gen_cost: 0.0006
+
+model_endpoints:
+
+  openai-chatgpt-4-turbo-v1:
+    # NOTE: This model has a 128k context, but we're just using 16k to save $$$
+    agent: openai_v1
+    primary:
+      model: gpt-4-turbo-preview
+      temperature: 0.3
+
+  openai-chatgpt-4-turbo-mix-v1:
+    agent: openai_v1
+    primary:
+      model: gpt-4-turbo
+      temperature: 0.3
+    secondary:
+      model: gpt-3.5-turbo
+      temperature: 0.3
+
+  openai-chatgpt-3.5-turbo-v1:
+    agent: openai_v1
+    primary:
+      model: gpt-3.5-turbo
+      temperature: 0.3
+
+  perplexity-mixtral-8x7b-instruct:
+    agent: openai_v1
+    primary:
+      model: mixtral-8x7b-instruct
+      temperature: 0.3
+
+  perplexity-70b-online:
+    agent: openai_v1
+    primary:
+      model: pplx-70b-online
+      temperature: 0.3
+
+  together-nous-hermes-2-mixtral-8x7b-dpo:
+    agent: openai_v1  
+    primary:
+      model: "NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO"
+      temperature: 0.7
+
+  together-nous-hermes-2-mixtral-8x7b-sft:
+    agent: openai_v1  
+    primary:
+      model: "NousResearch/Nous-Hermes-2-Mixtral-8x7B-SFT"
+      temperature: 0.7
+
+  groq-mixtral-8x7b-32768:
+    agent: openai_v1  
+    primary:
+      model: "mixtral-8x7b-32768"
+      temperature: 0.3

@@ -1,0 +1,607 @@
+- data/new_game_state.yaml
+- data/licensed/ui/paper/ppr_03.PNG
+- data/licensed/ui/paper/ppr_02.png
+- data/licensed/ui/paper/ppr_01.PNG
+- data/licensed/ui/paper/ppr_04.PNG
+- data/licensed/ui/buttons/bt_01_3.PNG
+- data/licensed/ui/buttons/bt_03_1.png
+- data/licensed/ui/buttons/bt_01_2.PNG
+- data/licensed/ui/buttons/bt_03_2.PNG
+- data/licensed/ui/buttons/bt_03_3.PNG
+- data/licensed/ui/buttons/bt_01_1.PNG
+- data/licensed/ui/buttons/bt_02_2.PNG
+- data/licensed/ui/buttons/bt_02_3.PNG
+- data/licensed/ui/buttons/bt_02_1.PNG
+- data/licensed/ui/buttons/bt_04_2.png
+- data/licensed/ui/buttons/bt_04_3.png
+- data/licensed/ui/buttons/bt_04_1.PNG
+- data/licensed/ui/loading/ld_01.PNG
+- data/licensed/ui/loading/ld_02.PNG
+- data/licensed/ui/loading/ld_03.png
+- data/licensed/ui/checkbox/chb_01.png
+- data/licensed/ui/checkbox/chb_02.PNG
+- data/licensed/ui/surface/sur_08.png
+- data/licensed/ui/surface/sur_02.png
+- data/licensed/ui/surface/sur_03.png
+- data/licensed/ui/surface/sur_01.PNG
+- data/licensed/ui/surface/sur_04.png
+- data/licensed/ui/surface/sur_05.PNG
+- data/licensed/ui/surface/sur_07.PNG
+- data/licensed/ui/surface/sur_06.png
+- data/licensed/ui/frame/fr_02_qrtr.png
+- data/licensed/ui/frame/Silver Coins 1.jpg
+- data/licensed/ui/frame/Silver Coins 2.jpg
+- data/licensed/ui/frame/fr_02_half.png
+- data/licensed/ui/frame/fr_04.PNG
+- data/licensed/ui/frame/fr_03.png
+- data/licensed/ui/frame/fr_02.png
+- data/licensed/ui/frame/fr_01.PNG
+- data/licensed/ui/banners/bn_02.PNG
+- data/licensed/ui/banners/bn_01_2.PNG
+- data/licensed/ui/banners/bn_01_3.png
+- data/licensed/ui/banners/bn_01_1.PNG
+- data/licensed/ui/char_card/card_frame.png
+- data/licensed/ui/char_card/shield.png
+- data/licensed/ui/char_card/target.png
+- data/licensed/ui/char_card/heart.png
+- data/licensed/ui/char_card/sword.png
+- data/licensed/ui/char_card/gray_jewel.png
+- data/licensed/ui/char_card/char_card.yaml
+- data/licensed/ui/char_card/char.png
+- data/licensed/ui/scrolling/scr_01.PNG
+- data/licensed/ui/scrolling/scr_02.PNG
+- data/licensed/ui/scrolling/scr_03.png
+- data/licensed/ui/icons/Icon_05.png
+- data/licensed/ui/icons/Icon_04.PNG
+- data/licensed/ui/icons/Icon_06.PNG
+- data/licensed/ui/icons/Icon_07.png
+- data/licensed/ui/icons/Icon_03.PNG
+- data/licensed/ui/icons/Icon_02.PNG
+- data/licensed/ui/icons/Icon_01.png
+- data/licensed/ui/slots/slt_04.PNG
+- data/licensed/ui/slots/slt_05.PNG
+- data/licensed/ui/slots/slt_01.PNG
+- data/licensed/ui/slots/slt_02.png
+- data/licensed/ui/slots/slt_03.png
+- data/licensed/ui/decor/dcr_03.png
+- data/licensed/ui/decor/dcr_02.PNG
+- data/licensed/ui/decor/dcr_01.png
+- data/licensed/ui/decor/dcr_05.png
+- data/licensed/ui/decor/dcr_04.png
+- data/licensed/ui/decor/dcr_06.png
+- data/licensed/icons/magic/Elixir of Sight.png
+- data/licensed/icons/magic/Vile of Wisdom.png
+- data/licensed/icons/magic/Book of Death.png
+- data/licensed/icons/magic/Mystic Dreamcatcher.png
+- data/licensed/icons/magic/Reagents.png
+- data/licensed/icons/magic/Health Potion.png
+- data/licensed/icons/magic/Essence of Darkness.png
+- data/licensed/icons/magic/Mask of Veronis.png
+- data/licensed/icons/magic/Elixir of Life.png
+- data/licensed/icons/magic/Blessed Waters.png
+- data/licensed/icons/magic/Scroll.png
+- data/licensed/icons/weapons/Machete.png
+- data/licensed/icons/weapons/Sabre.png
+- data/licensed/icons/weapons/Runic Sword.png
+- data/licensed/icons/weapons/Dao.png
+- data/licensed/icons/weapons/Short Sword.png
+- data/licensed/icons/weapons/Ogre Mace.png
+- data/licensed/icons/weapons/Claw of the Dead.png
+- data/licensed/icons/weapons/Light Spear.png
+- data/licensed/icons/weapons/Light Axe.png
+- data/licensed/icons/weapons/Troll Hammer.png
+- data/licensed/icons/weapons/Wooden Club.png
+- data/licensed/icons/weapons/Northmen Crossbow.png
+- data/licensed/icons/weapons/Spiked Club.png
+- data/licensed/icons/weapons/Pke.png
+- data/licensed/icons/weapons/Wooden Flail.png
+- data/licensed/icons/weapons/Northmen Club.png
+- data/licensed/icons/weapons/Heavy Flail.png
+- data/licensed/icons/weapons/Admant Hammer.png
+- data/licensed/icons/weapons/Throwing Knives.png
+- data/licensed/icons/weapons/Broken Sword.png
+- data/licensed/icons/weapons/Primitive Hammer.png
+- data/licensed/icons/weapons/Bolts.png
+- data/licensed/icons/weapons/Primitive Spear.png
+- data/licensed/icons/weapons/Battle Axe.png
+- data/licensed/icons/weapons/Longsword.png
+- data/licensed/icons/weapons/Goblin Spike.png
+- data/licensed/icons/weapons/Bone Club.png
+- data/licensed/icons/weapons/Sharpened Pole.png
+- data/licensed/icons/weapons/Crossbow.png
+- data/licensed/icons/weapons/Halbard.png
+- data/licensed/icons/weapons/Mutant Axe.png
+- data/licensed/icons/weapons/Great Sword.png
+- data/licensed/icons/weapons/Heavy Bow.png
+- data/licensed/icons/weapons/Flaming Trident.png
+- data/licensed/icons/weapons/Northmen Mace.png
+- data/licensed/icons/weapons/Dragon Axe.png
+- data/licensed/icons/weapons/Spiked Mace.png
+- data/licensed/icons/weapons/Runic Hammer.png
+- data/licensed/icons/weapons/Arrows.png
+- data/licensed/icons/weapons/Jeweled Hammer.png
+- data/licensed/icons/weapons/Primitive Mace.png
+- data/licensed/icons/weapons/Mystic Bow.png
+- data/licensed/icons/weapons/Sword.png
+- data/licensed/icons/weapons/Light Crossbow.png
+- data/licensed/icons/weapons/Trident.png
+- data/licensed/icons/weapons/Light Bow.png
+- data/licensed/icons/weapons/Jeweled Knife.png
+- data/licensed/icons/weapons/Hooked Flail.png
+- data/licensed/icons/weapons/Earth Breaker.png
+- data/licensed/icons/weapons/Mystic Hammer.png
+- data/licensed/icons/weapons/Great Maul.png
+- data/licensed/icons/weapons/Stone Hammer.png
+- data/licensed/icons/weapons/Primitive Axe.png
+- data/licensed/icons/weapons/Undead Spear.png
+- data/licensed/icons/weapons/Small Shiv.png
+- data/licensed/icons/weapons/Light Mace.png
+- data/licensed/icons/weapons/Cutlas.png
+- data/licensed/icons/weapons/Goblin Axe.png
+- data/licensed/icons/weapons/Falchion.png
+- data/licensed/icons/weapons/Battle Hammer.png
+- data/licensed/icons/weapons/Heavy Crossbow.png
+- data/licensed/icons/weapons/Knife.png
+- data/licensed/icons/weapons/Flail.png
+- data/licensed/icons/weapons/Heavy Mace.png
+- data/licensed/icons/weapons/Sorcerors Spike.png
+- data/licensed/icons/weapons/Throwing Star.png
+- data/licensed/icons/weapons/Spear.png
+- data/licensed/icons/weapons/Legion Spear.png
+- data/licensed/icons/weapons/Ancient Spear.png
+- data/licensed/icons/weapons/Ancient Mace.png
+- data/licensed/icons/weapons/Rapier.png
+- data/licensed/icons/weapons/Chain Mace.png
+- data/licensed/icons/weapons/Hand Axe.png
+- data/licensed/icons/weapons/Northmen Hammer.png
+- data/licensed/icons/weapons/Mystic Knife.png
+- data/licensed/icons/weapons/Troll Mace.png
+- data/licensed/icons/weapons/Primitive Spike.png
+- data/licensed/icons/weapons/Admant Sword.png
+- data/licensed/icons/weapons/Great Hammer.png
+- data/licensed/icons/weapons/Mystic Trident.png
+- data/licensed/icons/loot/Jeweled Ring.png
+- data/licensed/icons/loot/Sorceror Ring.png
+- data/licensed/icons/loot/Silver.png
+- data/licensed/icons/loot/Iron Key.png
+- data/licensed/icons/loot/Bronze Key.png
+- data/licensed/icons/loot/Bronze Chalice.PNG
+- data/licensed/icons/loot/Gold.png
+- data/licensed/icons/armor/Primitive Plate Armor.png
+- data/licensed/icons/armor/Wooden Shield.png
+- data/licensed/icons/armor/Blue Cloak.png
+- data/licensed/icons/armor/Legionaire Plate.png
+- data/licensed/icons/armor/Plate Armor.png
+- data/licensed/icons/armor/Chaimmail Armor.png
+- data/licensed/icons/armor/Leather Armor.png
+- data/licensed/icons/armor/Heavy Shield.png
+- data/licensed/icons/armor/Light Scale Armor.png
+- data/licensed/icons/armor/Cloth Armor.png
+- data/licensed/icons/armor/Heavy Cloth Armor.png
+- data/licensed/icons/armor/Dragonskin Shield.png
+- data/licensed/icons/armor/Light Round Shield.png
+- data/licensed/icons/armor/Light Chainmail.png
+- data/licensed/icons/armor/Bronze Plate Armor.png
+- data/licensed/icons/armor/Plate Shield.png
+- data/licensed/icons/armor/Red Robe.png
+- data/licensed/icons/armor/Scale Armor.png
+- data/licensed/icons/food/Leg Roast.png
+- data/licensed/icons/food/Peach.png
+- data/licensed/icons/food/Bread.png
+- data/licensed/icons/food/Corn.png
+- data/licensed/icons/food/Figs.png
+- data/licensed/icons/food/Mushrooms.png
+- data/licensed/icons/food/Carrot.png
+- data/licensed/icons/food/Chicken.png
+- data/licensed/icons/food/Steak.png
+- data/licensed/icons/food/Raspberries.png
+- data/licensed/icons/food/Beer.png
+- data/licensed/icons/food/Blueberries.png
+- data/licensed/icons/food/Tomato.png
+- data/licensed/icons/food/Oranges.png
+- data/licensed/icons/food/Meat.png
+- data/licensed/icons/food/Cherries.png
+- data/licensed/icons/food/Grapes.png
+- data/licensed/icons/food/Apple.png
+- data/licensed/icons/food/Ribs.png
+- data/licensed/icons/food/Cheese.png
+- data/licensed/icons/food/Strawberries.png
+- data/licensed/icons/food/Pear.png
+- data/licensed/icons/food/Sausage.png
+- data/licensed/icons/food/Preserves.png
+- data/licensed/icons/food/Peas.png
+- data/licensed/icons/food/Potatos.png
+- data/licensed/icons/food/Hootch.png
+- data/licensed/icons/food/Lemon.png
+- data/licensed/icons/food/Eggplant.png
+- data/licensed/icons/food/Cabbage.png
+- data/licensed/icons/food/Egg.png
+- data/licensed/icons/food/Radish.png
+- data/licensed/icons/food/Ham.png
+- data/licensed/icons/food/Fish.png
+- data/licensed/icons/keys/Gold Key.png
+- data/licensed/icons/containers/Sack.png
+- data/licensed/icons/containers/Leather Bag.png
+- data/licensed/icons/containers/Purse.png
+- data/licensed/icons/containers/Pouch.png
+- data/licensed/icons/equipment/Saw.png
+- data/licensed/icons/equipment/Cauldron.png
+- data/licensed/icons/equipment/Table Fork.png
+- data/licensed/icons/equipment/Winch.png
+- data/licensed/icons/equipment/Spade.png
+- data/licensed/icons/equipment/Torch.png
+- data/licensed/icons/equipment/Parchment.png
+- data/licensed/icons/equipment/Lock Picks.png
+- data/licensed/icons/equipment/Grappling Hook.PNG
+- data/licensed/icons/equipment/Fishhook.png
+- data/licensed/icons/equipment/Pick.png
+- data/licensed/icons/equipment/Ladder.png
+- data/licensed/icons/equipment/Wood Axe.png
+- data/licensed/icons/equipment/Fishing Rod.png
+- data/licensed/icons/equipment/String.png
+- data/licensed/icons/equipment/Stake.png
+- data/licensed/icons/equipment/Hammer.png
+- data/licensed/icons/equipment/Rope.png
+- data/licensed/icons/equipment/Table Knife.png
+- data/fonts/Merriweather-Bold.ttf
+- data/fonts/Merriweather-Regular.ttf
+- data/fonts/LondrinaSolid-Regular.ttf
+- data/fonts/Merriweather-BoldItalic.ttf
+- data/fonts/HammersmithOne-Regular.ttf
+- data/fonts/Rudelsberg.ttf
+- data/fonts/Merriweather-Italic.ttf
+- data/games/hoa/images/lobby.jpg
+- data/games/hoa/schemas/module_schema_hoa.yaml
+- data/games/hoa/rules/rules.yaml
+- data/games/hoa/rules/images/spells/Missile.jpg
+- data/games/hoa/rules/images/spells/Healing Waters.jpg
+- data/games/hoa/rules/images/spells/Earth Spike.jpg
+- data/games/hoa/rules/images/magic_categories/Rune Magic.jpg
+- data/games/hoa/rules/images/magic_categories/Totem Magic.jpg
+- data/games/hoa/rules/images/magic_categories/Light Magic.jpg
+- data/games/hoa/rules/images/magic_categories/Earth Magic.jpg
+- data/games/hoa/rules/images/magic_categories/Nature Magic.jpg
+- data/games/hoa/rules/images/magic_categories/Fire Magic.jpg
+- data/games/hoa/rules/images/magic_categories/Divine Magic.jpg
+- data/games/hoa/rules/images/magic_categories/Matter Magic.jpg
+- data/games/hoa/rules/images/magic_categories/Air Magic.jpg
+- data/games/hoa/rules/images/magic_categories/Time Magic.jpg
+- data/games/hoa/rules/images/magic_categories/Arcane Magic.jpg
+- data/games/hoa/rules/images/magic_categories/Psionic Magic.jpg
+- data/games/hoa/rules/images/magic_categories/Form Magic.jpg
+- data/games/hoa/rules/images/magic_categories/Ice Magic.jpg
+- data/games/hoa/rules/images/magic_categories/Dark Magic.jpg
+- data/games/hoa/rules/images/magic_categories/Chaos Magic.jpg
+- data/games/hoa/rules/images/magic_categories/Shadow Magic.jpg
+- data/games/hoa/rules/images/magic_categories/Water Magic.jpg
+- data/games/hoa/prompts/lobby_prompts_openai_v1.yaml
+- data/games/hoa/prompts/game_prompts_default.yaml
+- data/games/hoa/prompts/game_prompts_openai_v1.yaml
+- data/games/hoa/prompts/lobby_prompts_default.yaml
+- data/games/hoa/prompts/game_prompts_huggingface.yaml
+- data/games/hoa/prompts/lobby_prompts_huggingface.yaml
+- data/games/hoa/parties/Band of Heroes/party.yaml
+- data/games/hoa/characters/characters.yaml
+- data/games/hoa/characters/images/Willem of Oxlay.jpg
+- data/games/hoa/characters/images/Coranthis Mettar.jpg
+- data/games/hoa/characters/images/Melric Castan.jpg
+- data/games/hoa/characters/images/Katala Hart.jpg
+- data/games/hoa/characters/images/Sandar Nestus.jpg
+- data/games/hoa/characters/images/Feyla Ashenwood.jpg
+- data/games/hoa/characters/images/Kayleth.jpg
+- data/games/hoa/characters/images/Sigurd Moon.jpg
+- data/games/hoa/characters/images/Nithryn.jpg
+- data/games/hoa/characters/images/Selma Hark.jpg
+- data/games/hoa/characters/images/Lilith Garvald.jpg
+- data/games/hoa/characters/images/Augustus.jpg
+- data/games/hoa/characters/images/Cal Fenner.jpg
+- data/games/hoa/characters/images/Judge Oakmont.jpg
+- data/games/hoa/characters/images/Torin Wilder.jpg
+- data/games/hoa/characters/images/Tannarak.jpg
+- data/games/hoa/characters/images/Ser Fargal the Bold.jpg
+- data/games/hoa/characters/images/Jareth Fell.jpg
+- data/games/hoa/characters/images/Briona of the Wilds.jpg
+- data/games/hoa/characters/images/Daxir Tenas.jpg
+- data/games/hoa/characters/images/Grip Fulkor.jpg
+- data/games/hoa/characters/images/Sheniba 'The Cat'.jpg
+- data/games/hoa/characters/images/Alo Spirit Walker.jpg
+- data/games/hoa/characters/images/Jareth.jpg
+- data/games/hoa/characters/images/Northmen.jpg
+- data/games/hoa/characters/images/Mad Madaggan.jpg
+- data/games/hoa/characters/images/Old Nell.jpg
+- data/games/hoa/characters/images/Lucian Blackthorne.jpg
+- data/games/hoa/characters/images/Darik Ironstone.jpg
+- data/games/hoa/characters/images/Lorrigan.jpg
+- data/games/hoa/characters/images/Mortis Zen.jpg
+- data/games/hoa/characters/images/Sephina Blackwind.jpg
+- data/games/hoa/characters/images/Nguyen Sha.jpg
+- data/games/hoa/characters/images/Randal Var.jpg
+- data/games/hoa/characters/images/Rowena Gilde.jpg
+- data/games/hoa/characters/images/Torshen Gray.jpg
+- data/games/hoa/characters/images/Moss Fenn.jpg
+- data/games/hoa/characters/images/Amar Kanan.jpg
+- data/games/hoa/characters/images/Corban Tanus.jpg
+- data/games/hoa/characters/images/Hurk Duskhelm.jpg
+- data/games/hoa/characters/images/Joff Thorne.jpg
+- data/games/hoa/characters/images/Elder Tor.jpg
+- data/games/hoa/characters/images/Tharamis Trent.jpg
+- data/games/hoa/characters/images/Wandra Tarburn.jpg
+- data/games/hoa/characters/images/Tharbor Gard.jpg
+- data/games/hoa/characters/images/Morrigan Ravenwood.jpg
+- data/games/hoa/characters/images/Hamilton Gord.jpg
+- data/games/hoa/characters/images/Wilhelm Waraxe.jpg
+- data/games/hoa/characters/images/Finnegan Falconcrest.jpg
+- data/games/hoa/characters/images/Gorla Boran.jpg
+- data/games/hoa/characters/images/Kellan Blackthorne.jpg
+- data/games/hoa/characters/images/Tamara Webb.jpg
+- data/games/hoa/characters/images/Qira Fallow.jpg
+- data/games/hoa/characters/images/Thurgar Masan.jpg
+- data/games/hoa/characters/images/Vidar Nissin.jpg
+- data/games/hoa/characters/images/Rhaygol.jpg
+- data/games/hoa/characters/images/Silandris Terex.jpg
+- data/games/hoa/characters/images/Tiandra Ronan.jpg
+- data/games/hoa/characters/images/Rig Halfoot.jpg
+- data/games/hoa/characters/images/Malson Tar.jpg
+- data/games/hoa/characters/images/Channum Grove.jpg
+- data/games/hoa/characters/images/Villen Marc.jpg
+- data/games/hoa/characters/images/Codis Tark.jpg
+- data/games/hoa/characters/images/Alderman Bray.jpg
+- data/games/hoa/characters/images/Mistrala.jpg
+- data/games/hoa/characters/images/Obius Drek.jpg
+- data/games/hoa/characters/images/Friar Hugh.jpg
+- data/games/hoa/characters/images/Mordinus Lorn.jpg
+- data/games/hoa/characters/images/Amaris Dell.jpg
+- data/games/hoa/characters/images/Al Haddin.jpg
+- data/games/hoa/characters/images/Ragnar Cragspike.jpg
+- data/games/hoa/characters/images/Harcan Tor.jpg
+- data/games/hoa/characters/images/Ser Corbin Danson.jpg
+- data/games/hoa/characters/images/Traveller.jpg
+- data/games/hoa/characters/images/Ser Lorus Davenport.jpg
+- data/games/hoa/characters/images/Isala Orleth.jpg
+- data/games/hoa/characters/images/Felk.jpg
+- data/games/hoa/characters/images/Telemander.jpg
+- data/games/hoa/characters/images/Gayla Ibbot.jpg
+- data/games/hoa/characters/images/Gideon Maurton.jpg
+- data/games/hoa/characters/images/Tharak Bloodfang.jpg
+- data/games/hoa/characters/images/Azrael Shadus.jpg
+- data/games/hoa/characters/images/Kursella Dragonbane.jpg
+- data/games/hoa/characters/images/Zelgis Kane.jpg
+- data/games/hoa/characters/images/Nek.jpg
+- data/games/hoa/characters/images/Faelor Tavaris.jpg
+- data/games/hoa/characters/images/Idium-Ra.jpg
+- data/games/hoa/characters/images/Gorinar.jpg
+- data/games/hoa/characters/images/Lyra Frost.jpg
+- data/games/hoa/characters/images/Tanel Elvene.jpg
+- data/games/hoa/characters/images/Shenhara.jpg
+- data/games/hoa/characters/images/Ravenna Soon.jpg
+- data/games/hoa/characters/images/Q'Var Reed.jpg
+- data/games/hoa/characters/images/Rugek.jpg
+- data/games/hoa/characters/images/Quennell Ryder.jpg
+- data/games/hoa/characters/images/Nadina Nostra.jpg
+- data/games/hoa/characters/images/Matlock Finch.jpg
+- data/games/hoa/characters/images/Grimlock.jpg
+- data/games/hoa/characters/images/Solem Tor.jpg
+- data/games/hoa/characters/images/Simur Arandi.jpg
+- data/games/hoa/characters/images/Haldon Rek.jpg
+- data/games/hoa/characters/images/Eiko Landras.jpg
+- data/games/hoa/characters/images/Sonus Hellblade.jpg
+- data/games/hoa/characters/images/Lianna Faye.jpg
+- data/games/hoa/characters/images/Morave Gwennin.jpg
+- data/games/hoa/characters/images/Torin Reynard.jpg
+- data/games/hoa/characters/images/Jasmin Thorpe.jpg
+- data/games/hoa/characters/images/'Young' Filian.jpg
+- data/games/hoa/characters/images/Ordo Hesk.jpg
+- data/games/hoa/characters/images/Darzed.jpg
+- data/games/hoa/characters/images/Zarsuthis.jpg
+- data/games/hoa/characters/images/Irdina Cerate.jpg
+- data/games/hoa/characters/images/Orin Uther.jpg
+- data/games/hoa/characters/images/Daegan Frost.jpg
+- data/games/hoa/characters/images/Melisan.jpg
+- data/games/hoa/characters/images/Wild Bron.jpg
+- data/games/hoa/characters/images/Takeda Hazu.jpg
+- data/games/hoa/characters/images/Markus Knox.jpg
+- data/games/hoa/characters/images/Ankha of the North.jpg
+- data/games/hoa/characters/images/Brother Coyleth.jpg
+- data/games/hoa/characters/images/Lutus Strix.jpg
+- data/games/hoa/characters/images/'Mighty' Miller.jpg
+- data/games/hoa/characters/images/Rufus Charin.jpg
+- data/games/hoa/characters/images/Rohan Strider.jpg
+- data/games/hoa/characters/images/Ralek Tor.jpg
+- data/games/hoa/characters/images/Sister Aylwen.jpg
+- data/games/hoa/characters/images/Shettanga.jpg
+- data/games/hoa/characters/images/Kayla Durrin.jpg
+- data/games/hoa/characters/images/Boran the Blessed.jpg
+- data/games/hoa/characters/images/Robar Kauf.jpg
+- data/games/hoa/characters/images/Jorinne.jpg
+- data/games/hoa/characters/images/Old Kadel.jpg
+- data/games/hoa/characters/images/Weylin Rand.jpg
+- data/games/hoa/characters/images/Fordus Blake.jpg
+- data/games/hoa/characters/images/Mojak Khan.jpg
+- data/games/hoa/characters/images/Nostrakan.jpg
+- data/games/hoa/characters/images/Isara Oakley.jpg
+- data/games/hoa/characters/images/Torvald Grim.jpg
+- data/games/hoa/characters/images/Zang Sorra.jpg
+- data/games/hoa/characters/images/Gideon Tor.jpg
+- data/games/hoa/characters/images/Darid Anver.jpg
+- data/games/hoa/characters/images/Beriven the Brave.jpg
+- data/games/hoa/characters/images/Yenfer Riverwell.jpg
+- data/games/hoa/characters/images/Ser Gilwyn.jpg
+- data/games/hoa/characters/images/Zanthil the Cursed.jpg
+- data/games/hoa/characters/images/Skarder Russ.jpg
+- data/games/hoa/characters/images/Inkar Felun.jpg
+- data/games/hoa/characters/images/Augustus Bol.jpg
+- data/games/hoa/characters/images/Brother Harn.jpg
+- data/games/hoa/characters/images/Legate Sartorius.jpg
+- data/games/hoa/characters/images/Shenka Fenestra.jpg
+- data/games/hoa/characters/images/Fulk Cottal.jpg
+- data/games/hoa/characters/images/Herv Fletcher.jpg
+- data/games/hoa/characters/images/Aurelia Vale.jpg
+- data/games/hoa/characters/images/Lenora Brimstone.jpg
+- data/games/hoa/characters/images/Kestus Stave.jpg
+- data/games/hoa/characters/images/The Mouse.jpg
+- data/games/hoa/characters/images/Kirax.jpg
+- data/games/hoa/characters/images/Briana Lux.jpg
+- data/games/hoa/characters/images/Xandar Lorien.jpg
+- data/games/hoa/characters/images/Siras.jpg
+- data/games/hoa/characters/images/Brother Joshua.jpg
+- data/games/hoa/characters/images/Balan West.jpg
+- data/games/hoa/characters/images/Bardic Tore.jpg
+- data/games/hoa/characters/images/Johan Maton.jpg
+- data/games/hoa/characters/images/Callon Fayne.jpg
+- data/games/hoa/characters/images/Arnak Fellspire.jpg
+- data/games/hoa/characters/images/Mak Fenner.jpg
+- data/games/hoa/characters/images/Fellex the Scout.jpg
+- data/games/hoa/characters/images/Romlic.jpg
+- data/games/hoa/characters/images/Jaros Enklan.jpg
+- data/games/hoa/characters/images/Theandra Blake.jpg
+- data/games/hoa/characters/images/Garat.jpg
+- data/games/hoa/characters/images/Selwyn Dusk.jpg
+- data/games/hoa/characters/images/Brother Lantar.jpg
+- data/games/hoa/characters/images/Brida the Berserker.jpg
+- data/games/hoa/characters/images/Karthik Ren.jpg
+- data/games/hoa/characters/images/Nakaga Nightspear.jpg
+- data/games/hoa/characters/images/Maya Krell.jpg
+- data/games/hoa/characters/images/Takeda.jpg
+- data/games/hoa/characters/images/Elanya Burrows.jpg
+- data/games/hoa/characters/images/Reinard.jpg
+- data/games/hoa/characters/images/Vila Lanfar.jpg
+- data/games/hoa/characters/images/Ser Jeyna Faris.jpg
+- data/games/hoa/characters/images/Caden Moss.jpg
+- data/games/hoa/characters/images/Masla Tork.jpg
+- data/games/hoa/characters/images/Kalin Morn.jpg
+- data/games/hoa/characters/images/Nuraz Low.jpg
+- data/games/hoa/characters/images/Morrigan Katar.jpg
+- data/games/hoa/characters/images/Ozen the Elf.jpg
+- data/games/hoa/characters/images/Astra Fallon.jpg
+- data/games/hoa/characters/images/Party1.jpg
+- data/games/hoa/characters/images/Tavorus Latt.jpg
+- data/games/hoa/characters/images/Robert De Vere.jpg
+- data/games/hoa/characters/images/Nequitar Stylion.jpg
+- data/games/hoa/characters/images/Veluna Rey.jpg
+- data/games/hoa/characters/images/Kaylan Sildur.jpg
+- data/games/hoa/characters/images/Relek Patos.jpg
+- data/games/hoa/characters/images/Lana Gilberd.jpg
+- data/games/hoa/characters/images/Hutch Redstone.jpg
+- data/games/hoa/characters/images/Sister Sayren.jpg
+- data/games/hoa/characters/images/Cheswick.jpg
+- data/games/hoa/characters/images/Takeda Holdo.jpg
+- data/games/hoa/characters/images/Barzun the Sage.jpg
+- data/games/hoa/characters/images/Tammond Veres.jpg
+- data/games/hoa/characters/images/Mok Drakken.jpg
+- data/games/hoa/characters/images/Sorius Fletch.jpg
+- data/games/hoa/characters/images/Party2.jpg
+- data/games/hoa/characters/images/Party3.jpg
+- data/games/hoa/characters/images/Teneya Blackwych.jpg
+- data/games/hoa/modules/modules.yaml
+- data/games/hoa/modules/Encounter Test/module.yaml
+- data/games/hoa/modules/Encounter Test/images/DeadGiantAnts.jpg
+- data/games/hoa/modules/Encounter Test/images/GiantAnts.jpg
+- data/games/hoa/modules/Lair of the Mutant/module.yaml
+- data/games/hoa/modules/Lair of the Mutant/images/Dungeon Chamber 1.png
+- data/games/hoa/modules/Lair of the Mutant/images/Wooden Crate 1.png
+- data/games/hoa/modules/Lair of the Mutant/images/MoathouseMap.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Gate.png
+- data/games/hoa/modules/Lair of the Mutant/images/RockPowder.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Wooden Drawer 3.png
+- data/games/hoa/modules/Lair of the Mutant/images/Grun.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Stables 1.png
+- data/games/hoa/modules/Lair of the Mutant/images/Thelana-Ki.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Wooden Crate 2.png
+- data/games/hoa/modules/Lair of the Mutant/images/Jacob.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Tattooed Man.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Wooden Drawer 2.png
+- data/games/hoa/modules/Lair of the Mutant/images/Barus Injured.png
+- data/games/hoa/modules/Lair of the Mutant/images/Farmhouse Storage Room.png
+- data/games/hoa/modules/Lair of the Mutant/images/VineChoker.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Farmhouse Kitchen 1.png
+- data/games/hoa/modules/Lair of the Mutant/images/Barus.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Jacob2.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/FarmhouseMap.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Farmhouse Barus's Bedroom.png
+- data/games/hoa/modules/Lair of the Mutant/images/Farmhouse Kitchen 3.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Farmhouse Kitchen 2.png
+- data/games/hoa/modules/Lair of the Mutant/images/Meryn.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Shelf 1.png
+- data/games/hoa/modules/Lair of the Mutant/images/Silver Coins 1.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Courtyard.png
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Drawer 1.png
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Washroom 3.png
+- data/games/hoa/modules/Lair of the Mutant/images/GiantSpider.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Farmhouse Lounge 1.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/ChaosStone.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Courtyard Ants 1.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Washroom 2.png
+- data/games/hoa/modules/Lair of the Mutant/images/Barn.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Silver Coins 2.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/GreenfootFungus.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Washroom 1.png
+- data/games/hoa/modules/Lair of the Mutant/images/Farmhouse Lounge 2.png
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Giant Ants 3.png
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Stairs 1.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Washroom 5.png
+- data/games/hoa/modules/Lair of the Mutant/images/Jacob's Toys 1.png
+- data/games/hoa/modules/Lair of the Mutant/images/TheMoathouse.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Giant Ants 2.png
+- data/games/hoa/modules/Lair of the Mutant/images/image-033.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Farmhouse Storage Room 3.png
+- data/games/hoa/modules/Lair of the Mutant/images/Wooden Shelves 3.png
+- data/games/hoa/modules/Lair of the Mutant/images/Barus's Locket.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Jacob's Toys 2.png
+- data/games/hoa/modules/Lair of the Mutant/images/GiantRat.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Farmhouse Storage Room 2.png
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Giant Ants 1.png
+- data/games/hoa/modules/Lair of the Mutant/images/BarusSmall.png
+- data/games/hoa/modules/Lair of the Mutant/images/BlessingOfSunos.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Tower Stairs.png
+- data/games/hoa/modules/Lair of the Mutant/images/Moathoue Stairway 1.png
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Catacombs 1.png
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Gate 3.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Gaurd Quarters 3.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Gaurd Quarters 2.png
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Guard Quarters.png
+- data/games/hoa/modules/Lair of the Mutant/images/FeyWood.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Dungeon Hallway 1.png
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Hallway 3.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/LowerDungeonMap.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Thelana-Ki2.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Hallway 2.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Knife With Soldiers.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Reece.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Hallway 1.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Wooden Box 4.png
+- data/games/hoa/modules/Lair of the Mutant/images/Stone Shelves 2.png
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Antechamber.png
+- data/games/hoa/modules/Lair of the Mutant/images/Wooden Box 5.png
+- data/games/hoa/modules/Lair of the Mutant/images/BatsSwarm.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/UpperDungeonMap.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Meryn2.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Wooden Box 6.png
+- data/games/hoa/modules/Lair of the Mutant/images/Dungeon Dark 1.png
+- data/games/hoa/modules/Lair of the Mutant/images/Farmhouse Jacob's Bedroom 1.png
+- data/games/hoa/modules/Lair of the Mutant/images/GiantWorkerAnt.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Wooden Box 2.png
+- data/games/hoa/modules/Lair of the Mutant/images/Ralik.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/GrunsWagon.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Armoury 1.png
+- data/games/hoa/modules/Lair of the Mutant/images/SheepPen.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/IronWood.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Courtyard 2.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Stone Shelves.png
+- data/games/hoa/modules/Lair of the Mutant/images/Wooden Box 3.png
+- data/games/hoa/modules/Lair of the Mutant/images/Farmhouse Jacob's Bedroom 2.png
+- data/games/hoa/modules/Lair of the Mutant/images/Wooden Box 1.png
+- data/games/hoa/modules/Lair of the Mutant/images/Start.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Introduction.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/OldFarmhouse.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Barus Injured 3.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/QueensChamber.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Farmhouse Topdown 1.png
+- data/games/hoa/modules/Lair of the Mutant/images/MutantQueen.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/EndingTheAdventure.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/WellAndOuthouse.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Moathouse Armoury 2.png
+- data/games/hoa/modules/Lair of the Mutant/images/GiantFireAnt.jpg
+- data/games/hoa/modules/Lair of the Mutant/images/Barus Injured 2.png
+- data/games/hoa/modules/Caves of Madness/module.yaml
+- data/games/hoa/modules/Caves of Madness/images/cave_entrance.jpg
+- data/games/hoa/modules/Caves of Madness/images/cave_interior.jpg

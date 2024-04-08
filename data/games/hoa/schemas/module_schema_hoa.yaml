@@ -1,0 +1,624 @@
+# Heroes of Adventure Module Schema
+#
+# This module scema defines in a formal way the contents of a Heroes of Adventure game module
+# such that it can be played by a computer game engine. It consists of the following blocks:
+#
+# Top level sections:
+#
+#   info - Describes the title, author, copyright and other information about the module
+#
+#   overview - The module narrative overview, inforamtion on how to play, rules, etc.
+#
+#   starting_game_state - Whether the game starts off in 'exploration', 'encounter' or 
+#   'dialog' game mode. Usually is 'exploration'.
+#
+#   starting_location_name - The name of the starting location for the module in the location table.
+#
+#   starting_time - Game world starting time (game's usually are in the 1000 year range).
+#
+#   npcs - A table of npc's in the game (by first name).
+#
+#   monster_types - The monster definitions for this module (by name).
+#
+#   monsters - Table of pre-rolled monsters to use in the game (by first name).
+#
+#   quests - Table of global quests available in various parts of the module (by quest name).
+#
+#   areas - Table of areas with overview, rules, random encounters and other information for a larger game area (by area name).
+#
+#   locations - Definines a location in the game (a room, chamber, etc.) Each location has various script states, hidden items, items, 
+#               npcs, monster encounters, etc.
+#
+#   other_stuff - String area to place other module information not used directly by the game engine.
+#
+# Details:
+#
+# - Tables are indexed by the name of the item, location, monster, character, npc. Usually the first name.
+#
+# - Names of locations usually have as a prefix the area name the location is in.
+#
+# - Locations preserve the text/pdf 'id' of the location like "location 10" in the id field. But in
+#   the module file all locations are indexed by FULL NAME and not by id.
+#
+definitions:
+
+  # Shared referenced definitions
+
+  # General module information (author, copyright, etc.)
+  info:
+    properties:
+      author:
+        description: Detailed information about author.
+        type: string
+      copyright:
+        description: Detailed information about copyright.
+        type: string
+      credits:
+        description: Detailed information about credits.
+        type: string
+      full_title:
+        description: Detailed information about full_title.
+        type: string
+      game:
+        description: Detailed information about game.
+        type: string
+      game_version:
+        description: Detailed information about game_version.
+        type: string
+      license:
+        description: Detailed information about license.
+        type: string
+      title:
+        description: Detailed information about title.
+        type: string
+      version:
+        description: Detailed information about version.
+        type: string
+    required:
+    - title
+    - game
+    - game_version
+    additionalProperties: false
+    type: object
+
+  # General introduction information for the module
+  overview:
+    description: Brief overview of the module.
+    properties:
+      description: 
+        type: string
+        description: 'A description of the module that will be presented to the user when it starts. The AI Referee will summarize this.'
+      instructions:
+        type: string
+        description: 'Instructions to the AI that will be used as general guidelines while playing the module. Must be reasonably short.'
+      image:
+        type: string
+        description: 'The relative path of an image file to show when introducing the module. No extension required.'
+    additionalProperties: false
+    type: object
+
+  # Definition for any kind of a living being - monster, NPC, or character
+  being:
+    properties:
+      type:
+        description: The type of the being. Can be "npc", "monster", "character".
+        enum:
+        - npc
+        - monster
+        - character
+        type: string
+      role:
+        description: The job rank or role of this character.
+        type: string
+      description:
+        description: A general description of the character, monster, npc's appearance and backstory.
+        type: string
+      notes:
+        description: Information useful to the Referee about this monster, npc or character.
+        type: string
+      info:
+        properties:
+          basic:
+            properties:
+              class:
+                description: Class or profession of the being.
+                type: string
+              full_name:
+                description: Full name of the being.
+                type: string
+              race:
+                description: Race of the being, e.g., Human, Elf, Dwarf.
+                type: string
+            additionalProperties: false
+            type: object
+          other:
+            properties:
+              age:
+                description: Age of the being.
+                type: integer
+              description:
+                description: Brief description or backstory of the being.
+                type: string
+              sex:
+                description: Gender of the being.
+                type: string
+            additionalProperties: false
+            type: object
+        type: object
+      items:
+        additionalProperties:
+          $ref: '#/definitions/item'
+        type: object
+      melee_attack:
+        $ref: '#/definitions/item'
+        nullable: true
+      ranged_attack:
+        $ref: '#/definitions/item'
+        nulllable: true
+      spells:
+        description: List of spells that the being can cast.
+        items:
+          type: string
+        type: array
+      stats:
+        properties:
+          abilities:
+            description: Special abilities or powers of the being.
+            items:
+              type: string
+            type: array
+          attributes:
+            additionalProperties:
+              description: Dice roll determining the attribute level.
+              pattern: d\d+(?:\+\d+)?
+              type: string
+            description: Set of attributes describing the being's abilities.
+            type: object
+          basic:
+            properties:
+              defense:
+                description: Defense rating of the being.
+                type: integer
+              health:
+                description: Health points of the being.
+                type: integer
+              level:
+                description: Experience level of the being.
+                type: integer
+              piety:
+                description: Piety points indicating the being's religious devotion.
+                type: integer
+              skill:
+                description: Skill dice roll for the being.
+                pattern: (None|d\d+(?:\+\d+)?)              
+                type: string
+            type: object
+          skills:
+            additionalProperties:
+              description: Dice roll determining the skill level.
+              pattern: d\d+(?:\+\d+)?
+              type: string
+            description: Set of skills possessed by the being.
+            type: object
+        additionalProperties: false
+        type: object
+      topics:
+        additionalProperties:
+          description: Test that will be used when the topic is mentioned.
+          type: string
+        description: A conversation topic for this character.
+        type: object
+    additionalProperties: false
+    required:
+    - 'type'
+    type: object
+
+  # Encounter definition - used in location defitions but may occur elsewhere
+  encounter:
+    description: Details about potential encounters in the location.
+    properties:
+      description:
+        description: Description of the encounter event.
+        type: string
+      image:
+        description: A reference to an image associated with the encounter.
+        type: string
+      monsters:
+        additionalProperties:
+          properties:
+            health:
+              description: Health points of the monster.
+              type: integer
+            monster_type:
+              description: Type or category of the monster.
+              type: string              
+          additionalProperties: false
+          type: object
+        description: Monsters involved in the encounter.
+        type: object
+    additionalProperties: false
+    type: object
+
+  # Exits list - used in locations
+  exits:
+    additionalProperties:
+      properties:
+        hidden:
+          description: Indicates if the exit is hidden or not.
+          type: boolean
+        key:
+          description: The key required to unlock the exit, if it's locked.
+          type: string
+        locked:
+          description: Indicates if the exit is locked or not.
+          type: boolean
+        to:
+          description: The destination location the exit leads to.
+          type: string
+        terms:
+          description: Synonym terms related to the exit.
+          items:
+            type: string
+          type: array          
+      additionalProperties: false
+      type: object
+    description: Possible exits from the location, with details about each exit.
+    type: object
+
+  # Hidden element definition - used in location state, elsewhere
+  hidden:
+    description: List of items, objects, or events that are hidden within the location.
+    items:
+      properties:
+        description:
+          description: A narrative or description related to the hidden item or event.
+          type: string
+        image:
+          description: A reference to an image associated with the hidden items or
+            event.
+          type: string
+        items:
+          additionalProperties:
+            $ref: '#/definitions/item'
+          type: object
+        terms:
+          description: Keywords or terms related to the hidden item or event.
+          items:
+            type: string
+          type: array
+        exits:
+          $ref: '#/definitions/exits'
+      additionalProperties: false
+      type: object
+    type: array
+
+  # Points of interest - things in a location that players can inspect, look at, examine
+  poi:
+    additionalProperties:
+      properties:
+        description:
+          description: A narrative or description related to the point of interest.
+          type: string
+        image:
+          description: A reference to an image associated with the point of interest.
+          type: string     
+      additionalProperties: false
+      type: object
+    description: Possible exits from the location, with details about each exit.
+    type: object
+
+  # Item definition - describes all aspects of an item that can be used, placed in inventory, dropped, etc.
+  item:
+    properties:
+      behavior:
+        description: The behavior of general items.
+        type: string
+      damage:
+        description: The damage dice to roll for this item if it is a weapon.
+        pattern: d\d+(?:\+\d+)?
+        type: string
+      health:
+        description: The health that will be restored by using this item.
+        pattern: d\d+(?:\+\d+)?
+        type: string
+      defense:
+        description: The defense value of the item, primarily for armor.
+        type: integer
+      effect:
+        description: Array of effects of the item.
+        items:
+          properties:
+            duration:
+              description: The duration of the effect.
+              type: string
+            used_item:
+              description: The item that gets used or transformed after the effect.
+              type: string
+          type: object
+        type: array
+      requires:
+        description: Array of requirements for the item.
+        items:
+          properties:
+            item:
+              description: Other items that are required for this item to function.
+              type: string
+          type: object
+        type: array
+      slot:
+        description: Specifies where the item can be equipped or used.
+        type: string
+      qty:
+        description: The quantity of the items for items like silver, arrows, crossbow bolts, etc.
+        type: integer
+      description:
+        description: Full long description of the item.
+        type: string
+      type:
+        description: The type of the item.
+        type: string
+      weapon_type:
+        description: The specific type of weapon.
+        type: string
+      advantage:
+        description: True if advantage should be applied when rolling for this item.
+        type: boolean
+      single_use:
+        description: True if this item is a consumable that will disappear when used (like food).
+        type: boolean
+      on_use:
+        description: If this is a simple usable, the prompt to return to the AI when the item is used.
+        type: string
+      terms:
+        description: Synonym terms related to the exit.
+        items:
+          type: string
+        type: array       
+    additionalProperties: false
+    type: object
+
+  # Topics of conversation
+  topics:
+    additionalProperties:
+      additionalProperties:
+        type: string
+      description: List of dialog topics for this character.
+      type: object
+    description: List of characters who have dialog topics.
+    type: object
+
+  # General module information (author, copyright, etc.)
+  conversation_image:
+    properties:
+      terms:
+        description: A list of conversation terms or phrases to match.
+        items:
+          type: string
+        type: array
+      image:
+        description: "Image or image pattern to show if a match is found. Image pattern is name ending with a #"
+        type: string
+      num_images:
+        description: "Count of images if image name is a pattern (ends with #)."
+        type: integer
+    required:
+    - terms
+    - image
+    additionalProperties: false
+    type: object
+
+  # describes a single location (usua)
+  location:
+    properties:
+      id:
+        description: The number or name of the location from the written module pdf/book. Example 10, A15, b, etc.
+        type: string
+      area:
+        description: The general area or region the location is part of.
+        type: string
+      size:
+        description: The size of the location (for combat ranges). The size 
+          small is < 30 meters, medium 30-60, large 60-90, very_large 90=120, and 
+          open or outside is 120+.
+        type: string
+        enum:
+        - small
+        - medium
+        - large
+        - very_large
+        - open
+        - outside
+      description:
+        description: A detailed description or narrative of the location.
+        type: string
+      encounter:
+        $ref: '#/definitions/encounter'
+      exits:
+        $ref: '#/definitions/exits'
+      hidden:
+        $ref: '#/definitions/item'
+      poi:
+        $ref: '#/definitions/poi'          
+      image:
+        description: A reference to an image associated with the location.
+        type: string
+      instructions:
+        description: Specific guidance or steps related to the location.
+        type: string
+      conversation_images:
+        description: List of images that will be show if conversation text matches terms. Last match wins.
+        items:
+          $ref: '#/definitions/conversation_image'
+        type: array        
+      npcs:
+        description: A list of NPCs present or related to the location.
+        items:
+          type: string
+        type: array
+      script:
+        additionalProperties:
+          additionalProperties: true
+          description: Instance name for a script section.
+          properties:
+            exits:
+              $ref: '#/definitions/exits'
+            hidden:
+              $ref: '#/definitions/hidden'
+            items:
+              additionalProperties:
+                $ref: '#/definitions/item'
+              type: object
+            usables:
+              additionalProperties:
+                $ref: '#/definitions/item'
+              type: object              
+            topics:
+              $ref: '#/definitions/topics'
+            poi:
+              $ref: '#/definitions/poi'
+            transitions:
+              additionalProperties:
+                description: Conditions and details for the transition.
+                type: object
+              description: Details about possible transitions from the current script
+                instance to another, based on certain conditions.
+              type: object
+            goto_location:
+              description: The location to transition to after this script state is shown.
+              type: string
+          type: object
+        description: Scripted events or scenarios that can occur within the location.
+        type: object
+      usables:
+        additionalProperties:
+          $ref: '#/definitions/item'
+        type: object          
+      state:
+        description: 'Defines the initial persistent but modifiable state for the location'
+        properties:
+          encounter:
+            $ref: '#/definitions/encounter'
+          exits:
+            $ref: '#/definitions/exits'
+          hidden:
+            $ref: '#/definitions/hidden'
+          items:
+            additionalProperties:
+              $ref: '#/definitions/item'
+            type: object
+          cur_script_state:
+            description: The current state in the 'scripts' section that is active for this location.
+            type: string
+        additionalProperties: false              
+        type: object
+      topics:
+        $ref: '#/definitions/topics'
+      hint:
+        description: A prompt hint that will be repeated for every prompt in this location.
+        type: string
+      start_max_para:
+        description: Limit paragraphs for the first response for this location
+        type: integer
+      response_max_para:
+        description: Limit responses for all other responses after the first response
+        type: integer
+    required:
+    - description
+    additionalProperties: false
+    type: object
+
+# Core structure
+
+properties:
+
+  # Top level information about the module (title, author, copyright, etc.)
+  info:
+    $ref: '#/definitions/info'
+
+  # Provides the initial text and instructions for the module, read before starting the module.
+  overview:
+    $ref: '#/definitions/overview'
+
+  # Defines the starting game state (or mode) the game engine starts in. Usually will be 
+  # 'exploration' but the game could start in an encounter or dialog state potentially.
+  starting_game_state:
+    description: Initial state of the game. Can be one of 'exploration', 'encounter',
+      or 'dialog'.
+    enum:
+    - exploration
+    - encounter
+    - dialog
+    type: string
+
+  # The name of the initial location the module will start in after the overview.
+  starting_location_name:
+    description: Name of the starting location.
+    type: string
+
+  # The initial game time in standard date format.
+  starting_time:
+    description: Initial in-game date and 24h time in format 'Mon DD YYYY HH:MM'.
+    pattern: '(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) \d{1,2} \d{1,4} \d{1,2}:\d{2}'
+    type: string
+
+  # Defines any monster types that are not defined in the game rules .yaml or local monster definitions
+  monster_types:
+    additionalProperties:
+      $ref: '#/definitions/being'
+    type: object
+
+  # Defines any initial list of pre-rolled monsters (usually boss monsters)
+  monsters:
+    additionalProperties:
+      $ref: '#/definitions/being'
+    type: object
+
+  # Defines the list of npc's in this module
+  npcs:
+    additionalProperties:
+      $ref: '#/definitions/being'
+    type: object
+
+  # Areas of the module (each location is in one area).
+  areas:
+    additionalProperties:
+      properties:
+        description:
+          description: Detailed description of the area.
+          type: string
+        story_summary:
+          description: A brief summary or backstory related to the area.
+          type: string
+      required:
+      - description
+      additionalProperties: false
+      type: object
+    description: Collection of different areas within the module.
+    type: object
+
+  # List of the locations (rooms) in the module.
+  locations:
+    additionalProperties:
+      $ref: '#/definitions/location'
+    type: object
+
+  # Defines the list of quests NPC's can ask players to complete, and their completion criteria.
+  quests:
+    additionalProperties:
+      type: object
+    type: object
+
+  # An unstructured string section for additional information. Not used by the game engine but can be
+  # used by other tools or just to provide additional context.
+  other_stuff:
+    description: Additional content.
+    type: string    
+
+required:
+- info
+- locations
+- starting_game_state
+- starting_time
+- starting_location_name
+additionalProperties: false
+type: object

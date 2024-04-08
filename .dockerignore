@@ -1,9 +1,15 @@
 .env
 .git
 .vscode
+.gitignore
+.gcloudignore
 .DS_Store
 __pycache__
 memory_count.yaml
 /attic
 /db
 /logs
+__pycache__/
+app.py
+app.yaml
+gen_model.py

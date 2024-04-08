@@ -1,0 +1,102 @@
+openapi: 3.0.3
+info:
+  title: GPT-HoA
+  version: 0.1.0
+servers:
+- name: hoa-dev
+  url: https://dgod.ngrok.app
+tags: []
+components:
+  schemas:
+    ActionArgsUpdate:
+      properties:
+        arg1:
+          type: string
+        arg2:
+          type: string
+        arg3:
+          type: string
+        arg4:
+          type: string
+      type: object
+    HTTPError:
+      properties:
+        detail:
+          type: object
+        message:
+          type: string
+      type: object
+    Results:
+      properties:
+        error:
+          type: string
+        image_to_show:
+          type: string
+        response:
+          type: string
+        success:
+          type: boolean
+      type: object
+    ValidationError:
+      properties:
+        detail:
+          properties:
+            "<location>":
+              properties:
+                "<field_name>":
+                  items:
+                    type: string
+                  type: array
+              type: object
+          type: object
+        message:
+          type: string
+      type: object
+paths:
+  "/do_action/{action}":
+    post:
+      operationId: do_action
+      x-openai-isConsequential: false      
+      parameters:
+      - in: path
+        name: action
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ActionArgsUpdate"
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Results"
+          description: Successful response
+        '404':
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/HTTPError"
+          description: Not found
+        '422':
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/ValidationError"
+          description: Validation error
+      summary: Does a game engine action and returns the results.
+  "/privacy":
+    get:
+      operationId: privacy
+      parameters: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                "$ref": "#/components/schemas/Results"
+          description: Successful response
+      summary: Returns the privacy policy.

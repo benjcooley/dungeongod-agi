@@ -1,9 +1,13 @@
 openai==0.27.6
-pinecone_client==2.2.1
 python-dotenv==1.0.0
 PyYAML==6.0
 tiktoken==0.4.0
 discord.py==2.3.1
 pydash==7.0.5
 Pillow==10.0.0
-
+flask==3.0.0
+apiflask[async]==2.0.2
+shortuuid==1.0.11
+google-cloud-firestore==2.13.1
+gunicorn==21.2.0
+easyllm==0.6.2
